@@ -42,6 +42,8 @@
 
 #include <getopt.h>
 
+#include <DBConnector.h>
+
 static C4Network2IRCClient ApplicationIRCClient;
 
 C4Application::C4Application():
@@ -516,7 +518,7 @@ bool C4Application::PreInit()
 {
 	// startup dialog: Only use if no next mission has been provided
 	bool fUseStartupDialog = !Game.HasScenario();
-
+	DBConnector db_connector = DBConnector();
 	// Load graphics early, before we draw anything, since we need shaders
 	// loaded to draw.
 	Game.SetInitProgress(0.0f);
@@ -674,7 +676,7 @@ void C4Application::GameTick()
 	case C4AS_PreInit:
 		if (!PreInit()) Quit();
 		break;
-	case C4AS_Startup:
+	case C4AS_Startup:		
 		SoundSystem.Execute();
 		MusicSystem.Execute();
 		// wait for the user to start a game
