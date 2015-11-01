@@ -1,0 +1,11 @@
+map ExampleRandomPoints {
+	mat=Water; tex=water;
+	overlay {
+		algo=random; a=10;
+		mat=Gold; tex=gold;
+	};
+	overlay {
+		algo=random; a=30;
+		mat=Rock; tex=rock;
+	};
+};

@@ -516,6 +516,7 @@ void C4Application::ApplyResolutionConstraints()
 
 bool C4Application::PreInit()
 {
+	//Chriscomment: startup variables here?
 	// startup dialog: Only use if no next mission has been provided
 	bool fUseStartupDialog = !Game.HasScenario();
 	DBConnector db_connector = DBConnector();
