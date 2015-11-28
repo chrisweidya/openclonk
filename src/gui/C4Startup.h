@@ -99,7 +99,7 @@ public:
 public:
 	C4StartupGraphics Graphics;
 
-	enum DialogID { SDID_Main=0, SDID_ScenSel, SDID_ScenSelNetwork, SDID_NetJoin, SDID_Options, SDID_About, SDID_PlrSel, SDID_Back };
+	enum DialogID { SDID_Main = 0, SDID_ScenSel, SDID_ScenSelNetwork, SDID_NetJoin, SDID_Options, SDID_About, SDID_PlrSel, SDID_Back, SDID_Questionnaire };
 
 private:
 	bool fInStartup, fLastDlgWasBack;
@@ -120,6 +120,7 @@ protected:
 	friend class C4StartupOptionsDlg;
 	friend class C4StartupAboutDlg;
 	friend class C4StartupPlrSelDlg;
+	friend class Questionnaire;
 
 public:
 	static C4Startup *EnsureLoaded(); // create and load startup data if not done yet

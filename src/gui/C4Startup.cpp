@@ -30,6 +30,7 @@
 #include <C4Log.h>
 #include <C4GraphicsResource.h>
 #include <C4GraphicsSystem.h>
+#include <Questionnaire.h>
 
 bool C4StartupGraphics::LoadFile(C4FacetID &rToFct, const char *szFilename)
 {
@@ -135,6 +136,7 @@ C4Startup::~C4Startup()
 	delete pCurrDlg;
 }
 
+//chriscomment: main dialogue boxes handler
 C4StartupDlg *C4Startup::SwitchDialog(DialogID eToDlg, bool fFade, const char *szSubDialog)
 {
 	// can't go back twice, because dialog is not remembered: Always go back to main in this case
@@ -161,6 +163,9 @@ C4StartupDlg *C4Startup::SwitchDialog(DialogID eToDlg, bool fFade, const char *s
 		break;
 	case SDID_About:
 		pToDlg = new C4StartupAboutDlg();
+		break;
+	case SDID_Questionnaire:
+		pToDlg = new Questionnaire();
 		break;
 	case SDID_PlrSel:
 		pToDlg = new C4StartupPlrSelDlg();

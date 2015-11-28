@@ -1,0 +1,14 @@
+YEE_INSTRUCTIONS=Please rate how important each of the following game play elements is to you when play games.
+YEE_QUESTION1=Becoming powerful.
+YEE_QUESTION2=Acquiring rare items.
+YEE_QUESTION3=Optimizing your character as much as possible.
+YEE_QUESTION4=Competing with other players.
+YEE_QUESTION5=Chatting with other players.
+YEE_QUESTION6=Being part of a guild.
+YEE_QUESTION7=Grouping with other players.
+YEE_QUESTION8=Keeping in touch with your friends.
+YEE_QUESTION9=Learning about stories and lore of the world.
+YEE_QUESTION10=Feeling immersed in the world.
+YEE_QUESTION11=Exploring the world just for the sake of exploring it.
+YEE_QUESTION12=Creating a background story and history for your character.
+

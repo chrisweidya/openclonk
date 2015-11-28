@@ -62,6 +62,11 @@ C4StartupMainDlg::C4StartupMainDlg() : C4StartupDlg(NULL) // create w/o title; i
 	AddElement(btn = new C4GUI::CallbackButton<C4StartupMainDlg>(LoadResStr("IDS_DLG_ABOUT"), caButtons.GetFromTop(iButtonHeight), &C4StartupMainDlg::OnAboutBtn));
 	btn->SetToolTip(LoadResStr("IDS_DLGTIP_ABOUT"));
 	btn->SetCustomGraphics(&C4Startup::Get()->Graphics.barMainButtons, &C4Startup::Get()->Graphics.barMainButtonsDown);
+
+	AddElement(btn = new C4GUI::CallbackButton<C4StartupMainDlg>(LoadResStr("IDS_DLG_QUESTIONNAIRE"), caButtons.GetFromTop(iButtonHeight), &C4StartupMainDlg::OnQuestionnaireBtn));
+//	btn->SetToolTip(LoadResStr("IDS_DLGTIP_ABOUT"));
+	btn->SetCustomGraphics(&C4Startup::Get()->Graphics.barMainButtons, &C4Startup::Get()->Graphics.barMainButtonsDown);
+
 	AddElement(btn = new C4GUI::CallbackButton<C4StartupMainDlg>(LoadResStr("IDS_DLG_EXIT"), caButtons.GetFromTop(iButtonHeight), &C4StartupMainDlg::OnExitBtn));
 	btn->SetToolTip(LoadResStr("IDS_DLGTIP_EXIT"));
 	btn->SetCustomGraphics(&C4Startup::Get()->Graphics.barMainButtons, &C4Startup::Get()->Graphics.barMainButtonsDown);
@@ -247,6 +252,12 @@ void C4StartupMainDlg::OnAboutBtn(C4GUI::Control *btn)
 {
 	// advance to about screen
 	C4Startup::Get()->SwitchDialog(C4Startup::SDID_About);
+}
+
+void C4StartupMainDlg::OnQuestionnaireBtn(C4GUI::Control *btn)
+{
+	// advance to about screen
+	C4Startup::Get()->SwitchDialog(C4Startup::SDID_Questionnaire);
 }
 
 void C4StartupMainDlg::OnExitBtn(C4GUI::Control *btn)
