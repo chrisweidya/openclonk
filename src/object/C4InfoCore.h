@@ -25,6 +25,7 @@
 #include "C4Real.h"
 #include "C4InputValidation.h"
 #include "C4ScenarioParameters.h"
+#include "PlayerProfile.h"
 
 const int32_t C4MaxPhysical = 100000,
                               C4MaxDeathMsg = 75;
@@ -110,6 +111,8 @@ public:
 
 	// achievements indexed by achievement name and scenario
 	C4ScenarioParameters Achievements; 
+
+	PlayerProfile Profile;
 public:
 	void Default(C4RankSystem *pRanks=NULL);
 	void Promote(int32_t iRank, C4RankSystem &rRanks);

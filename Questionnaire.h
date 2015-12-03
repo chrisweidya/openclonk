@@ -13,15 +13,17 @@
 * To redistribute this file separately, substitute the full license texts
 * for the above references.
 */
-// Startup screen for non-parameterized engine start: Player selection dialog
-// Also contains player creation, editing and crew management
 
 #ifndef INC_Questionnaire
 #define INC_Questionnaire
 
-#include <utility>
 #include "C4Startup.h"
-#include "C4InfoCore.h"
+#include "C4Scenario.h"
+#include "C4Folder.h"
+#include "C4ScenarioParameters.h"
+
+#include <list>
+#include <string>
 
 // startup dialog: Player selection
 class Questionnaire : public C4StartupDlg
@@ -34,30 +36,29 @@ public:
 	~Questionnaire(); // dtor
 
 private:
-	class C4KeyBinding *pKeyBack, *pKeyProperties, *pKeyCrew, *pKeyDelete, *pKeyRename, *pKeyNew;
 	class C4GUI::TextWindow *questionWindow;
 	C4GUI::TextWindow *instructionsWindow;
-	C4GUI::TextWindow *pSelectionInfo;
-	
+
 private:
 	C4Rect rcBottomButtons; int32_t iBottomButtonWidth;
 	class C4GUI::Button *btnActivatePlr, *btnCrew, *btnProperties, *btnDelete, *btnBack, *btnNext,
 		*btnVeryUnimpt, *btnUnimpt, *btnImpt, *btnVeryImpt;
 
 	int currQs = 0;
-	
-	enum {VERY_UNIMPORTANT = 1, UNIMPORTANT = 2, IMPORTANT = 3, VERY_IMPORTANT = 4};
+
+	enum { VERY_UNIMPORTANT = 1, UNIMPORTANT = 2, IMPORTANT = 3, VERY_IMPORTANT = 4 };
 
 	void UpdateBottomButtons(); // update command button texts and positions
 	void UpdateSelection();
 	void OnSelChange(class C4GUI::Element *pEl) { UpdateSelection(); }
+	int ModifyProfile();
 
 protected:
 	virtual int32_t GetMarginTop() { return (rcBounds.Hgt / 7); }
 	virtual bool HasBackground() { return false; }
 
 	virtual bool OnEnter() { return false; } // Enter ignored
-//	virtual bool OnEscape() { DoBack(); return true; }
+	//	virtual bool OnEscape() { DoBack(); return true; }
 
 	void OnBackBtn(C4GUI::Control *btn) { DoBack(); }
 	void OnNextBtn(C4GUI::Control *btn) { DoNext(currQs); }
@@ -73,7 +74,7 @@ protected:
 	void ShowQuestion(int index);
 
 public:
-	
+
 };
 
 

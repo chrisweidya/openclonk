@@ -490,6 +490,7 @@ IDS_MSG_AUTOFRAMESKIP=Automatic frame skip
 IDS_MSG_AUTOWINDOWED=Automatic
 IDS_MSG_BACKTOPLAYERDLG=Back to player selection.
 IDS_MSG_CANNOTSTARTSCENARIO=Cannot start scenario.
+IDS_MSG_CANNOTSTARTQUESTIONNAIRE=Cannot start questionnaire.
 IDS_MSG_CANTSENDTEAMMESSAGETEAMSN=Can't send team message: Teams not known.
 IDS_MSG_CHANGESTHETOPICTO=%s changes the topic to: %s
 IDS_MSG_CHATDISCLAIMER=Chat - Disclaimer

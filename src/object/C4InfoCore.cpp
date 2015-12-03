@@ -65,6 +65,7 @@ void C4PlayerInfoCore::Default(C4RankSystem *pRanks)
 	OldPrefAutoContextMenu = 0;
 	PrefControl.Clear();
 	ExtraData.Reset();
+	Profile = PlayerProfile();
 }
 
 DWORD C4PlayerInfoCore::GetPrefColorValue(int32_t iPrefColor)
