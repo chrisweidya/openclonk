@@ -11,12 +11,6 @@ void PlayerProfile::Default()
 	ZeroMem(this, sizeof(PlayerProfile));
 }
 
-void PlayerProfile::setAchievementScore(float score)
-{
-	Config.General.Participants[0];
-	achievementScore = score;
-}
-
 void PlayerProfile::updatePlayerType(float achievementScore, float socialScore, float immersionScore)
 {
 	Config.General.Participants[0];
@@ -32,7 +26,7 @@ PlayerProfile* PlayerProfile::getSingleProfile() {
 	if (!FileExists(szPlayerFilename) || !PlayerGrp.Open(szPlayerFilename) || !nfo.Load(PlayerGrp) || !PlayerGrp.Close())
 		return nullptr;
 //	profile = nfo.Profile;
-//	std::cout << "before: " << profile.achievementScore << "\n";
+//	std::cout << "before: " << nfo.Profile.achievementScore << "\n";
 	
 	return &nfo.Profile;
 }
@@ -48,7 +42,7 @@ int PlayerProfile::saveSingleProfile(PlayerProfile profile) {
 	core.Profile = profile;
 	if (!core.Save(PlayerGrp) || !PlayerGrp.Close())
 		return -1;
-	std::cout << "-->" << profile.achievementScore << "\n";
+//	std::cout << "-->" << profile.achievementScore << "\n";
 	return 1;
 } 
 

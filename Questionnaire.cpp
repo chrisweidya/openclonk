@@ -17,23 +17,6 @@
 #include <Questionnaire.h>
 #include <PlayerProfile.h>
 
-#include <C4Application.h>
-#include <C4GameOptions.h>
-#include <C4Network2Dialogs.h>
-#include <C4StartupMainDlg.h>
-#include <C4StartupNetDlg.h>
-#include <C4ComponentHost.h>
-#include <C4Components.h>
-#include <C4RTF.h>
-#include <C4Log.h>
-#include <C4Game.h>
-#include <C4GameDialogs.h>
-#include <C4Language.h>
-#include <C4FileSelDlg.h>
-#include <C4MouseControl.h>
-#include <C4GraphicsResource.h>
-#include <set>
-
 // font clrs
 const uint32_t ClrPlayerItem = 0xffffffff;
 
@@ -87,23 +70,21 @@ Questionnaire::Questionnaire() : C4StartupDlg("Questionnaire")
 
 }
 
+int Questionnaire::ModifyProfile()
+{
+	PlayerProfile *profile = PlayerProfile::getSingleProfile();
+	if (!profile)
+		return -1;
+
+	return PlayerProfile::saveSingleProfile(*profile);
+}
+
 void Questionnaire::DoBack()
 {
 	// back 2 main, restart quiz
 	currQs = 0;
 	C4Startup::Get()->SwitchDialog(C4Startup::SDID_Back);
 }
-
-int Questionnaire::ModifyProfile()
-{
-	PlayerProfile *profile = PlayerProfile::getSingleProfile();
-	if (!profile)
-		return -1;
-	profile->achievementScore = 5;
-	PlayerProfile::saveSingleProfile(*profile);
-	return 1;
-}
-
 
 void Questionnaire::DoNext()
 {
@@ -112,6 +93,7 @@ void Questionnaire::DoNext()
 
 void Questionnaire::DoNext(int feedback)
 {
+
 	ShowQuestion(++currQs);
 }
 

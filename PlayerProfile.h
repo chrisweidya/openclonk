@@ -5,10 +5,9 @@ class PlayerProfile
 {
 public:
 	PlayerProfile();
-	int32_t achievementScore;
-
-	enum DialogID { SDID_Main = 0, SDID_ScenSel, SDID_ScenSelNetwork, SDID_NetJoin, SDID_Options, SDID_About, SDID_PlrSel, SDID_Back, SDID_Questionnaire };
-	void setAchievementScore(float score);
+	int32_t achievementScore=0;
+	int32_t socialScore=0;
+	int32_t immersionScore=0;
 	void updatePlayerType(float achievementScore, float socialScore, float immersionScore);
 	static PlayerProfile *getSingleProfile();
 	static int saveSingleProfile(PlayerProfile profile);
@@ -17,8 +16,6 @@ public:
 	void CompileFunc(StdCompiler *pComp);
 
 private:
-	float socialScore= 0.0;
-	float immersionScore=0.0;
 
 
 };

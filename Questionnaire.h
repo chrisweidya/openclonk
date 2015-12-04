@@ -18,11 +18,7 @@
 #define INC_Questionnaire
 
 #include "C4Startup.h"
-#include "C4Scenario.h"
-#include "C4Folder.h"
-#include "C4ScenarioParameters.h"
 
-#include <list>
 #include <string>
 
 // startup dialog: Player selection
@@ -54,8 +50,6 @@ private:
 	int ModifyProfile();
 
 protected:
-	virtual int32_t GetMarginTop() { return (rcBounds.Hgt / 7); }
-	virtual bool HasBackground() { return false; }
 
 	virtual bool OnEnter() { return false; } // Enter ignored
 	//	virtual bool OnEscape() { DoBack(); return true; }
