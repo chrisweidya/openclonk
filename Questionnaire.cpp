@@ -99,8 +99,8 @@ int Questionnaire::ModifyProfile()
 	PlayerProfile *profile = PlayerProfile::getSingleProfile();
 	if (!profile)
 		return -1;
-	
-	
+	profile->achievementScore = 5;
+	PlayerProfile::saveSingleProfile(*profile);
 	return 1;
 }
 

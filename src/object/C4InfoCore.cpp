@@ -174,6 +174,7 @@ void C4PlayerInfoCore::CompileFunc(StdCompiler *pComp)
 	pComp->Value(mkNamingAdapt(LastRound,                "LastRound"));
 
 	pComp->Value(mkNamingAdapt(Achievements,                "Achievements"));
+	pComp->Value(mkNamingAdapt(Profile, "Profile"));
 }
 
 //------------------------------- Object Info ----------------------------------------

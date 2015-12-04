@@ -1,10 +1,14 @@
-#include <PlayerProfile.h>
+
 #include <C4Include.h>
 #include <C4StartupNetDlg.h>
 
 PlayerProfile::PlayerProfile()
 {	
-
+	Default();
+}
+void PlayerProfile::Default()
+{
+	ZeroMem(this, sizeof(PlayerProfile));
 }
 
 void PlayerProfile::setAchievementScore(float score)
@@ -22,19 +26,14 @@ PlayerProfile* PlayerProfile::getSingleProfile() {
 	assert(SModuleCount(Config.General.Participants) == 1);
 	C4Group PlayerGrp;
 	C4PlayerInfoCore nfo;
-	PlayerProfile profile;
+//	PlayerProfile profile;
 	const char *szPlayerFilename = Config.AtUserDataPath(Config.General.Participants);
-	std::cout << "getprofile\n";
-	if (!FileExists(szPlayerFilename) || !PlayerGrp.Open(szPlayerFilename) || !nfo.Load(PlayerGrp))
+//	std::cout << "getprofile\n";
+	if (!FileExists(szPlayerFilename) || !PlayerGrp.Open(szPlayerFilename) || !nfo.Load(PlayerGrp) || !PlayerGrp.Close())
 		return nullptr;
-	profile = nfo.Profile;
-	std::cout << "before: " << profile.achievementScore << "\n";
-	profile.achievementScore = 3.0;
-	nfo.Profile = profile;
-	C4PlayerInfoCore &newCore = nfo;
-	if (!newCore.Save(PlayerGrp) || !PlayerGrp.Close())
-		return nullptr;
-	std::cout << "-->" << newCore.Profile.achievementScore << "\n";
+//	profile = nfo.Profile;
+//	std::cout << "before: " << profile.achievementScore << "\n";
+	
 	return &nfo.Profile;
 }
 
@@ -53,3 +52,8 @@ int PlayerProfile::saveSingleProfile(PlayerProfile profile) {
 	return 1;
 } 
 
+void PlayerProfile::CompileFunc(StdCompiler *pComp)
+{
+	pComp->Value(mkNamingAdapt(achievementScore, "achievementScore", 0));
+
+}
