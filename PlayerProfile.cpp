@@ -49,5 +49,6 @@ int PlayerProfile::saveSingleProfile(PlayerProfile profile) {
 void PlayerProfile::CompileFunc(StdCompiler *pComp)
 {
 	pComp->Value(mkNamingAdapt(achievementScore, "achievementScore", 0));
-
+	pComp->Value(mkNamingAdapt(socialScore, "socialScore", 0));
+	pComp->Value(mkNamingAdapt(immersionScore, "immersiontScore", 0));
 }
