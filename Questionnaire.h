@@ -37,16 +37,13 @@ private:
 
 private:
 	C4Rect rcBottomButtons; int32_t iBottomButtonWidth;
-	class C4GUI::Button *btnActivatePlr, *btnCrew, *btnProperties, *btnDelete, *btnBack, *btnNext,
-		*btnVeryUnimpt, *btnUnimpt, *btnImpt, *btnVeryImpt;
-
+	class C4GUI::Button *btnBack, *btnVeryUnimpt, *btnUnimpt, *btnImpt, *btnVeryImpt;
+	float newAchievementScore = 0.0, newSocialScore = 0.0, newImmersionScore = 0.0;
 	int currQs = 0;
 
 	enum { VERY_UNIMPORTANT = 1, UNIMPORTANT = 2, IMPORTANT = 3, VERY_IMPORTANT = 4 };
 
 	void UpdateBottomButtons(); // update command button texts and positions
-	void UpdateSelection();
-	void OnSelChange(class C4GUI::Element *pEl) { UpdateSelection(); }
 	int ModifyProfile();
 
 protected:

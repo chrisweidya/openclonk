@@ -26,7 +26,7 @@ PlayerProfile* PlayerProfile::getSingleProfile() {
 	if (!FileExists(szPlayerFilename) || !PlayerGrp.Open(szPlayerFilename) || !nfo.Load(PlayerGrp) || !PlayerGrp.Close())
 		return nullptr;
 //	profile = nfo.Profile;
-//	std::cout << "before: " << nfo.Profile.achievementScore << "\n";
+	std::cout << "before: " << nfo.Profile.achievementScore << "\n";
 	
 	return &nfo.Profile;
 }

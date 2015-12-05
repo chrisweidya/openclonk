@@ -47,7 +47,6 @@ Questionnaire::Questionnaire() : C4StartupDlg("Questionnaire")
 	C4Rect rcInstructionsWindow = C4Rect(rcMain.Wdt / 8, rcMain.Hgt / 11, rcMain.Wdt * 11 / 16, rcMain.Hgt * 1 / 16);
 	C4Rect rcQuestionWindow = C4Rect(rcMain.Wdt / 8, rcMain.Hgt / 6, rcMain.Wdt * 11 / 16, rcMain.Hgt * 1 / 8);
 	rcBottomButtons = C4Rect(rcMain.Wdt / 8, rcQuestionWindow.GetBottom(), rcMain.Wdt * 11 / 16, rcMain.Hgt * 2 / 8);
-	C4Rect rcInfoWindow = C4Rect(rcMain.Wdt * 9 / 16, rcMain.Hgt / 8, rcMain.Wdt * 5 / 16, rcMain.Hgt * 6 / 8);
 	AddElement(instructionsWindow = new C4GUI::TextWindow(rcInstructionsWindow, 0, 0, 0, 100, 4096, "  ", false, NULL, 0, true));
 	AddElement(questionWindow = new C4GUI::TextWindow(rcQuestionWindow, 0, 0, 0, 100, 4096, "  ", false, NULL, 0, true));
 	questionWindow->SetDecoration(true, true, &C4Startup::Get()->Graphics.sfctBookScroll, true);
@@ -55,19 +54,15 @@ Questionnaire::Questionnaire() : C4StartupDlg("Questionnaire")
 	questionWindow->UpdateHeight();
 	instructionsWindow->UpdateHeight();
 	instructionsWindow->AddTextLine(FormatString(LoadResStr("YEE_INSTRUCTIONS")).getData(), &C4Startup::Get()->Graphics.BookFont, ClrPlayerItem, false, false);
-	DoNext(currQs);
+	DoNext();
 
 	C4Rect rcDefault(0, 0, 10, 10);
 	AddElement(btnBack = new C4GUI::CallbackButton<Questionnaire>(LoadResStr("IDS_BTN_BACK_MENU"), rcDefault, &Questionnaire::OnBackBtn));
-	//	AddElement(btnNext = new C4GUI::CallbackButton<Questionnaire>(LoadResStr("IDS_BTN_NEXT"), rcDefault, &Questionnaire::OnNextBtn));
 	AddElement(btnVeryUnimpt = new C4GUI::CallbackButton<Questionnaire>(LoadResStr("YEE_VERY_UNIMPORTANT"), rcDefault, &Questionnaire::OnVeryUnimptBtn));
 	AddElement(btnUnimpt = new C4GUI::CallbackButton<Questionnaire>(LoadResStr("YEE_UNIMPORTANT"), rcDefault, &Questionnaire::OnUnimptBtn));
 	AddElement(btnImpt = new C4GUI::CallbackButton<Questionnaire>(LoadResStr("YEE_IMPORTANT"), rcDefault, &Questionnaire::OnImptBtn));
 	AddElement(btnVeryImpt = new C4GUI::CallbackButton<Questionnaire>(LoadResStr("YEE_VERY_IMPORTANT"), rcDefault, &Questionnaire::OnVeryImptBtn));
 	UpdateBottomButtons();
-
-	ModifyProfile();
-
 }
 
 int Questionnaire::ModifyProfile()
@@ -75,13 +70,20 @@ int Questionnaire::ModifyProfile()
 	PlayerProfile *profile = PlayerProfile::getSingleProfile();
 	if (!profile)
 		return -1;
-
+	profile->achievementScore = (int) (newAchievementScore * 100);
+	profile->socialScore = (int)(newSocialScore * 100);
+	profile->immersionScore = (int)(newImmersionScore * 100);
 	return PlayerProfile::saveSingleProfile(*profile);
 }
 
 void Questionnaire::DoBack()
 {
 	// back 2 main, restart quiz
+	if (currQs < 13) {
+		StdStrBuf sError;
+		sError.Format(LoadResStr("IDS_MSG_INCOMPLETEQUESTIONNAIRE_MSG"));
+		GetScreen()->ShowMessage(sError.getData(), LoadResStr("IDS_MSG_INCOMPLETEQUESTIONNAIRE"), C4GUI::Ico_Error);
+	}
 	currQs = 0;
 	C4Startup::Get()->SwitchDialog(C4Startup::SDID_Back);
 }
@@ -93,7 +95,44 @@ void Questionnaire::DoNext()
 
 void Questionnaire::DoNext(int feedback)
 {
-
+	switch (currQs) {		
+	case 1:
+		newAchievementScore += feedback*0.73;
+		break;
+	case 2:
+		newAchievementScore += feedback*0.68;
+		break;
+	case 3:
+		newAchievementScore += feedback*0.67;
+		break;
+	case 4:
+		newAchievementScore += feedback*0.55;
+		break;
+	case 5:
+		newSocialScore += feedback*0.73;
+		break;
+	case 6:
+		newSocialScore += feedback*0.7;
+		break;
+	case 7:
+		newSocialScore += feedback*0.67;
+		break;
+	case 8:
+		newSocialScore += feedback*0.6;
+		break;
+	case 9:
+		newImmersionScore += feedback*0.78;
+		break;
+	case 10:
+		newImmersionScore += feedback*0.73;
+		break;
+	case 11:
+		newImmersionScore += feedback*0.6;
+		break;
+	case 12:
+		newImmersionScore += feedback*0.54;
+		break;
+	}
 	ShowQuestion(++currQs);
 }
 
@@ -113,9 +152,8 @@ void Questionnaire::ShowQuestion(int index) {
 		btnUnimpt->SetVisibility(false);
 		btnImpt->SetVisibility(false);
 		btnVeryImpt->SetVisibility(false);
-		currQs = 0;
+		ModifyProfile();
 	}
-
 }
 
 void Questionnaire::UpdateBottomButtons()
