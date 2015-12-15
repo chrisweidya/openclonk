@@ -1,18 +1,23 @@
 [Head]
 Icon=2
 Title=chris
-Version=6,0
-MaxPlayer=1
+Version=7
 Difficulty=1
-
-[Definitions]
-Definition1=Objects.ocd
+MaxPlayer=1
+NoInitialize=true
 
 [Player1]
-Crew=Clonk=1
+
+[Player2]
+
+[Player3]
+
+[Player4]
 
 [Landscape]
 Sky=Clouds1
+MapWidth=100,0,64,10000
+MapHeight=50,0,40,10000
 SkyScrollMode=2
 
 [Weather]
@@ -20,4 +25,3 @@ Climate=0,0,0,100
 StartSeason=0,0,0,100
 YearSpeed=0,0,0,100
 Wind=1,100,-100,100
-

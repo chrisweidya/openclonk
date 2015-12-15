@@ -162,7 +162,7 @@ bool C4Game::InitDefs()
 	return true;
 }
 
-
+//chriscomment:open scenario here
 bool C4Game::OpenScenario()
 {
 

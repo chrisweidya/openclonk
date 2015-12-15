@@ -1720,6 +1720,7 @@ C4ScenarioListLoader::Entry *C4StartupScenSelDlg::GetSelectedEntry()
 	return pSel ? pSel->GetEntry() : NULL;
 }
 
+//chriscomment:start scenario here
 bool C4StartupScenSelDlg::StartScenario(C4ScenarioListLoader::Scenario *pStartScen)
 {
 	assert(pStartScen);
