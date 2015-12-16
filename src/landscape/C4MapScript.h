@@ -63,29 +63,30 @@ public:
 // List of possible algorithms. Also registered as script constants in void C4MapScriptHost::InitFunctionMap.
 enum C4MapScriptAlgoType
 {
-	MAPALGO_None       = 0,
+	MAPALGO_None = 0,
 
-	MAPALGO_Layer      = 1,
+	MAPALGO_Layer = 1,
 
 	MAPALGO_RndChecker = 10,
 
-	MAPALGO_Rect       = 20,
-	MAPALGO_Ellipsis   = 21,
-	MAPALGO_Polygon    = 22,
-	MAPALGO_Lines      = 23,
+	MAPALGO_Rect = 20,
+	MAPALGO_Ellipsis = 21,
+	MAPALGO_Polygon = 22,
+	MAPALGO_Lines = 23,
 
-	MAPALGO_And        = 30,
-	MAPALGO_Or         = 31,
-	MAPALGO_Not        = 32,
-	MAPALGO_Xor        = 33,
+	MAPALGO_And = 30,
+	MAPALGO_Or = 31,
+	MAPALGO_Not = 32,
+	MAPALGO_Xor = 33,
 
-	MAPALGO_Offset     = 40,
-	MAPALGO_Scale      = 41,
-	MAPALGO_Rotate     = 42,
+	MAPALGO_Offset = 40,
+	MAPALGO_Scale = 41,
+	MAPALGO_Rotate = 42,
 	MAPALGO_Turbulence = 43,
 
-	MAPALGO_Border     = 50,
-	MAPALGO_Filter     = 51,
+	MAPALGO_Border = 50,
+	MAPALGO_Filter = 51,
+	MAPALGO_SimplexNoise = 60,
 };
 
 // MAPALGO_Layer: Just query pixel in layer. Pixels outside the layer range are zero.
@@ -106,6 +107,15 @@ class C4MapScriptAlgoRndChecker : public C4MapScriptAlgo
 	bool is_fixed_offset;
 public:
 	C4MapScriptAlgoRndChecker(const C4PropList *props);
+
+	virtual bool operator () (int32_t x, int32_t y, uint8_t& fg, uint8_t& bg) const;
+};
+
+class C4MapScriptAlgoSimplexNoise : public C4MapScriptAlgo
+{
+	int32_t seed, set_percentage, noise_wdt, noise_hgt, octave, persistence, frequency;
+public:
+	C4MapScriptAlgoSimplexNoise(const C4PropList *props);
 
 	virtual bool operator () (int32_t x, int32_t y, uint8_t& fg, uint8_t& bg) const;
 };

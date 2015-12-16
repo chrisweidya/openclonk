@@ -312,6 +312,8 @@ enum C4PropertyName
 	P_y,
 	P_Wdt,
 	P_Hgt,
+	P_Octave,
+	P_Persistence,
 	P_OffX,
 	P_OffY,
 	P_FacetBase,

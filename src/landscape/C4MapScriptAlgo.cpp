@@ -20,6 +20,7 @@
 #include <C4Include.h>
 #include <C4MapScript.h>
 #include <C4Random.h>
+#include <simplexnoise.h>
 
 C4MapScriptAlgo *FnParAlgo(C4PropList *algo_par);
 
@@ -84,6 +85,26 @@ C4MapScriptAlgoRndChecker::C4MapScriptAlgoRndChecker(const C4PropList *props)
 		is_fixed_offset = false;
 }
 
+C4MapScriptAlgoSimplexNoise::C4MapScriptAlgoSimplexNoise(const C4PropList *props)
+{
+	// Get MAPALGO_SimplexNoise properties
+	seed = props->GetPropertyInt(P_Seed);
+	if (!seed) seed = Random(65536);
+	set_percentage = Clamp(props->GetPropertyInt(P_Ratio), 0, 100);
+	if (!set_percentage) set_percentage = 50;
+	noise_wdt = Abs(props->GetPropertyInt(P_Wdt));
+	if (!noise_wdt) noise_wdt = 10;
+	noise_hgt = Abs(props->GetPropertyInt(P_Hgt));
+	if (!noise_hgt) noise_hgt = 10;
+	octave = Abs(props->GetPropertyInt(P_Octave));
+	if (!octave) octave = 5;
+	persistence = Abs(props->GetPropertyInt(P_Persistence));
+	if (!persistence) persistence = 5;
+	frequency = Abs(props->GetPropertyInt(P_Scale));
+	if (!frequency) frequency = 10;
+
+}
+
 // Division and modulo operators that always round downwards
 // Both assuming b>0
 static int32_t divD(int32_t a, int32_t b) { return a/b-(a%b<0); }
@@ -102,6 +123,14 @@ bool C4MapScriptAlgoRndChecker::operator () (int32_t x, int32_t y, uint8_t& fg, 
 	if (!is_fixed_offset) { x+=seed%checker_wdt; y+=((seed*214013)%checker_hgt); }
 	x = divD(x, checker_wdt); y = divD(y, checker_hgt);
 	return QuerySeededRandomField(seed, x,y, 100) < set_percentage;
+}
+
+bool C4MapScriptAlgoSimplexNoise::operator () (int32_t x, int32_t y, uint8_t& fg, uint8_t& bg) const
+{
+	// Evaluate MAPALGO_RndChecker at x,y: Query a seeded random field scaled by checker_wdt,checker_hgt
+//	if (!is_fixed_offset) { x += seed%checker_wdt; y += ((seed * 214013) % checker_hgt); }
+	x = divD(x, noise_wdt); y = divD(y, noise_hgt);
+	return (int) scaled_octave_noise_2d(octave, persistence/10.0, frequency, 0, 100, x, y) < set_percentage;
 }
 
 C4MapScriptAlgoRect::C4MapScriptAlgoRect(const C4PropList *props)
@@ -513,6 +542,7 @@ C4MapScriptAlgo *FnParAlgo(C4PropList *algo_par)
 	case MAPALGO_Turbulence:  return new C4MapScriptAlgoTurbulence(algo_par);
 	case MAPALGO_Border:      return new C4MapScriptAlgoBorder(algo_par);
 	case MAPALGO_Filter:      return new C4MapScriptAlgoFilter(algo_par);
+	case MAPALGO_SimplexNoise: return new C4MapScriptAlgoSimplexNoise(algo_par);
 	default:
 		throw new C4AulExecError(FormatString("got invalid algo: %d", algo_par->GetPropertyInt(P_Algo)).getData());
 	}

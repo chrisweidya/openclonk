@@ -669,6 +669,7 @@ void C4MapScriptHost::InitFunctionMap(C4AulScriptEngine *pEngine)
 	::ScriptEngine.RegisterGlobalConstant("MAPALGO_Turbulence", C4VInt(MAPALGO_Turbulence));
 	::ScriptEngine.RegisterGlobalConstant("MAPALGO_Border", C4VInt(MAPALGO_Border));
 	::ScriptEngine.RegisterGlobalConstant("MAPALGO_Filter", C4VInt(MAPALGO_Filter));
+	::ScriptEngine.RegisterGlobalConstant("MAPALGO_SimplexNoise", C4VInt(MAPALGO_SimplexNoise));
 	Reg2List(pEngine);
 	AddEngineFunctions();
 }

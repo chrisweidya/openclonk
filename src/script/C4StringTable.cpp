@@ -103,6 +103,8 @@ C4StringTable::C4StringTable()
 	P[P_y] = "y";
 	P[P_Wdt] = "Wdt";
 	P[P_Hgt] = "Hgt";
+	P[P_Persistence] = "Persistence";
+	P[P_Octave] = "Octave";
 	P[P_OffX] = "OffX";
 	P[P_OffY] = "OffY";
 	P[P_FacetBase] = "FacetBase";

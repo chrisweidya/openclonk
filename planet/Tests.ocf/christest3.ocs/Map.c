@@ -2,10 +2,10 @@
 
 func InitializeMap(proplist map)
 {
-
-	var checkerboard = { Algo = MAPALGO_Ellipsis, X = 50, Y = 50, Wdt = 10, Hgt = 10 };
-	var jumbled_checkerboard = { Algo = MAPALGO_Turbulence, Amplitude = 100, Scale = 100, Op = checkerboard };
-	Draw("Water", jumbled_checkerboard);
+//	var checkerboard = { Algo = MAPALGO_SimplexNoise, Ratio = 50, Octave = 3, Persistence = 1, Scale = 10, Wdt = 1, Hgt = 1 };
+//	var checkerboard = { Algo = MAPALGO_SimplexNoise, Ratio = 70, Wdt = 1, Hgt = 1 };
+//	var jumbled_checkerboard = { Algo = MAPALGO_Turbulence, Amplitude = 100, Scale = 100, Op = checkerboard };
+//	Draw("Water", checkerboard);
 	/*
 	// Create a big map
 	Resize(150, 150);
