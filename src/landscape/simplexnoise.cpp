@@ -17,8 +17,9 @@
 
 
 #include <math.h>
-
+#include <stdlib.h>
 #include "simplexnoise.h"
+#include <array>
 
 
 /* 2D, 3D and 4D Simplex Noise functions return 'random' values in (-1, 1).
@@ -62,9 +63,9 @@ float octave_noise_2d( const float octaves, const float persistence, const float
     for( int i=0; i < octaves; i++ ) {
         total += raw_noise_2d( x * frequency, y * frequency ) * amplitude;
 
-        frequency *= 2;
+        frequency *= persistence;
         maxAmplitude += amplitude;
-        amplitude *= persistence;
+        amplitude *= 2;
     }
 
     return total / maxAmplitude;
@@ -125,8 +126,26 @@ float octave_noise_4d( const float octaves, const float persistence, const float
 // 2D Scaled Multi-octave Simplex noise.
 //
 // Returned value will be between loBound and hiBound.
-float scaled_octave_noise_2d( const float octaves, const float persistence, const float scale, const float loBound, const float hiBound, const float x, const float y ) {
-    return octave_noise_2d(octaves, persistence, scale, x, y) * (hiBound - loBound) / 2 + (hiBound + loBound) / 2;
+float scaled_octave_noise_2d(const float octaves, const float persistence, const float scale, const float loBound, const float hiBound, const float x, const float y ) {
+	return octave_noise_2d(octaves, persistence, scale, x, y) * (hiBound - loBound) / 2 + (hiBound + loBound) / 2;
+}
+
+float scaled_octave_noise_2d_seeded(const int seed, const float octaves, const float persistence, const float scale, const float loBound, const float hiBound, const float x, const float y) {
+	int num_swaps = 400;
+	int swapFrom, swapTo;
+	short temp;
+	srand(seed);
+	for (int i = 0; i<512; i++){
+		perm[i] = permOriginal[i];
+	}
+	for (int i = 0; i < num_swaps; i++) {
+		swapFrom = rand() % 512;
+		swapTo = rand() % 512;
+		temp = perm[swapFrom];
+		perm[swapFrom] = perm[swapTo];
+		perm[swapTo] = temp;
+	}
+	return octave_noise_2d(octaves, persistence, scale, x, y) * (hiBound - loBound) / 2 + (hiBound + loBound) / 2;
 }
 
 

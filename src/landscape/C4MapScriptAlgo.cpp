@@ -130,7 +130,7 @@ bool C4MapScriptAlgoSimplexNoise::operator () (int32_t x, int32_t y, uint8_t& fg
 	// Evaluate MAPALGO_RndChecker at x,y: Query a seeded random field scaled by checker_wdt,checker_hgt
 //	if (!is_fixed_offset) { x += seed%checker_wdt; y += ((seed * 214013) % checker_hgt); }
 	x = divD(x, noise_wdt); y = divD(y, noise_hgt);
-	return (int) scaled_octave_noise_2d(octave, persistence/10.0, frequency, 0, 100, x, y) < set_percentage;
+	return (int) scaled_octave_noise_2d_seeded(seed, octave, persistence/10.0, frequency, 0, 100, x, y) < set_percentage;
 }
 
 C4MapScriptAlgoRect::C4MapScriptAlgoRect(const C4PropList *props)
