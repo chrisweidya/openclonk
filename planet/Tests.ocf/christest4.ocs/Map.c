@@ -2,17 +2,29 @@
 
 func InitializeMap(proplist map)
 {
+	var seed = 123123;
 	var bg = CreateLayer("Sky");
-	var ground = { Algo = MAPALGO_Rect, X = 0, Y = bg.Hgt / 3, Wdt = bg.Wdt, Hgt = 2 * bg.Hgt / 3 };
-	var smallTunnels = { Algo = MAPALGO_SimplexNoise, Seed = 123123, Ratio = 50, Octave = 10, Persistence = 5, Scale = 10, Wdt = 1, Hgt = 1 };
-//	var largeTunnels = { Algo = MAPALGO_SimplexNoise, Seed = 123123, Ratio = 30, Octave = 3, Persistence = 1, Scale = 10, Wdt = 9, Hgt = 9 };
-	var result = { Algo = MAPALGO_And, Op = [smallTunnels, ground] };
-//	var checkerboard = { Algo = MAPALGO_SimplexNoise, Ratio = 70, Wdt = 1, Hgt = 1 };
-//	var jumbled_checkerboard = { Algo = MAPALGO_Turbulence, Amplitude = 100, Scale = 100, Op = checkerboard };
-	Draw("Earth", ground);
-	Draw("Tunnel", result);
-//	result = { Algo = MAPALGO_And, Op = [largeTunnels, ground] };
-//	Draw("Tunnel", result);
+	var ground = draw_ground(seed, map);
+	var coal = draw_mat(seed, "Coal", ground, 30, 5, 3);
+	var fireStone = draw_mat(seed, "Firestone", ground, 30, 8, 2);
+	var largeTunnels = draw_mat(seed, "Tunnel", ground, 50, 8, 3);
 
 	return true;
+}
+
+func draw_ground(int seed, proplist map) {
+	var ground = { Algo = MAPALGO_Rect, X = 0, Y = map.Hgt / 3, Wdt = map.Wdt, Hgt = 2 * map.Hgt / 3 };
+	Draw("Earth", ground);
+
+	var ground2 = { Algo = MAPALGO_SimplexNoise, Seed = (seed+1), Ratio = 50, Octave = 8, Persistence = 5, Scale = 3, Wdt = 1, Hgt = 1 };
+	var result = { Algo = MAPALGO_And, Op = [ground2, ground] };
+	Draw("Earth-earth_midSoil", result);
+	return ground;
+}
+
+func draw_mat(int seed, string type, proplist ground, int ratio, int octave, int scale) {
+	var mat = { Algo = MAPALGO_SimplexNoise, Seed = seed, Ratio = ratio, Octave = octave, Persistence = 5, Scale = scale, Wdt = 1, Hgt = 1 };
+	var result = { Algo = MAPALGO_And, Op = [mat, ground] };
+	Draw(type, result);
+	return result;
 }
