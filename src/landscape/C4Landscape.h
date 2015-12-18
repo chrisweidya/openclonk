@@ -111,12 +111,13 @@ public:
 	bool SetMode(int32_t iMode);
 	bool SetPix2(int32_t x, int32_t y, BYTE fgPix, BYTE bgPix); // set landscape pixel (bounds checked)
 	bool _SetPix2(int32_t x, int32_t y, BYTE fgPix, BYTE bgPix); // set landsape pixel (bounds not checked)
+	void _SetPix2Tmp(int32_t x, int32_t y, BYTE fgPix, BYTE bgPix); // set landsape pixel (bounds not checked, no material count updates, no landscape relighting). Material must be reset to original value with this function before modifying landscape in any other way. Only used for temporary pixel changes by SolidMask (C4SolidMask::RemoveTemporary, C4SolidMask::PutTemporary).
 	bool InsertMaterial(int32_t mat, int32_t *tx, int32_t *ty, int32_t vx = 0, int32_t vy = 0, bool query_only=false); // modifies tx/ty to actual insertion position
 	bool InsertDeadMaterial(int32_t mat, int32_t tx, int32_t ty);
 	bool FindMatPath(int32_t &fx, int32_t &fy, int32_t ydir, int32_t mdens, int32_t mslide) const;
 	bool FindMatSlide(int32_t &fx, int32_t &fy, int32_t ydir, int32_t mdens, int32_t mslide) const;
 	bool FindMatPathPush(int32_t &fx, int32_t &fy, int32_t mdens, int32_t mslide, bool liquid) const;
-	bool Incinerate(int32_t x, int32_t y);
+	bool Incinerate(int32_t x, int32_t y, int32_t cause_player);
 	bool DrawBrush(int32_t iX, int32_t iY, int32_t iGrade, const char *szMaterial, const char *szTexture, const char *szBackMaterial, const char *szBackTexture);
 	bool DrawLine(int32_t iX1, int32_t iY1, int32_t iX2, int32_t iY2, int32_t iGrade, const char *szMaterial, const char *szTexture, const char *szBackMaterial, const char *szBackTexture);
 	bool DrawBox(int32_t iX1, int32_t iY1, int32_t iX2, int32_t iY2, int32_t iGrade, const char *szMaterial, const char *szTexture, const char *szBackMaterial, const char *szBackTexture);
@@ -281,8 +282,6 @@ private:
 	uint32_t ChunkyRandom(uint32_t &iOffset, uint32_t iRange) const; // return static random value, according to offset and MapSeed
 	void DrawChunk(int32_t tx, int32_t ty, int32_t wdt, int32_t hgt, uint8_t mcol, uint8_t mcolBkg, C4MaterialCoreShape Shape, uint32_t cro);
 	void DrawSmoothOChunk(int32_t tx, int32_t ty, int32_t wdt, int32_t hgt, uint8_t mcol, uint8_t mcolBkg, int flip, uint32_t cro);
-	void DrawCustomShapePoly(const C4MaterialShape::Poly &poly, int32_t off_x, int32_t off_y, uint8_t mcol, uint8_t mcolBkg);
-	void DrawCustomShape(CSurface8 * sfcMap, CSurface8* sfcMapBkg, C4MaterialShape *shape, int32_t iMapX, int32_t iMapY, int32_t iMapWdt, int32_t iMapHgt, uint8_t iTexture, int32_t iOffX, int32_t iOffY);
 	void ChunkOZoom(CSurface8 * sfcMap, CSurface8* sfcMapBkg, int32_t iMapX, int32_t iMapY, int32_t iMapWdt, int32_t iMapHgt, uint8_t iTexture, int32_t iOffX=0,int32_t iOffY=0);
 	bool GetTexUsage(CSurface8 * sfcMap, CSurface8* sfcMapBkg, int32_t iMapX, int32_t iMapY, int32_t iMapWdt, int32_t iMapHgt, DWORD *dwpTextureUsage) const;
 	bool TexOZoom(CSurface8 * sfcMap, CSurface8* sfcMapBkg, int32_t iMapX, int32_t iMapY, int32_t iMapWdt, int32_t iMapHgt, DWORD *dwpTextureUsage, int32_t iToX=0,int32_t iToY=0);
@@ -323,10 +322,6 @@ public:
 	bool ClearPix(int32_t tx, int32_t ty);	// also used by mass mover (corrode)
 
 private:
-	std::vector<int32_t> GetRoundPolygon(int32_t x, int32_t y, int32_t size, int32_t smoothness) const;
-	std::vector<int32_t> GetRectangle(int32_t tx, int32_t ty, int32_t wdt, int32_t hgt) const;
-	C4Rect getBoundingBox(int *vtcs, int length) const;
-
 	CSurface8* CreateDefaultBkgSurface(CSurface8& sfcFg, bool msbAsIft) const;
 	void DigMaterial2Objects(int32_t tx, int32_t ty, C4MaterialList *mat_list, C4Object *pCollect = NULL);
 	void BlastMaterial2Objects(int32_t tx, int32_t ty, C4MaterialList *mat_list, int32_t caused_by, int32_t str, C4ValueArray *out_objects);

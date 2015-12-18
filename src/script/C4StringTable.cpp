@@ -57,11 +57,15 @@ C4String::C4String()
 C4String::~C4String()
 {
 	// unreg
+#ifdef _DEBUG
 	static bool remove = false;
 	assert(!remove); (void)remove;
 	remove = true;
+#endif
 	Strings.Set.Remove(this);
+#ifdef _DEBUG
 	remove = false;
+#endif
 }
 
 void C4String::operator=(const char * s)
@@ -239,6 +243,12 @@ C4StringTable::C4StringTable()
 	P[P_Equalizer_High_Gain] = "Equalizer_High_Gain";
 	P[P_Equalizer_High_Cutoff] = "Equalizer_High_Cutoff";
 	P[P_LightOffset] = "LightOffset";
+	P[P_PlayList] = "PlayList";
+	P[P_MusicBreakMin] = "MusicBreakMin";
+	P[P_MusicBreakMax] = "MusicBreakMax";
+	P[P_MusicBreakChance] = "MusicBreakChance";
+	P[P_MusicMaxPositionMemory] = "MusicMaxPositionMemory";
+	P[P_InflameLandscape] = "InflameLandscape";
 	P[DFA_WALK] = "WALK";
 	P[DFA_FLIGHT] = "FLIGHT";
 	P[DFA_KNEEL] = "KNEEL";

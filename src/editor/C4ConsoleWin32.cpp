@@ -205,7 +205,12 @@ INT_PTR CALLBACK ConsoleDlgProc(HWND hDlg, UINT Msg, WPARAM wParam, LPARAM lPara
 			wchar_t buffer[16000];
 			GetDlgItemTextW(hDlg,IDC_COMBOINPUT,buffer,16000);
 			if (buffer[0])
-				Console.In(StdStrBuf(buffer).getData());
+			{
+				StdStrBuf in_char(buffer);
+				::Console.RegisterRecentInput(in_char.getData(), C4Console::MRU_Scenario);
+				::Console.In(in_char.getData());
+				::Console.UpdateInputCtrl();
+			}
 			return true;
 			// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 		case IDC_BUTTONHALT:
@@ -674,7 +679,7 @@ void C4ConsoleGUI::Out(const char* message)
 	int len,len2,lines; wchar_t *buffer, *buffer2;
 	len = 65000;//SendDlgItemMessage(hWindow,IDC_EDITOUTPUT,EM_LINELENGTH,(WPARAM)0,(LPARAM)0);
 	StdBuf messageW = GetWideCharBuf(message);
-	len2 = len+Min<int32_t>(messageW.getSize()/sizeof(wchar_t)+2, 5000);
+	len2 = len+std::min<int32_t>(messageW.getSize()/sizeof(wchar_t)+2, 5000);
 	buffer = new wchar_t [len2];
 	buffer[0]=0;
 	GetDlgItemTextW(hWindow,IDC_EDITOUTPUT,buffer,len);
@@ -857,13 +862,13 @@ static void SetComboItems(HWND hCombo, std::list<const char*> &items)
 	for (std::list<const char*>::iterator it = items.begin(); it != items.end(); it++)
 	{
 		if (!*it)
-			SendMessage(hCombo,CB_INSERTSTRING,0,(LPARAM)L"----------");
+			SendMessage(hCombo, CB_ADDSTRING, 0, (LPARAM)L"----------");
 		else
 			SendMessage(hCombo,CB_ADDSTRING,0,GetWideLPARAM(*it));
 	}
 }
 
-void C4ConsoleGUI::PropertyDlgUpdate(C4ObjectList &rSelection)
+void C4ConsoleGUI::PropertyDlgUpdate(C4ObjectList &rSelection, bool force_function_update)
 {
 	HWND hDialog = state->hPropertyDlg;
 	if (!hDialog) return;
@@ -872,10 +877,11 @@ void C4ConsoleGUI::PropertyDlgUpdate(C4ObjectList &rSelection)
 	SendDlgItemMessage(hDialog,IDC_EDITOUTPUT,EM_LINESCROLL,(WPARAM)0,(LPARAM)iLine);
 	UpdateWindow(GetDlgItem(hDialog,IDC_EDITOUTPUT));
 
-	if (PropertyDlgObject == rSelection.GetObject()) return;
+	if (PropertyDlgObject == rSelection.GetObject() && !force_function_update) return;
 	PropertyDlgObject = rSelection.GetObject();
 	
-	std::list<const char *> functions = ::ScriptEngine.GetFunctionNames(PropertyDlgObject);
+	std::list<const char *> functions = ::Console.GetScriptSuggestions(PropertyDlgObject, C4Console::MRU_Object);
+
 	HWND hCombo = GetDlgItem(state->hPropertyDlg, IDC_COMBOINPUT);
 	wchar_t szLastText[500+1];
 	// Remember old window text
@@ -891,7 +897,9 @@ void C4ConsoleGUI::PropertyDlgUpdate(C4ObjectList &rSelection)
 
 void C4ConsoleGUI::SetInputFunctions(std::list<const char*> &functions)
 {
-	SetComboItems(GetDlgItem(hWindow,IDC_COMBOINPUT), functions);
+	HWND hCombo = GetDlgItem(hWindow, IDC_COMBOINPUT);
+	SendMessage(hCombo, CB_RESETCONTENT, 0, 0);
+	SetComboItems(hCombo, functions);
 }
 
 void C4ConsoleGUI::ClearPlayerMenu()
@@ -924,6 +932,11 @@ public:
 		Init(C4Window::WindowKind::W_Control, &Application, NULL, NULL);
 		this->hWindow = this->hRenderWindow = hwndControl;
 		pSurface = new C4Surface(&Application, this);
+	}
+
+	~C4ConsoleGUIPreviewWindow()
+	{
+		delete pSurface;
 	}
 
 	virtual void Close() {}
@@ -1068,7 +1081,7 @@ void C4ToolsDlg::UpdateTextures()
 			}
 		}
 		// reselect current
-		SendDlgItemMessage(state->hDialog, box, CB_SELECTSTRING, 0, GetWideLPARAM(texture));
+		SendDlgItemMessage(state->hDialog, box, CB_SELECTSTRING, -1, GetWideLPARAM(texture));
 	}
 }
 

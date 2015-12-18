@@ -15,6 +15,7 @@ local clonkmesh;
 
 public func IsVehicle() { return true; }
 public func IsArmoryProduct() { return true; }
+public func FitsInDoubleElevator() { return true; }
 
 protected func Initialize()
 {
@@ -140,7 +141,7 @@ protected func DoFire(object clonk, int power)
 	aim_anim = PlayAnimation("ArmPosition", 1, Anim_Linear(GetAnimationPosition(aim_anim),0, GetAnimationLength("ArmPosition"), 3, ANIM_Hold), Anim_Const(1000));
 
 	//Sound
-	Sound("Catapult_Launch");
+	Sound("Objects::Catapult_Launch");
 
 	var projectile = nil;
 	if (Contents(0))
@@ -165,6 +166,34 @@ protected func DoFire(object clonk, int power)
 		{
 			CatapultDismount(projectile);
 			projectile->SetAction("Tumble");
+			
+			// Special behavior for Clonks: make sure the Clonk can't shoot itself into solid material.
+			if (projectile->Stuck())
+			{
+				// First, try to just put the Clonk a few pixels lower - might still look okay in some situations.
+				for (var i = 0; i <= 4; ++i)
+				{
+					projectile->SetPosition(projectile->GetX(), projectile->GetY() + 2);
+					if (!projectile->Stuck()) break;
+				}
+				// Then as a safeguard, just place the Clonk at the catapult's feet and do nothing.
+				if (projectile->Stuck())
+				{
+					projectile->SetPosition(GetX(), GetY());
+					// Still stuck? Then we don't actually care if stuck here or at the end of the arm.
+					if (projectile->Stuck())
+					{
+						// Go back to normal shooting position.
+						projectile->SetPosition(GetX() + x, GetY() + y);
+					}
+					else
+					{
+						// We set the Clonk back down on the ground. This is not a normal shot.
+						angle = 0;
+						power = 20;
+					}
+				}
+			}
 		}
 
 		//Catapult is facing left or right?
@@ -205,7 +234,7 @@ public func ActivateEntrance(object clonk)
 		clonk->Enter(this);
 		SetOwner(clonk->GetController());
 		clonkmesh = AttachMesh(clonk,"shot","skeleton_body",Trans_Mul(Trans_Rotate(180, 1, 0, 0), Trans_Translate(-3000, 1000, 0)),AM_DrawBefore);
-		clonk->PlayAnimation("CatapultSit", 5, Anim_Const(0), Anim_Const(1000));
+		clonk->PlayAnimation("CatapultSit", CLONK_ANIM_SLOT_Movement, Anim_Const(0), Anim_Const(1000));
 		ShowTrajectory(70);
 	}
 }

@@ -86,7 +86,7 @@ private func CheckForKeg(object clonk)
 		{
 			keg->Exit();
 			keg->Enter(this);
-			Sound("WoodHit?");
+			Sound("Hits::Materials::Wood::WoodHit?");
 		}
 		else // No keg, stop using cannon.
 		{
@@ -240,8 +240,6 @@ func FxIntTurnCannonTimer(object cannon, proplist effect, int timer)
 
 protected func DoFire(object iammo, object clonk, int angle)
 {
-	iammo->~Fuse();
-
 	//Don't excede possible trajectory
 	var r = Normalize(angle,-180 * angPrec, angPrec);
 	if(r > 90 * angPrec + GetR() * angPrec) r = 90 * angPrec + GetR() * angPrec;
@@ -251,6 +249,7 @@ protected func DoFire(object iammo, object clonk, int angle)
 	iammo->SetR(r / angPrec);
 	iammo->SetRDir(-4 + Random(9));
 	iammo->LaunchProjectile(r, 17, Fire_Velocity, 0,0, angPrec);
+	iammo->~Fuse();
 
 	//Particles
 	var dist = 25;
@@ -263,7 +262,7 @@ protected func DoFire(object iammo, object clonk, int angle)
 	CreateParticle("Smoke", px, py, PV_Random(x - 20, x + 20), PV_Random(y - 20, y + 20), PV_Random(40, 60), Particles_Smoke(), 20);
 	CreateMuzzleFlash(px, py, r / angPrec, 60);
 	//sound
-	Sound("Blast3");
+	Sound("Fire::Blast3");
 }
 
 local ActMap = {

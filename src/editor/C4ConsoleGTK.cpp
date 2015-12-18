@@ -131,6 +131,8 @@ public:
 
 	GtkWidget* propertydlg;
 	GtkWidget* propertydlg_textview;
+	GtkAdjustment* propertydlg_vadj;
+	double propertydlg_vadj_pos;
 	GtkWidget* propertydlg_entry;
 
 	gulong handlerDestroy;
@@ -139,6 +141,7 @@ public:
 	gulong handlerModePlay;
 	gulong handlerModeEdit;
 	gulong handlerModeDraw;
+	guint handlerPropertyDlgRescrollIdle;
 
 	State(C4ConsoleGUI *console): Super(console)
 	{	
@@ -161,6 +164,8 @@ public:
 			g_signal_handler_disconnect(btnModeEdit, handlerModeEdit);
 		if(handlerModeDraw)
 			g_signal_handler_disconnect(btnModeDraw, handlerModeDraw);
+		if (handlerPropertyDlgRescrollIdle)
+			g_source_remove(handlerPropertyDlgRescrollIdle);
 		if (propertydlg)
 		{
 			C4DevmodeDlg::RemovePage(propertydlg);
@@ -202,6 +207,9 @@ public:
 	static void OnNetClient(GtkWidget* item, gpointer data);
 
 	static void OnScriptActivate(GtkWidget* widget, gpointer data);
+
+	static void OnPropertyVadjustmentChanged(GtkAdjustment* adj, gpointer data);
+	static gboolean OnPropertyDlgRescrollIdle(gpointer data);
 };
 
 class C4ToolsDlg::State: public C4ConsoleGUI::InternalState<class C4ToolsDlg>
@@ -293,6 +301,25 @@ void C4ConsoleGUI::State::OnScriptActivate(GtkWidget* widget, gpointer data)
 	const gchar* text = gtk_entry_get_text(GTK_ENTRY(widget));
 	if (text && text[0])
 		Console.EditCursor.In(text);
+}
+
+void C4ConsoleGUI::State::OnPropertyVadjustmentChanged(GtkAdjustment* adj, gpointer data)
+{
+	C4ConsoleGUI* gui = static_cast<C4ConsoleGUI*>(data);
+	State* state = gui->state;
+
+	if (state->propertydlg_vadj_pos != -1.0)
+		gtk_adjustment_set_value(adj, state->propertydlg_vadj_pos);
+}
+
+gboolean C4ConsoleGUI::State::OnPropertyDlgRescrollIdle(gpointer data)
+{
+	C4ConsoleGUI* gui = static_cast<C4ConsoleGUI*>(data);
+	State* state = gui->state;
+
+	state->propertydlg_vadj_pos = -1.0;
+	state->handlerPropertyDlgRescrollIdle = 0;
+	return FALSE;
 }
 
 C4Window* C4ConsoleGUI::CreateConsoleWindow(C4AbstractApp* pApp)
@@ -533,6 +560,7 @@ void C4ConsoleGUI::State::Clear()
 	handlerModePlay = 0;
 	handlerModeEdit = 0;
 	handlerModeDraw = 0;
+	handlerPropertyDlgRescrollIdle = 0;
 
 	propertydlg = 0;
 }
@@ -821,6 +849,11 @@ void C4ConsoleGUI::SetInputFunctions(std::list<const char*>& functions)
 	if(state->txtScript == NULL) return;
 
 	GtkEntryCompletion* completion = gtk_entry_get_completion(GTK_ENTRY(state->txtScript));
+	if(!completion)
+	{
+		ClearInput();
+		completion = gtk_entry_get_completion(GTK_ENTRY(state->txtScript));
+	}
 	GtkListStore* store = GTK_LIST_STORE(gtk_entry_completion_get_model(completion));
 	GtkTreeIter iter;
 	g_assert(store);
@@ -957,6 +990,10 @@ bool C4ConsoleGUI::PropertyDlgOpen()
 		GtkWidget* scrolled_wnd = gtk_scrolled_window_new(NULL, NULL);
 		gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(scrolled_wnd), GTK_POLICY_NEVER, GTK_POLICY_ALWAYS);
 		gtk_scrolled_window_set_shadow_type(GTK_SCROLLED_WINDOW(scrolled_wnd), GTK_SHADOW_IN);
+		GtkAdjustment* adj = state->propertydlg_vadj = gtk_scrolled_window_get_vadjustment(GTK_SCROLLED_WINDOW(scrolled_wnd));
+		state->propertydlg_vadj_pos = -1.0;
+
+		g_signal_connect(G_OBJECT(adj), "changed", G_CALLBACK(State::OnPropertyVadjustmentChanged), this);
 
 		GtkWidget * textview = state->propertydlg_textview = gtk_text_view_new();
 		GtkWidget * entry = state->propertydlg_entry = gtk_entry_new();
@@ -985,15 +1022,28 @@ void C4ConsoleGUI::PropertyDlgClose()
 {
 }
 
-void C4ConsoleGUI::PropertyDlgUpdate(C4ObjectList &rSelection)
+void C4ConsoleGUI::PropertyDlgUpdate(C4ObjectList &rSelection, bool force_function_update)
 {
 	if (!state->propertydlg) return;
 	if (!C4DevmodeDlg::GetWindow()) return;
 	if (!gtk_widget_get_visible(GTK_WIDGET(C4DevmodeDlg::GetWindow()))) return;
+
+	// Remember current scroll position
+	if (PropertyDlgObject == rSelection.GetObject())
+	{
+		state->propertydlg_vadj_pos = gtk_adjustment_get_value(state->propertydlg_vadj);
+		state->handlerPropertyDlgRescrollIdle = g_idle_add_full(GTK_TEXT_VIEW_PRIORITY_VALIDATE + 1, State::OnPropertyDlgRescrollIdle, this, NULL);
+	}
+	else
+	{
+		state->propertydlg_vadj_pos = -1.0;
+		// TODO: Reset idle handler?
+	}
+
 	GtkTextBuffer* buffer = gtk_text_view_get_buffer(GTK_TEXT_VIEW(state->propertydlg_textview));
 	gtk_text_buffer_set_text(buffer, rSelection.GetDataString().getData(), -1);
 
-	if (PropertyDlgObject == rSelection.GetObject()) return;
+	if (PropertyDlgObject == rSelection.GetObject() && !force_function_update) return;
 	PropertyDlgObject = rSelection.GetObject();
 	
 	std::list<const char *> functions = ::ScriptEngine.GetFunctionNames(PropertyDlgObject);
@@ -1104,17 +1154,10 @@ bool C4ToolsDlg::State::Open()
 		gtk_box_pack_start(GTK_BOX(local_hbox), scale, false, false, 0);
 
 		vbox = gtk_vbox_new(false, 6);
-#if GTK_CHECK_VERSION(2,23,0)
 		fg_materials = gtk_combo_box_text_new();
 		fg_textures = gtk_combo_box_text_new();		
 		bg_materials = gtk_combo_box_text_new();
 		bg_textures = gtk_combo_box_text_new();	
-#else
-		fg_materials = gtk_combo_box_new_text();
-		fg_textures = gtk_combo_box_new_text();
-		bg_materials = gtk_combo_box_new_text();
-		bg_textures = gtk_combo_box_new_text();
-#endif
 
 		// Link the material combo boxes together, but not the texture combo boxes,
 		// so that we can sort the texture combo box differently.
@@ -1173,11 +1216,6 @@ void C4ConsoleGUI::ToolsDlgInitMaterialCtrls(C4ToolsDlg *dlg)
 	dlg->state->InitMaterialCtrls();
 }
 
-#if GTK_CHECK_VERSION(2,23,0)
-#define gtk_combo_box_append_text(c,t) gtk_combo_box_text_append_text(GTK_COMBO_BOX_TEXT(c),t)
-#define	gtk_combo_box_prepend_text(c,t) gtk_combo_box_text_prepend_text(GTK_COMBO_BOX_TEXT(c),t)
-#define gtk_combo_box_get_active_text(c) gtk_combo_box_text_get_active_text(GTK_COMBO_BOX_TEXT(c))
-#endif
 void C4ToolsDlg::State::InitMaterialCtrls()
 {
 	GtkListStore* list = GTK_LIST_STORE(gtk_combo_box_get_model(GTK_COMBO_BOX(fg_materials)));
@@ -1186,11 +1224,11 @@ void C4ToolsDlg::State::InitMaterialCtrls()
 	g_signal_handler_block(bg_materials, handlerBgMaterials);
 	gtk_list_store_clear(list);
 
-	gtk_combo_box_append_text(GTK_COMBO_BOX(fg_materials), C4TLS_MatSky);
+	gtk_combo_box_text_append_text(GTK_COMBO_BOX_TEXT(fg_materials), C4TLS_MatSky);
 
 	for (int32_t cnt = 0; cnt < ::MaterialMap.Num; cnt++)
 	{
-		gtk_combo_box_append_text(GTK_COMBO_BOX(fg_materials), ::MaterialMap.Map[cnt].Name);
+		gtk_combo_box_text_append_text(GTK_COMBO_BOX_TEXT(fg_materials), ::MaterialMap.Map[cnt].Name);
 	}
 
 	g_signal_handler_unblock(fg_materials, handlerFgMaterials);
@@ -1255,13 +1293,13 @@ void C4ToolsDlg::UpdateTextures()
 				if (!::TextureMap.GetIndex(material, szTexture, false))
 				{
 					fAnyEntry = true;
-					gtk_combo_box_prepend_text(box, szTexture);
+					gtk_combo_box_text_prepend_text(GTK_COMBO_BOX_TEXT(box), szTexture);
 				}
 			}
 		// separator
 		if (fAnyEntry)
 		{
-			gtk_combo_box_prepend_text(box, "-------");
+			gtk_combo_box_text_prepend_text(GTK_COMBO_BOX_TEXT(box), "-------");
 		}
 
 		// atop: valid textures
@@ -1270,7 +1308,7 @@ void C4ToolsDlg::UpdateTextures()
 			// Current material-texture valid? Always valid for exact mode
 			if (::TextureMap.GetIndex(material,szTexture,false) || ::Landscape.Mode==C4LSC_Exact)
 			{
-				gtk_combo_box_prepend_text(box, szTexture);
+				gtk_combo_box_text_prepend_text(GTK_COMBO_BOX_TEXT(box), szTexture);
 			}
 		}
 	}
@@ -1625,28 +1663,28 @@ void C4ToolsDlg::State::OnButtonNoIft(GtkWidget* widget, gpointer data)
 
 void C4ToolsDlg::State::OnComboMaterial(GtkWidget* widget, gpointer data)
 {
-	gchar* text = gtk_combo_box_get_active_text(GTK_COMBO_BOX(widget));
+	gchar* text = gtk_combo_box_text_get_active_text(GTK_COMBO_BOX_TEXT(widget));
 	static_cast<C4ToolsDlg::State*>(data)->GetOwner()->SetMaterial(text);
 	g_free(text);
 }
 
 void C4ToolsDlg::State::OnComboTexture(GtkWidget* widget, gpointer data)
 {
-	gchar* text = gtk_combo_box_get_active_text(GTK_COMBO_BOX(widget));
+	gchar* text = gtk_combo_box_text_get_active_text(GTK_COMBO_BOX_TEXT(widget));
 	static_cast<C4ToolsDlg::State*>(data)->GetOwner()->SetTexture(text);
 	g_free(text);
 }
 
 void C4ToolsDlg::State::OnComboBgMaterial(GtkWidget* widget, gpointer data)
 {
-	gchar* text = gtk_combo_box_get_active_text(GTK_COMBO_BOX(widget));
+	gchar* text = gtk_combo_box_text_get_active_text(GTK_COMBO_BOX_TEXT(widget));
 	static_cast<C4ToolsDlg::State*>(data)->GetOwner()->SetBackMaterial(text);
 	g_free(text);
 }
 
 void C4ToolsDlg::State::OnComboBgTexture(GtkWidget* widget, gpointer data)
 {
-	gchar* text = gtk_combo_box_get_active_text(GTK_COMBO_BOX(widget));
+	gchar* text = gtk_combo_box_text_get_active_text(GTK_COMBO_BOX_TEXT(widget));
 	static_cast<C4ToolsDlg::State*>(data)->GetOwner()->SetBackTexture(text);
 	g_free(text);
 }

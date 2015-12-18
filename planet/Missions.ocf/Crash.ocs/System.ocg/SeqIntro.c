@@ -4,7 +4,7 @@
 
 func Intro_Init()
 {
-	this.plane = CreateObjectAbove(Plane, 0, 400);
+	this.plane = CreateObjectAbove(Airplane, 0, 400);
 	this.plane->SetColor(0xa04000);
 	this.pilot = npc_pyrit = CreateObjectAbove(Clonk, 100, 100, NO_OWNER);
 	this.pilot->MakeInvincible();
@@ -16,6 +16,7 @@ func Intro_Init()
 	this.pilot->SetColor(0xff0000);
 	this.pilot->SetDir(DIR_Left);
 	this.pilot->SetObjectLayer(this.pilot);
+	this.pilot->AttachMesh(Hat, "skeleton_head", "main", Trans_Translate(5500, 0, 0));
 	this.dialogue = this.pilot->SetDialogue("Pilot");
 	this.dialogue->SetInteraction(false);
 
@@ -251,5 +252,14 @@ func Intro_Stop()
 	this.dialogue->SetInteraction(true);
 	this.dialogue->AddAttention();
 	SetPlayerZoomByViewRange(NO_OWNER, 400,300, PLRZOOM_Set);
+	
+	// Turn and relocate the airplane to make starting it easier.
+	var plane = FindObject(Find_ID(Airplane));
+	if (plane)
+	{
+		plane->FaceLeft();
+		plane->SetR(-130);
+		plane->SetPosition(1387, 238);
+	}
 	return true;
 }

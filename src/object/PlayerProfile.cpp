@@ -8,7 +8,6 @@ PlayerProfile::PlayerProfile()
 }
 void PlayerProfile::Default()
 {
-	ZeroMem(this, sizeof(PlayerProfile));
 }
 
 void PlayerProfile::updatePlayerType(float achievementScore, float socialScore, float immersionScore)

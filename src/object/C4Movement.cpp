@@ -44,7 +44,7 @@ const C4Real DefaultGravAccel=C4REAL100(20);
 void RedirectForce(C4Real &from, C4Real &to, int32_t tdir)
 {
 	C4Real fred;
-	fred=Min(Abs(from), FRedirect);
+	fred=std::min(Abs(from), FRedirect);
 	from-=fred*Sign(from);
 	to+=fred*tdir;
 }
@@ -442,7 +442,7 @@ void C4Object::DoMovement()
 		if (!InLiquid) // Enter liquid
 		{
 			if (OCF & OCF_HitSpeed2) if (Mass>3)
-					Splash(GetX(),GetY()+1,Min(Shape.Wdt*Shape.Hgt/10,20),this);
+					Splash(GetX(),GetY()+1,std::min(Shape.Wdt*Shape.Hgt/10,20),this);
 			fNoAttach=false;
 			InLiquid=1;
 		}
@@ -584,7 +584,7 @@ bool C4Object::ExecMovement() // Every Tick1 by Execute
 	if (!Def->Rotateable) fix_r=Fix0;
 
 	// Out of bounds check
-	if ((!Inside<int32_t>(GetX(),-Shape.Wdt/2,GBackWdt+Shape.Wdt/2) && !(Def->BorderBound & C4D_Border_Sides)) || (GetY()+Shape.Hgt/2>GBackHgt && !(Def->BorderBound & C4D_Border_Bottom)))
+	if ((!Inside<int32_t>(GetX(), -Shape.Wdt / 2, GBackWdt + Shape.Wdt / 2) && !(Def->BorderBound & C4D_Border_Sides)) || ((GetY() > GBackHgt + Shape.Hgt / 2) && !(Def->BorderBound & C4D_Border_Bottom)))
 	{
 		C4PropList* pActionDef = GetAction();
 		// Never remove attached objects: If they are truly outside landscape, their target will be removed,

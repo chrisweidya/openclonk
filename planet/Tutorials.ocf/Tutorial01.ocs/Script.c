@@ -33,8 +33,8 @@ protected func Initialize()
 	InitAnimals();
 	
 	// Environment.
-	var time = CreateObject(Environment_Time);
-	time->SetTime(18*60 + 30);
+	var time = CreateObject(Time);
+	time->SetTime(18 * 60 + 30);
 	time->SetCycleSpeed(0);
 
 	// Dialogue options -> repeat round.
@@ -208,8 +208,9 @@ private func InitCaveExit()
 	
 	// Some vegetation / rocks on top of the cave.
 	SproutBerryBush->Place(1 + Random(2), Rectangle(420, 200, 160, 70));
-	SproutBerryBush->Place(1, Rectangle(640, 80, 100, 70));
-	Flower->Place(10, Rectangle(420, 200, 160, 70));
+	SproutBerryBush->Place(1, Rectangle(560, 200, 100, 70));
+	Cotton->Place(2, Rectangle(560, 200, 100, 70));
+	Flower->Place(10, Rectangle(420, 300, 160, 70));
 	var bigrock = CreateObjectAbove(BigRock, 218, 395);
 	bigrock.MeshTransformation = [-103, 561, -337, 0, 0, 730, 1216, 0, 555, 74, -44, 0];
 	return;
@@ -230,7 +231,9 @@ private func InitVegetation()
 private func InitAnimals()
 {
 	// The wipf as your friend, controlled by AI.
-	CreateObjectAbove(Wipf, 76, 616);
+	var wipf = CreateObjectAbove(Wipf, 76, 616);
+	wipf->EnableTutorialControl();
+	wipf->SetMeshMaterial("WipfSkin");
 	
 	// Some butterflies as atmosphere.
 	for (var i = 0; i < 25; i++)
@@ -256,7 +259,7 @@ protected func InitializePlayer(int plr)
 	DisablePlrControls(plr);
 	
 	// Add an effect to the clonk to track the goal.
-	var track_goal = AddEffect("TrackGoal", clonk, 100, 2);
+	var track_goal = AddEffect("TrackGoal", nil, 100, 2);
 	track_goal.plr = plr;
 
 	// Standard player zoom for tutorials, player is not allowed to zoom in/out.
@@ -294,11 +297,12 @@ private func OnFinishedTutorialIntro(int plr)
 
 global func FxTrackGoalTimer(object target, proplist effect, int time)
 {
-	if (Inside(target->GetX(), 980, 996) && Inside(target->GetY(), 314, 324))
+	var crew = GetCrew(effect.plr);
+	if (Inside(crew->GetX(), 980, 996) && Inside(crew->GetY(), 314, 324))
 	{
-		if (FindObject(Find_ID(Wipf), Find_Distance(15, target->GetX(), target->GetY())))
+		if (FindObject(Find_ID(Wipf), Find_Distance(15, crew->GetX(), crew->GetY())))
 		{
-			var outro = AddEffect("GoalOutro", target, 100, 5);
+			var outro = AddEffect("GoalOutro", crew, 100, 5);
 			outro.plr = effect.plr;
 			return FX_Execute_Kill;	
 		}		
@@ -322,12 +326,7 @@ global func FxGoalOutroStart(object target, proplist effect, int temp)
 	// Find wipf and enter it into the clonk.	
 	var wipf = FindObject(Find_ID(Wipf), Find_Distance(15, target->GetX(), target->GetY()));
 	if (wipf)
-		wipf->Enter(target);
-	
-	// Let the clonk pick up the wipf as an outro.
-	effect.mesh = target->AttachMesh(Wipf, "pos_tool1", "Bone.006");
-	effect.anim = target->PlayAnimation("CarryArmsPickup", 10, Anim_Linear(0,0,target->GetAnimationLength("CarryArmsPickup"), 60, ANIM_Remove), Anim_Const(1000));
-		
+		wipf->Enter(target);		
 	return FX_OK;
 }
 
@@ -345,13 +344,15 @@ global func FxGoalOutroTimer(object target, proplist effect, int time)
 global func FxGoalOutroStop(object target, proplist effect, int reason, bool temp)
 {
 	if (temp) 
-		return;
+		return FX_OK;
 		
 	// Enable player controls again.
-	EnablePlrControls(effect.plr);	
-	
-	target->DetachMesh(effect.mesh);
-	target->StopAnimation(effect.anim);
+	EnablePlrControls(effect.plr);
+	// Enable wipf activity.
+	var wipf = FindObject(Find_ID(Wipf));
+	if (wipf)
+		wipf->DisableTutorialControl();
+	return FX_OK;
 }
 
 /*-- Guide Messages --*/

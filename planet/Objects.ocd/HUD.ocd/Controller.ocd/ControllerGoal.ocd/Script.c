@@ -1,225 +1,262 @@
 /**
 	ControllerGoal
-	Controlls the goal display.
 
-	@author Maikel
+	Shows the scenario goal in the top right corner, next to the wealth icon.
+	Goal icon is clickable. On click displays a detailed goal description.
+
+	@authors Maikel, Clonkonaut
 */
 
-
 // HUD margin and size in tenths of em.
-static const GUI_Controller_Goal_IconSize = 30;
+static const GUI_Controller_Goal_IconSize = 25;
 static const GUI_Controller_Goal_IconMargin = 5;
 
-// Local variables to keep track of the goal HUD menu.
-local goal_gui_target;
+// Does also use constants defined by ControllerWealth to ensure distance between both icons.
+
 local goal_gui_menu;
 local goal_gui_id;
+
+local goal_info_id;
+local goals;
+
+/* Wealth Showing / Hiding */
+
+public func ShiftGoal()
+{
+	if (goal_gui_id == nil) return;
+
+	var offset = GUI_Controller_Wealth_IconSize + GUI_Controller_Wealth_IconMargin;
+	var x_end = GUI_Controller_Goal_IconMargin + offset;
+	var x_begin = GUI_Controller_Goal_IconMargin + GUI_Controller_Goal_IconSize + offset;
+
+	var update = {
+		Left = Format("100%%%s", ToEmString(-x_begin)),
+		Right = Format("100%%%s", ToEmString(-x_end)),
+	};
+
+	GuiUpdate(update, goal_gui_id);
+}
+
+public func UnshiftGoal()
+{
+	if (goal_gui_id == nil) return;
+
+	var x_end = GUI_Controller_Goal_IconMargin;
+	var x_begin = GUI_Controller_Goal_IconMargin + GUI_Controller_Goal_IconSize;
+
+	var update = {
+		Left = Format("100%%%s", ToEmString(-x_begin)),
+		Right = Format("100%%%s", ToEmString(-x_end)),
+	};
+
+	GuiUpdate(update, goal_gui_id);
+}
+
+/* Creation */
 
 public func Construction()
 {
 	var plr = GetOwner();
-	// Create a menu target.
-	goal_gui_target = CreateObject(Dummy, AbsX(0), AbsY(0), plr);
-	goal_gui_target.Visibility = VIS_Owner;
-	// Create the goal HUD menu.
-	var y_margin = GUI_Controller_Wealth_IconMargin;
-	var y_end = y_margin + GUI_Controller_Wealth_IconSize;
-	// Also take into account the margin and size of the wealth HUD.
-	var x_margin = y_margin + GUI_Controller_Wealth_IconMargin + GUI_Controller_Wealth_IconSize;
-	var x_end = y_end + GUI_Controller_Wealth_IconMargin + GUI_Controller_Wealth_IconSize;
+
+	var y_begin = GUI_Controller_Goal_IconMargin;
+	var y_end = y_begin + GUI_Controller_Goal_IconSize;
+	// Also take into account the margin and size of the wealth HUD if shown
+	var x_begin = y_end;
+	var x_end = y_begin;
+	if (this->~IsShowingWealth())
+	{
+		x_begin += GUI_Controller_Wealth_IconSize + GUI_Controller_Wealth_IconMargin;
+		x_end += GUI_Controller_Wealth_IconSize + GUI_Controller_Wealth_IconMargin;
+	}
+	// See also ShiftGoal() / UnshiftGoal()
+
 	goal_gui_menu = 
 	{
-		Target = goal_gui_target,
-		ID = 1,
-		Style = GUI_Multiple,
-		Left = Format("100%%%s", ToEmString(-x_end)),
-		Right = Format("100%%%s", ToEmString(-x_margin)),
-		Top = ToEmString(y_margin),
+		Target = this,
+		Player = NO_OWNER, // The goal icon will become visible if OnGoalUpdate is called
+		Style = GUI_Multiple | GUI_IgnoreMouse,
+		Left = Format("100%%%s", ToEmString(-x_begin)),
+		Right = Format("100%%%s", ToEmString(-x_end)),
+		Top = ToEmString(y_begin),
 		Bottom = ToEmString(y_end),
 		Priority = 1,
-		// hover part of the menu is created by a goal update.
 		text = 
 		{
-			Target = goal_gui_target,
-			ID = 3,
 			Style = GUI_TextHCenter | GUI_TextBottom,
 			Text = nil,
 			Priority = 3,
 		},
 	};
 	goal_gui_id = GuiOpen(goal_gui_menu);
+
 	return _inherited(...);
 }
 
-public func Destruction()
+private func Destruction()
 {
-	// This also closes the goal HUD menu.
-	if (goal_gui_target)
-		goal_gui_target->RemoveObject();
-	return _inherited(...);
+	GuiClose(goal_gui_id);
+	if (goal_info_id) GuiClose(goal_info_id);
+
+	_inherited(...);
 }
+
+/* Callbacks */
 
 // Callback from the goal library: display this goal.
 public func OnGoalUpdate(object goal)
 {
 	// Also notify the open info menu.
 	OnGoalWindowUpdate(goal);
-	// If there is no goal then remove the hover interface and hide the menu.
+	// If there is no goal hide the menu
 	if (!goal)
 	{
-		goal_gui_target.Visibility = VIS_None;
-		GuiClose(goal_gui_id, goal_gui_menu.hover.ID, goal_gui_menu.Target);
+		GuiUpdate({ Player = NO_OWNER }, goal_gui_id);
+
 		return _inherited(goal, ...);
 	}
-	// Only update if something has changed.
-	if (goal_gui_menu.Symbol != goal->GetID() || goal_gui_menu.GraphicsName != goal->GetGraphics() || goal_gui_menu.text.Text != goal->~GetShortDescription(GetOwner()))
+	var goal_picture_def;
+	var update_req = goal_gui_menu.Symbol != goal->GetID();
+	if (goal->~GetPictureDefinition())
 	{
-		goal_gui_target.Visibility = VIS_Owner;
+		goal_picture_def = goal->GetPictureDefinition();
+		update_req = goal_gui_menu.Symbol != goal_picture_def;
+	}
+	var goal_picture = goal->~GetPictureName() ?? goal->GetGraphics();
+
+	// Only update if something has changed.
+	if (update_req || goal_gui_menu.GraphicsName != goal_picture || goal_gui_menu.text.Text != goal->~GetShortDescription(GetOwner()))
+	{
 		goal_gui_menu.text.Text = goal->~GetShortDescription(GetOwner());
-		goal_gui_menu.Symbol = goal->GetID();
-		goal_gui_menu.GraphicsName = goal->GetGraphics();
+		if (goal_picture_def)
+			goal_gui_menu.Symbol = goal_picture_def;
+		else
+			goal_gui_menu.Symbol = goal->GetID();
+		goal_gui_menu.GraphicsName = goal_picture;
+
+		goal_gui_menu.Player = GetOwner();
+		goal_gui_menu.Style = GUI_Multiple;
 		// Also add an hover and mouse click element.
 		goal_gui_menu.hover = 
 		{
-			Target = goal_gui_target,
-			ID = 2,
 			Symbol = { Std = nil, OnHover = GUI_Controller_Goal},
-			OnClick = GuiAction_Call(this, "OnGoalClick", GetOwner()),
+			OnClick = GuiAction_Call(this, "OnGoalClick"),
 			OnMouseIn = GuiAction_SetTag("OnHover"),
 			OnMouseOut = GuiAction_SetTag("Std"),
 			Priority = 2,
-		};		
+		};
 		GuiUpdate(goal_gui_menu, goal_gui_id);
 	}
+
 	return _inherited(goal, ...);
 }
 
-public func OnGoalClick(int plr)
+private func OnGoalClick()
 {
-	if (goal_info_menu)
-		return;
-	// Open the goal menu if not already open.
-	if (!goal_info_menu)
-		OpenGoalWindow(plr);
-	return;
+	if (goal_info_id)
+		CloseGoalWindow();
+	else
+		OpenGoalWindow();
 }
-
 
 /*-- Goal Info Menu --*/
 
-local goal_info_target;
-local goal_info_menu;
-local goal_info_id;
-
-private func OpenGoalWindow(int plr)
+private func OpenGoalWindow()
 {
-	var goals = FindObjects(Find_Category(C4D_Goal));
+	goals = FindObjects(Find_Category(C4D_Goal));
 	var nr_goals = GetLength(goals);
 	var menu_width = BoundBy(nr_goals * 2, 10, 20); // in em
-	
-	// Create a menu target.
-	goal_info_target = CreateObject(Dummy, AbsX(0), AbsY(0), plr);
-	goal_info_target.Visibility = VIS_Owner;
-	
+
 	// Safety: there has to be at least one goal.
 	if (nr_goals <= 0)
 		return;
-	
+
 	// Main menu
-	goal_info_menu =
+	var goal_info_menu =
 	{
-		Target = goal_info_target,
+		Target = this,
+		Player = GetOwner(),
 		Decoration = GUI_MenuDeco,
 		Left = Format("50%%-%dem", menu_width),
 		Right = Format("50%%+%dem", menu_width),
 		Top = "50%-4em",
 		Bottom = "50%+8em",
-		BackgroundColor = {Std = 0},
 		OnClose = GuiAction_Call(this, "OnGoalWindowClosed"),
 	};
-	
+
 	// Close button
 	GuiAddCloseButton(goal_info_menu, this, "OnCloseButtonClick");
-	
+
 	// Text submenu
 	goal_info_menu.text =
 	{
-		Target = goal_info_target,
+		Target = this,
 		ID = 1,
 		Left = "0%",
 		Right = "100%",
 		Top = "0%+4em",
 		Bottom = "100%",
-		Text = "",
-		BackgroundColor = {Std = 0},	
 	};
-	
+
 	// Goal icons: maximum number of 10 goals for now
-	var prop_goals = [];
 	for (var i = 0; i < Min(10, nr_goals); i++)
 	{
-		var prop_goal = Format("goal%d", i);
-		prop_goals[i] = GoalSubMenu(goals[i], i);	
-		goal_info_menu[prop_goal] = prop_goals[i];
+		var menu = GoalSubMenu(goals[i], i);
+		GuiAddSubwindow(menu, goal_info_menu);
 	}
 	
-	// Select first goal and its description.
-	OnGoalGUIHover(goals[0]);
-
 	goal_info_id = GuiOpen(goal_info_menu);
-	return;
+	
+	// Select first goal and show its description.
+	OnGoalGUIHover(goals[0]);
 }
 
-public func CloseGoalWindow()
+private func CloseGoalWindow()
 {
 	GuiClose(goal_info_id);
-	return;
 }
 
-public func OnGoalWindowClosed()
+private func OnGoalWindowClosed()
 {
-	if (goal_info_target)
-		goal_info_target->RemoveObject();
 	goal_info_id = nil;
-	goal_info_menu = nil;
-	return;
 }
 
 private func GoalSubMenu(object goal, int nr, int size)
 {
 	if (size == nil)
 		size = 4;
-	
+
+	var symbol = goal->~GetPictureDefinition() ?? goal->GetID();
+	var graphics = goal->~GetPictureName() ?? goal->GetGraphics();
 	// Create the goal submenu with id counting upwards from 2.
 	var prop_goal = 
 	{
-		Target = goal_info_target,
+		Target = this,
 		ID = nr + 2,
 		Left = Format("0%%+%dem", nr * size),
 		Right = Format("0%%+%dem", (nr + 1) * size),
 		Top = "0%",
 		Bottom = Format("0%%+%dem", size),
-		Symbol = goal->GetID(),
-		GraphicsName = goal->GetGraphics(),
+		Symbol = symbol,
+		GraphicsName = graphics,
 		BackgroundColor = {Std = 0, Hover = 0x50ffffff},
 		OnMouseIn = [GuiAction_SetTag("Hover"), GuiAction_Call(this, "OnGoalGUIHover", goal)],
 		OnMouseOut = GuiAction_SetTag("Std"),
-		goal_object = goal, 
+		fulfilled = nil
 	};
-	// Indicate whether the goal is already fulfilled with a star.
+	// Indicate whether the goal is already fulfilled
 	if (goal->~IsFulfilled())
 	{
-		prop_goal.star = 
+		prop_goal.fulfilled = 
 		{
-			Target = goal_info_target,
+			Target = this,
 			Left = "100%-1em",
 			Right = "100%",
 			Top = "0%",
 			Bottom = "0%+1em",
 			Symbol = Icon_Ok,
-			BackgroundColor = {Std = 0},	
 		};
 	}
+
 	return prop_goal;
 }
 
@@ -231,30 +268,26 @@ public func OnCloseButtonClick()
 
 public func OnGoalGUIHover(object goal)
 {
+	if (!goal) return;
 	// change text to the current goal.
-	var prop_text = goal_info_menu.text;
-	prop_text.Text = goal->~GetDescription(GetOwner());
-	var id_text = prop_text.ID;
-	GuiUpdate(prop_text, goal_info_id, id_text, goal_info_target);
-	return;
+	GuiUpdateText(goal->~GetDescription(GetOwner()), goal_info_id, 1, this);
 }
 
 private func OnGoalWindowUpdate(object goal)
 {
-	if (!goal_info_menu)
+	if (!goal)
 		return;
-	
-	var index = 0, goal_menu;
-	while ((goal_menu = goal_info_menu[Format("goal%d", index)]))
+	if (!goal_info_id)
+		return;
+	var index = GetIndexOf(goals, goal);
+	if (index == -1) return;
+	var menu = GoalSubMenu(goal, index);
+	// Update only very selectively. (To e.g. not reset the background/tag)
+	var update = 
 	{
-		if (goal_menu.goal_object == goal)
-			break;
-		index++;
-	}
-	if (!goal_menu)
-		return;
-	var prop_goal = Format("goal%d", index);
-	goal_info_menu[prop_goal] = GoalSubMenu(goal, index);	
-	GuiUpdate(goal_info_menu[prop_goal], goal_info_id, goal_info_menu[prop_goal].ID, goal_info_menu[prop_goal].Target);
-	return;
+		Symbol = menu.Symbol,
+		GraphicsName = menu.GraphicsName,
+		fulfilled = menu.fulfilled,
+	};
+	GuiUpdate(update, goal_info_id, menu.ID, menu.Target);
 }

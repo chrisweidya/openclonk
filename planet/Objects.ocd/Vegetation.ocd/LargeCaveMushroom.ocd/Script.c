@@ -26,7 +26,7 @@ public func Place(int amount, proplist area, proplist settings)
 		if (!spot)
 		{
 			// note that the border is temporarily off until the bug with a turbulent-parent-overlay is fixed
-			var cave = Landscape_Cave->Place(1, area, {width = 200 + Random(50), height = 100 + Random(50), borderheight = 0, bordermat = "Earth", bordertex = "earth_topSoil" });
+			var cave = Landscape_Cave->Place(1, area, {width = 200 + Random(50), height = 100 + Random(50), borderheight = 0, bordermat = "Earth", bordertex = "earth" });
 			if (GetLength(cave) == 0) return plants; // can't place more
 			cave = cave[0];
 			spot = { x = cave->GetX(), y = cave->GetY() };
@@ -127,7 +127,7 @@ private func Damage(int change, int cause)
 {
 	_inherited(change, cause);
 
-	if (!burned && GetDamage() > MaxDamage()/3 && OnFire())
+	if (this && !burned && GetDamage() > MaxDamage()/3 && OnFire())
 	{
 		SetClrModulation(RGB(100, 100, 100));
 		RemoveTimer("Growing");
@@ -167,7 +167,7 @@ private func Seed()
 			x -= GetX();
 			y -= GetY();
 			if (!GBackSolid(x, y + 2)) continue;
-			if (GetMaterial(x, y) != Material("Tunnel")) continue;
+			if (GetMaterial(x, y - 2) != Material("Tunnel")) continue;
 			
 			var mat = GetMaterial(x, y + 2);
 			if (GetMaterialVal("Soil", "Material", mat) != 1) continue;

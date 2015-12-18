@@ -6,7 +6,7 @@ static npc_pyrit, g_cannon, g_cannoneer;
 
 func Intro_Init()
 {
-	this.plane = CreateObjectAbove(Plane, 0, 800);
+	this.plane = CreateObjectAbove(Airplane, 0, 800);
 	this.plane->SetColor(0xa04000);
 	this.plane.health = 9999999;
 	this.plane.intro_seq = this;
@@ -21,6 +21,8 @@ func Intro_Init()
 	this.pilot->SetColor(0xff0000);
 	this.pilot->SetDir(DIR_Left);
 	this.pilot->SetObjectLayer(this.pilot);
+	this.pilot->AttachMesh(Hat, "skeleton_head", "main", Trans_Translate(5500, 0, 0));
+	
 	this.dialogue = this.pilot->SetDialogue("Pyrit");
 	this.dialogue->SetInteraction(false);
 
@@ -143,13 +145,14 @@ func Intro_Stop()
 {
 	//this.dialogue->SetInteraction(true); - no dialogue yet
 	//this.dialogue->AddAttention();
-	S2AI->AddAI(g_cannoneer);
-	S2AI->SetHome(g_cannoneer);
-	S2AI->SetGuardRange(g_cannoneer, g_cannoneer->GetX()-100, g_cannoneer->GetY()-100, 300, 110);
+	AI->AddAI(g_cannoneer);
+	AI->SetHome(g_cannoneer);
+	AI->SetGuardRange(g_cannoneer, g_cannoneer->GetX()-100, g_cannoneer->GetY()-100, 300, 110);
 	g_cannoneer->CreateContents(Sword);
-	S2AI->BindInventory(g_cannoneer);
+	AI->BindInventory(g_cannoneer);
 	g_cannoneer->DoEnergy(10000);
 	g_cannoneer->AddEnergyBar();
+	g_cannoneer.SpecialDeathMessage = "$DeathOfBrutus$";
 	SetPlayerZoomByViewRange(NO_OWNER, 400,300, PLRZOOM_Set);
 	return true;
 }
@@ -157,7 +160,7 @@ func Intro_Stop()
 func Intro_PlaneHit()
 {
 	// Plane hit ground! Continue sequence.
-	Sound("PlaneCrash", true);
+	Sound("Objects::Plane::PlaneCrash", true);
 	var particles = Particles_Smoke(true);
 	particles.Size = PV_Linear(PV_Random(20, 60), PV_Random(50, 100));
 	CreateParticle("Smoke", PV_Random(-30,30), PV_Random(-30,30), PV_Random(-60, 60), PV_Random(-20,0), PV_Random(200, 500), particles, 20);
@@ -176,7 +179,7 @@ func Intro_PlaneHit()
 	npc_pyrit->Exit(0,-5, 0, -1, -2);
 	npc_pyrit->SetAction("Tumble");
 	this.Hit = this.intro_seq.plane_Hit;
-	this.MeshTransformation=Trans_Mul(Trans_Rotate(10,0,2,1), Plane.MeshTransformation);
+	this.MeshTransformation=Trans_Mul(Trans_Rotate(10,0,2,1), Airplane.MeshTransformation);
 	this.intro_seq->ScheduleNext(50);
 	SetObjectLayer(this); // plane is broken
 	return true;

@@ -213,11 +213,16 @@ bool VorbisLoader::ReadInfo(SoundInfo* result, BYTE* data, size_t data_length, u
 	result->sample_rate = info->rate;
 	result->sample_length = ov_time_total(&ogg_file, -1)/1000.0;
 
-	// read
+	// Compute the total buffer size
+	const unsigned long total_size = static_cast<unsigned int>(result->sample_rate * result->sample_length * 1000.0 * info->channels * 2 + 0.5);
+	const unsigned long extra_size = 1024 * 8;
+
+	// read: try to read the whole track in one go, and if there is more data
+	// than we predicted in total_size, read the additional data in 8K blocks.
 	unsigned long buffer_size = 0;
 	long bytes_read;
 	do {
-		const int chunk_size = 1024*8;
+		const int chunk_size = total_size + extra_size - std::min(total_size, buffer_size);
 		int bitStream;
 		if (buffer_size+chunk_size > result->sound_data.size())
 			result->sound_data.resize(buffer_size+chunk_size);
@@ -295,29 +300,4 @@ bool SDLMixerSoundLoader::ReadInfo(SoundInfo* result, BYTE* data, size_t data_le
 
 SDLMixerSoundLoader SDLMixerSoundLoader::singleton;
 
-#elif AUDIO_TK == AUDIO_TK_FMOD
-bool FMODSoundLoader::ReadInfo(SoundInfo* result, BYTE* data, size_t data_length, uint32_t options)
-{
-	int32_t iOptions = FSOUND_NORMAL | FSOUND_2D | FSOUND_LOADMEMORY;
-	if (options & OPTION_Raw)
-		iOptions |= FSOUND_LOADRAW;
-	C4SoundHandle pSample;
-	if (!(pSample = FSOUND_Sample_Load(FSOUND_UNMANAGED, (const char *)data, iOptions, 0, data_length)))
-		{ return false; }
-	// get length
-	int32_t iSamples = FSOUND_Sample_GetLength(pSample);
-	int iSampleRate = 0;
-	if (!iSamples || !FSOUND_Sample_GetDefaults(pSample, &iSampleRate, 0, 0, 0))
-	{
-		FSOUND_Sample_Free(pSample);
-		return false;
-	}
-	result->sample_rate = iSampleRate;
-	result->sample_length = static_cast<double>(iSamples) / iSampleRate;
-	result->final_handle = pSample;
-	assert(result->sample_length > 0);
-	return true;
-}
-
-FMODSoundLoader FMODSoundLoader::singleton;
 #endif

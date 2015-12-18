@@ -63,7 +63,7 @@ namespace
 		int d, dx, dy, aincr, bincr, xincr, yincr, x, y;
 		if (Abs(x2 - x1)<Abs(y2 - y1))
 		{
-			if (y1>y2) { Swap(x1, x2); Swap(y1, y2); }
+			if (y1>y2) { std::swap(x1, x2); std::swap(y1, y2); }
 			xincr = (x2>x1) ? 1 : -1;
 			dy = y2 - y1; dx = Abs(x2 - x1);
 			d = 2 * dx - dy; aincr = 2 * (dx - dy); bincr = 2 * dx; x = x1; y = y1;
@@ -85,7 +85,7 @@ namespace
 		}
 		else
 		{
-			if (x1>x2) { Swap(x1, x2); Swap(y1, y2); }
+			if (x1>x2) { std::swap(x1, x2); std::swap(y1, y2); }
 			yincr = (y2>y1) ? 1 : -1;
 			dx = x2 - x1; dy = Abs(y2 - y1);
 			d = 2 * dy - dx; aincr = 2 * (dy - dx); bincr = 2 * dy; x = x1; y = y1;
@@ -234,7 +234,7 @@ int32_t C4Landscape::DoScan(int32_t cx, int32_t cy, int32_t mat, int32_t dir)
 	// left pixel converted? suppose it was done by a prior scan and skip check
 	if (lmat != conv_to)
 	{
-		int32_t iSearchRange = Max<int32_t>(5, mconvs);
+		int32_t iSearchRange = std::max<int32_t>(5, mconvs);
 		// search upper/lower bound
 		int32_t cys = cy, cxs = cx;
 		while (cxs < GBackWdt-1)
@@ -248,7 +248,7 @@ int32_t C4Landscape::DoScan(int32_t cx, int32_t cy, int32_t mat, int32_t dir)
 				while (Inside<int32_t>(cys, 0, GBackHgt-1) && _GetMat(cxs, cys) == mat)
 				{
 					cys -= ydir;
-					if ((mconvs = Min(mconv - Abs(cys - cy), mconvs)) < 0)
+					if ((mconvs = std::min(mconv - Abs(cys - cy), mconvs)) < 0)
 						return 0;
 				}
 				// out of bounds?
@@ -329,7 +329,6 @@ bool C4Landscape::DoRelights()
 		if (!Relights[i].Wdt)
 			break;
 		// Remove all solid masks in the (twice!) extended region around the change
-		// TODO: Isn't Relights[i] already an "affected" rect? Might save a bit here...
 		C4Rect SolidMaskRect = pLandscapeRender->GetAffectedRect(Relights[i]);
 		C4SolidMask * pSolid;
 		for (pSolid = C4SolidMask::Last; pSolid; pSolid = pSolid->Prev)
@@ -351,8 +350,7 @@ bool C4Landscape::DoRelights()
 /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
 /* +++++++++++++++++++++++ Add and destroy landscape++++++++++++++++++++++++ */
 /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
-
-std::vector<int32_t> C4Landscape::GetRoundPolygon(int32_t x, int32_t y, int32_t size, int32_t smoothness) const
+static std::vector<int32_t> GetRoundPolygon(int32_t x, int32_t y, int32_t size, int32_t smoothness)
 {
 	/*
 	So what is this? It's basically a circle with the radius 'size'. The radius
@@ -396,7 +394,7 @@ std::vector<int32_t> C4Landscape::GetRoundPolygon(int32_t x, int32_t y, int32_t 
 	return vertices;
 }
 
-std::vector<int32_t> C4Landscape::GetRectangle(int32_t tx, int32_t ty, int32_t wdt, int32_t hgt) const
+static std::vector<int32_t> GetRectangle(int32_t tx, int32_t ty, int32_t wdt, int32_t hgt)
 {
 	std::vector<int32_t> vertices;
 	vertices.resize(8);
@@ -409,10 +407,23 @@ std::vector<int32_t> C4Landscape::GetRectangle(int32_t tx, int32_t ty, int32_t w
 	return vertices;
 }
 
+static C4Rect getBoundingBox(int *vtcs, int length)
+{
+	C4Rect BoundingBox(vtcs[0], vtcs[1], 1, 1);
+	for (int32_t i = 2; i + 1 < length; i += 2)
+	{
+		BoundingBox.Add(C4Rect(vtcs[i], vtcs[i + 1], 1, 1));
+	}
+	return BoundingBox;
+}
+
 void C4Landscape::ClearFreeRect(int32_t tx, int32_t ty, int32_t wdt, int32_t hgt)
 {
 	std::vector<int32_t> vertices(GetRectangle(tx,ty,wdt,hgt));
+	C4Rect r(tx, ty, wdt, hgt);
+	PrepareChange(r);
 	ForPolygon(&vertices[0],vertices.size()/2,&C4Landscape::ClearPix);
+	FinishChange(r);
 }
 
 int32_t C4Landscape::DigFreeRect(int32_t tx, int32_t ty, int32_t wdt, int32_t hgt, C4Object *by_object, bool no_dig2objects, bool no_instability_check)
@@ -441,30 +452,35 @@ void C4Landscape::ShakeFree(int32_t tx, int32_t ty, int32_t rad)
 
 C4ValueArray *C4Landscape::PrepareFreeShape(C4Rect &BoundingBox, C4Object *by_object)
 {
-	// Remember any collectible objects in area
+	// Remember any in-earth objects in area
 	C4FindObjectInRect fo_inrect(BoundingBox);
-	C4FindObjectOCF fo_collectible(OCF_Carryable);
 	C4FindObjectOCF fo_insolid(OCF_InSolid);
 	C4FindObjectLayer fo_layer(by_object ? by_object->Layer : NULL);
-	C4FindObject *fo_list[] = {&fo_inrect, &fo_collectible, &fo_insolid, &fo_layer};
-	C4FindObjectAndStatic fo_srch(4, fo_list);
+	C4FindObject *fo_list[] = {&fo_inrect, &fo_insolid, &fo_layer};
+	C4FindObjectAndStatic fo_srch(3, fo_list);
 	return fo_srch.FindMany(::Objects, ::Objects.Sectors);
 }
 
 void C4Landscape::PostFreeShape(C4ValueArray *dig_objects, C4Object *by_object)
 {
-	// Do callbacks to digger for objects that are now dug free
+	// Do callbacks to digger and dug out objects for objects that are now dug free
 	if (by_object)
 	{
 		for (int32_t i=0; i<dig_objects->GetSize(); ++i)
 		{
 			C4Object *dig_object = dig_objects->GetItem(i).getObj();
 			if (dig_object && !GBackSolid(dig_object->GetX(), dig_object->GetY()))
-				if (!dig_object->Contained && dig_object->Status)
-				{
-					C4AulParSet pars(C4VObj(dig_object));
-					by_object->Call(PSF_DigOutObject, &pars);
-				}
+				if (dig_object != by_object)
+					if (!dig_object->Contained && dig_object->Status)
+					{
+						C4AulParSet pars(C4VObj(by_object));
+						dig_object->Call(PSF_OnDugOut, &pars);
+						if (dig_object->Status && by_object->Status)
+						{
+							C4AulParSet pars(C4VObj(dig_object));
+							by_object->Call(PSF_DigOutObject, &pars);
+						}
+					}
 		}
 	}
 }
@@ -578,7 +594,7 @@ void C4Landscape::BlastMaterial2Objects(int32_t tx, int32_t ty, C4MaterialList *
 				}
 			}
 
-			mat_list->Amount[mat] -= Max(blastamount * ::MaterialMap.Map[mat].Blast2ObjectRatio,
+			mat_list->Amount[mat] -= std::max(blastamount * ::MaterialMap.Map[mat].Blast2ObjectRatio,
 			                             pxsamount * ::MaterialMap.Map[mat].Blast2PXSRatio);
 		}
 	}
@@ -699,20 +715,6 @@ bool C4Landscape::SetPix2(int32_t x, int32_t y, BYTE fgPix, BYTE bgPix)
 	// no change?
 	if ((fgPix == Transparent || fgPix == _GetPix(x, y)) && (bgPix == Transparent || bgPix == Surface8Bkg->_GetPix(x, y)))
 		return true;
-	// note for relight (TODO: Why is this not in _SetPix2?)
-	if(pLandscapeRender)
-	{
-		C4Rect CheckRect = pLandscapeRender->GetAffectedRect(C4Rect(x, y, 1, 1));
-		for (int32_t i = 0; i < C4LS_MaxRelights; i++)
-			if (!Relights[i].Wdt || Relights[i].Overlap(CheckRect) || i + 1 >= C4LS_MaxRelights)
-			{
-				Relights[i].Add(CheckRect);
-				break;
-			}
-		// Invalidate FoW
-		if (pFoW)
-			pFoW->Invalidate(CheckRect);
-	}
 	// set pixel
 	return _SetPix2(x, y, fgPix, bgPix);
 }
@@ -783,8 +785,30 @@ bool C4Landscape::_SetPix2(int32_t x, int32_t y, BYTE fgPix, BYTE bgPix)
 	// set 8bpp-surface only!
 	Surface8->SetPix(x, y, fgPix);
 	Surface8Bkg->SetPix(x, y, bgPix);
+	// note for relight
+	if(pLandscapeRender)
+	{
+		C4Rect CheckRect = pLandscapeRender->GetAffectedRect(C4Rect(x, y, 1, 1));
+		for (int32_t i = 0; i < C4LS_MaxRelights; i++)
+			if (!Relights[i].Wdt || Relights[i].Overlap(CheckRect) || i + 1 >= C4LS_MaxRelights)
+			{
+				Relights[i].Add(CheckRect);
+				break;
+			}
+		// Invalidate FoW
+		if (pFoW)
+			pFoW->Invalidate(CheckRect);
+	}
 	// success
 	return true;
+}
+
+void C4Landscape::_SetPix2Tmp(int32_t x, int32_t y, BYTE fgPix, BYTE bgPix)
+{
+	// set 8bpp-surface only!
+	assert(x >= 0 && y >= 0 && x < Width && y < Height);
+	if (fgPix != Transparent) Surface8->SetPix(x, y, fgPix);
+	if (bgPix != Transparent) Surface8Bkg->SetPix(x, y, bgPix);
 }
 
 bool C4Landscape::CheckInstability(int32_t tx, int32_t ty, int32_t recursion_count)
@@ -865,7 +889,7 @@ bool C4Landscape::InsertMaterial(int32_t mat, int32_t *tx, int32_t *ty, int32_t 
 	assert(tx); assert(ty);
 	int32_t mdens;
 	if (!MatValid(mat)) return false;
-	mdens=Min(MatDensity(mat), C4M_Solid);
+	mdens=std::min(MatDensity(mat), C4M_Solid);
 	if (!mdens) return true;
 
 	// Bounds
@@ -883,7 +907,7 @@ bool C4Landscape::InsertMaterial(int32_t mat, int32_t *tx, int32_t *ty, int32_t 
 	else
 	{
 		// Move up above same density
-		while (mdens==Min(GetDensity(*tx,*ty),C4M_Solid))
+		while (mdens==std::min(GetDensity(*tx,*ty),C4M_Solid))
 		{
 			(*ty)--; if (*ty<0) return false;
 			// Primitive slide (1)
@@ -965,15 +989,15 @@ bool C4Landscape::InsertDeadMaterial(int32_t mat, int32_t tx, int32_t ty)
 	return true;
 }
 
-bool C4Landscape::Incinerate(int32_t x, int32_t y)
+bool C4Landscape::Incinerate(int32_t x, int32_t y, int32_t cause_player)
 {
 	int32_t mat=GetMat(x,y);
 	if (MatValid(mat))
 		if (::MaterialMap.Map[mat].Inflammable)
-			// Not too much FLAMs
-			if (!Game.FindObject (C4Id2Def(C4ID::Flame), x - 4, y - 1, 8, 20))
-				if (Game.CreateObject(C4ID::Flame,NULL,NO_OWNER,x,y))
-					return true;
+		{
+			C4AulParSet pars(C4VInt(x), C4VInt(y), C4VInt(cause_player));
+			::ScriptEngine.GetPropList()->Call(P_InflameLandscape, &pars);
+		}
 	return false;
 }
 
@@ -1053,8 +1077,8 @@ static void fill_edge_structure(CPolyEdge *edge, int *i1, int *i2)
 	edge->prev = NULL;
 	edge->next = NULL;
 	if (edge->dx < 0)
-		edge->x += Min<int>(edge->dx+(1<<POLYGON_FIX_SHIFT), 0);
-	edge->w = Max<int>(Abs(edge->dx)-(1<<POLYGON_FIX_SHIFT), 0);
+		edge->x += std::min<int>(edge->dx+(1<<POLYGON_FIX_SHIFT), 0);
+	edge->w = std::max<int>(Abs(edge->dx)-(1<<POLYGON_FIX_SHIFT), 0);
 }
 
 static CPolyEdge *add_edge(CPolyEdge *list, CPolyEdge *edge, int sort_by_x)
@@ -1150,7 +1174,7 @@ int32_t C4Landscape::ForPolygon(int *vtcs, int length, bool (C4Landscape::*fnCal
 			x2=(edge->next->x+edge->next->w)>>POLYGON_FIX_SHIFT;
 			y=c;
 			// Fix coordinates
-			if (x1>x2) Swap(x1,x2);
+			if (x1>x2) std::swap(x1,x2);
 			// Set line
 			if (fnCallback)
 			{
@@ -1404,8 +1428,8 @@ bool C4Landscape::Init(C4Group &hGroup, bool fOverloadCurrent, bool fLoadSky, bo
 		// Calculate landscape size
 		Width = MapZoom * MapWidth;
 		Height = MapZoom * MapHeight;
-		Width = Max<int32_t>(Width,100);
-		Height = Max<int32_t>(Height,100);
+		Width = std::max<int32_t>(Width,100);
+		Height = std::max<int32_t>(Height,100);
 //    Width = (Width/8)*8;
 
 		// if overloading, clear current landscape (and sections, etc.)
@@ -1446,6 +1470,13 @@ bool C4Landscape::Init(C4Group &hGroup, bool fOverloadCurrent, bool fLoadSky, bo
 
 	// Scan settings
 	ScanSpeed=Clamp(Width/500,2,15);
+
+	// Create pixel count array before any SetPix operations may take place
+	// Proper pixel counts will be done later, but needs to have the arrays redy to avoid dead pointer access.
+	// We will use 15x17 blocks so the pixel count can't get over 255.
+	int32_t PixCntWidth = (Width + 16) / 17;
+	PixCntPitch = (Height + 14) / 15;
+	PixCnt = new uint8_t[PixCntWidth * PixCntPitch];
 
 	// map to big surface and sectionize it
 	// (not for shaders though - they require continous textures)
@@ -1530,11 +1561,7 @@ bool C4Landscape::Init(C4Group &hGroup, bool fOverloadCurrent, bool fLoadSky, bo
 	// Load diff, if existant
 	ApplyDiff(hGroup);
 
-	// Create pixel count array
-	// We will use 15x17 blocks so the pixel count can't get over 255.
-	int32_t PixCntWidth = (Width + 16) / 17;
-	PixCntPitch = (Height + 14) / 15;
-	PixCnt = new uint8_t[PixCntWidth * PixCntPitch];
+	// Pixel count tracking from landscape zoom is incomplete, so recalculate it.
 	UpdatePixCnt(C4Rect(0, 0, Width, Height));
 	ClearMatCount();
 	UpdateMatCnt(C4Rect(0, 0, Width, Height), true);
@@ -2003,7 +2030,7 @@ void C4Landscape::DrawChunk(int32_t tx, int32_t ty, int32_t wdt, int32_t hgt, ui
 		break;
 	}
 	int vtcs[16];
-	unsigned int rx = Max(wdt / 2, 1);
+	unsigned int rx = std::max(wdt / 2, 1);
 
 	vtcs[0] =  tx - ChunkyRandom(cro, rx * side_rough / 4);       vtcs[1] =  ty - ChunkyRandom(cro, rx * top_rough / 4);
 	vtcs[2] =  tx - ChunkyRandom(cro, rx * side_rough / 2);       vtcs[3] =  ty + hgt / 2;
@@ -2020,7 +2047,7 @@ void C4Landscape::DrawChunk(int32_t tx, int32_t ty, int32_t wdt, int32_t hgt, ui
 void C4Landscape::DrawSmoothOChunk(int32_t tx, int32_t ty, int32_t wdt, int32_t hgt, uint8_t mcol, uint8_t mcolBkg, int flip, uint32_t cro)
 {
 	int vtcs[8];
-	unsigned int rx = Max(wdt / 2, 1);
+	unsigned int rx = std::max(wdt / 2, 1);
 
 	vtcs[0] = tx;       vtcs[1] = ty;
 	vtcs[2] = tx;       vtcs[3] = ty + hgt;
@@ -2042,67 +2069,15 @@ void C4Landscape::DrawSmoothOChunk(int32_t tx, int32_t ty, int32_t wdt, int32_t 
 	ForPolygon(vtcs, 4, NULL, NULL, mcol, mcolBkg);
 }
 
-void C4Landscape::DrawCustomShapePoly(const C4MaterialShape::Poly &poly, int32_t off_x, int32_t off_y, uint8_t mcol, uint8_t mcolBkg)
-{
-	// put poly into plain int array format; add offset and send to polygon drawing proc
-	size_t n = poly.size(), i = 0;
-	int *vtcs = new int[n*2];
-	for (C4MaterialShape::Poly::const_iterator j=poly.begin(); j!=poly.end(); ++j)
-	{
-		vtcs[i++] = j->x + off_x;
-		vtcs[i++] = j->y + off_y;
-	}
-	ForPolygon(vtcs, n, NULL, NULL, mcol, mcolBkg);
-	// done
-	delete [] vtcs;
-}
-
-void C4Landscape::DrawCustomShape(CSurface8 * sfcMap, CSurface8* sfcMapBkg, C4MaterialShape *shape, int32_t iMapX, int32_t iMapY, int32_t iMapWdt, int32_t iMapHgt, uint8_t iTexture, int32_t iOffX, int32_t iOffY)
-{
-	// Prepare shape for map zoom
-	if (!shape->PrepareForZoom(MapZoom))
-	{
-		DebugLogF("ERROR: Cannot apply texture index %d: Material shape size not a multiple of map zoom!", (int)iTexture);
-		return;
-	}
-	// Get affected range of shapes
-	// range in pixels
-	int32_t x0 = iMapX*MapZoom, y0 = iMapY*MapZoom;
-	int32_t x1 = x0 + iMapWdt*MapZoom, y1 = y0 + iMapHgt*MapZoom;
-	// range in shape blocks
-	x0 = (x0-shape->overlap_right +shape->wdt) / shape->wdt - 1;
-	y0 = (y0-shape->overlap_bottom+shape->hgt) / shape->hgt - 1;
-	x1 = (x1+shape->overlap_left  +shape->wdt) / shape->wdt - 1;
-	y1 = (y1+shape->overlap_top   +shape->hgt) / shape->hgt - 1;
-	// paint from all affected shape blocks
-	for (int32_t y=y0; y<=y1; ++y)
-		for (int32_t x=x0; x<=x1; ++x)
-		{
-			int32_t x_map = x*shape->wdt/MapZoom, y_map = y*shape->hgt/MapZoom;
-			for (C4MaterialShape::PolyVec::const_iterator i = shape->polys.begin(); i!=shape->polys.end(); ++i)
-			{
-				const C4MaterialShape::Poly &p = *i;
-				// does this shape block overlap any map pixels of our material
-				for (C4MaterialShape::PtVec::const_iterator j=p.overlaps.begin(); j!=p.overlaps.end(); ++j)
-				{
-					const BYTE pix = sfcMap->GetPix(x_map + j->x, y_map + j->y);
-					if (pix == iTexture)
-					{
-						// First pixel in overlap list defines IFT
-						const BYTE pixBkg = sfcMapBkg->GetPix(x_map + j->x, y_map + j->y);
-						// draw this poly!
-						DrawCustomShapePoly(p, x_map*MapZoom+iOffX, y_map*MapZoom+iOffY, pix, pixBkg);
-						break;
-					}
-				}
-			}
-		}
-}
-
 void C4Landscape::ChunkOZoom(CSurface8 * sfcMap, CSurface8 * sfcMapBkg, int32_t iMapX, int32_t iMapY, int32_t iMapWdt, int32_t iMapHgt, uint8_t iTexture, int32_t iOffX, int32_t iOffY)
 {
-	C4Material *pMaterial = ::TextureMap.GetEntry(iTexture)->GetMaterial();
+	const C4TexMapEntry *entry = ::TextureMap.GetEntry(iTexture);
+	C4Material *pMaterial = entry->GetMaterial();
 	if (!pMaterial) return;
+	const char *texture_name = entry->GetTextureName();
+	C4Texture *texture = ::TextureMap.GetTexture(texture_name);
+	C4TextureShape *shape = texture ? texture->GetMaterialShape() : NULL;
+	// Chunk type by material
 	C4MaterialCoreShape iChunkType = ::Game.C4S.Landscape.FlatChunkShapes ? C4M_Flat : pMaterial->MapChunkType;
 	// Get map & landscape size
 	int iMapWidth, iMapHeight;
@@ -2185,7 +2160,7 @@ void C4Landscape::ChunkOZoom(CSurface8 * sfcMap, CSurface8 * sfcMapBkg, int32_t 
 		}
 	}
 	// Draw custom shapes on top of regular materials
-	if (pMaterial->CustomShape) DrawCustomShape(sfcMap, sfcMapBkg, pMaterial->CustomShape, iMapX, iMapY, iMapWdt, iMapHgt, iTexture, iOffX, iOffY);
+	if (shape && !::Game.C4S.Landscape.FlatChunkShapes) shape->Draw(sfcMap, sfcMapBkg, iMapX, iMapY, iMapWdt, iMapHgt, iTexture, iOffX, iOffY, MapZoom, pMaterial->MinShapeOverlap);
 }
 
 bool C4Landscape::GetTexUsage(CSurface8 * sfcMap, CSurface8 * sfcMapBkg, int32_t iMapX, int32_t iMapY, int32_t iMapWdt, int32_t iMapHgt, DWORD *dwpTextureUsage) const
@@ -2402,14 +2377,14 @@ int32_t C4Landscape::GetMatHeight(int32_t x, int32_t y, int32_t iYDir, int32_t i
 {
 	if (iYDir > 0)
 	{
-		iMax = Min<int32_t>(iMax, Height - y);
+		iMax = std::min<int32_t>(iMax, Height - y);
 		for (int32_t i = 0; i < iMax; i++)
 			if (_GetMat(x, y + i) != iMat)
 				return i;
 	}
 	else
 	{
-		iMax = Min<int32_t>(iMax, y + 1);
+		iMax = std::min<int32_t>(iMax, y + 1);
 		for (int32_t i = 0; i < iMax; i++)
 			if (_GetMat(x, y - i) != iMat)
 				return i;
@@ -2729,18 +2704,18 @@ bool FindConSiteSpot(int32_t &rx, int32_t &ry, int32_t wdt, int32_t hgt,
 	bool fFound=false;
 
 	// No hrange limit, use standard smooth surface limit
-	if (hrange==-1) hrange=Max(wdt/4,5);
+	if (hrange==-1) hrange=std::max(wdt/4,5);
 
 	int32_t cx1,cx2,cy1,cy2,rh1,rh2,rl1,rl2;
 
 	// Left offset starting position
-	cx1=Min(rx+wdt/2,GBackWdt-1); cy1=ry;
+	cx1=std::min(rx+wdt/2,GBackWdt-1); cy1=ry;
 	// No good: use centered starting position
-	if (!AboveSemiSolid(cx1,cy1)) { cx1=Min<int32_t>(rx,GBackWdt-1); cy1=ry; }
+	if (!AboveSemiSolid(cx1,cy1)) { cx1=std::min<int32_t>(rx,GBackWdt-1); cy1=ry; }
 	// Right offset starting position
-	cx2=Max(rx-wdt/2,0); cy2=ry;
+	cx2=std::max(rx-wdt/2,0); cy2=ry;
 	// No good: use centered starting position
-	if (!AboveSemiSolid(cx2,cy2)) { cx2=Min<int32_t>(rx,GBackWdt-1); cy2=ry; }
+	if (!AboveSemiSolid(cx2,cy2)) { cx2=std::min<int32_t>(rx,GBackWdt-1); cy2=ry; }
 
 	rh1=cy1; rh2=cy2; rl1=rl2=0;
 
@@ -2807,14 +2782,14 @@ bool PathFree(int32_t x1, int32_t y1, int32_t x2, int32_t y2, int32_t *ix, int32
 
 	if (steep)
 	{
-		Swap(x1, y1);
-		Swap(x2, y2);
+		std::swap(x1, y1);
+		std::swap(x2, y2);
 	}
 
 	if (x1 > x2)
 	{
-		Swap(x1, x2);
-		Swap(y1, y2);
+		std::swap(x1, x2);
+		std::swap(y1, y2);
 		reverse = true;
 	}
 
@@ -3093,8 +3068,8 @@ bool C4Landscape::FindMatPathPush(int32_t &fx, int32_t &fy, int32_t mdens, int32
 	fy = Clamp<int32_t>(fy, 0, Height - 1);
 	// Range to search, calculate bounds
 	const int32_t iPushRange = 500;
-	int32_t left = Max<int32_t>(0, fx - iPushRange), right = Min<int32_t>(Width - 1, fx + iPushRange),
-	               top = Max<int32_t>(0, fy - iPushRange), bottom = Min<int32_t>(Height - 1, fy + iPushRange);
+	int32_t left = std::max<int32_t>(0, fx - iPushRange), right = std::min<int32_t>(Width - 1, fx + iPushRange),
+	               top = std::max<int32_t>(0, fy - iPushRange), bottom = std::min<int32_t>(Height - 1, fy + iPushRange);
 	// Direction constants
 	const int8_t R = 0, D = 1, L = 2, U = 3;
 	int8_t dir = 0;
@@ -3175,12 +3150,12 @@ bool C4Landscape::FindMatPathPush(int32_t &fx, int32_t &fy, int32_t mdens, int32
 				// Save it
 				bx = nx; by = ny; bdist = dist; fGotBest = true;
 				// Adjust borders: We can obviously safely ignore anything at greater distance
-				top = Max<int32_t>(top, fy - dist / mslide - 1);
+				top = std::max<int32_t>(top, fy - dist / mslide - 1);
 				if (!liquid)
 				{
-					bottom = Min<int32_t>(bottom, fy + dist / mslide + 1);
-					left = Max<int32_t>(left, fx - dist - 1);
-					right = Min<int32_t>(right, fx + dist + 1);
+					bottom = std::min<int32_t>(bottom, fy + dist / mslide + 1);
+					left = std::max<int32_t>(left, fx - dist - 1);
+					right = std::min<int32_t>(right, fx + dist + 1);
 				}
 				// Set new startpoint
 				sx = x; sy = y; sdir = dir;
@@ -3304,11 +3279,12 @@ bool C4Landscape::DrawBrush(int32_t iX, int32_t iY, int32_t iGrade, const char *
 	if (!GetMapColorIndex(szBackMaterial,szBackTexture,byColBkg)) return false;
 	// Get material shape size
 	int32_t mat = PixCol2Mat(byCol);
+	C4Texture *texture = ::TextureMap.GetTexture(szTexture);
 	int32_t shape_wdt=0, shape_hgt=0;
-	if (mat>=0 && MaterialMap.Map[mat].CustomShape)
+	if (texture && texture->GetMaterialShape())
 	{
-		shape_wdt = MaterialMap.Map[mat].CustomShape->max_poly_width/MapZoom;
-		shape_hgt = MaterialMap.Map[mat].CustomShape->max_poly_height/MapZoom;
+		shape_wdt = texture->GetMaterialShape()->GetMaxPolyWidth() / MapZoom;
+		shape_hgt = texture->GetMaterialShape()->GetMaxPolyHeight() / MapZoom;
 	}
 	// Draw
 	switch (Mode)
@@ -3319,7 +3295,7 @@ bool C4Landscape::DrawBrush(int32_t iX, int32_t iY, int32_t iGrade, const char *
 		// Static: draw to map by material-texture-index, chunk-o-zoom to landscape
 	case C4LSC_Static:
 		// Draw to map
-		int32_t iRadius; iRadius=Max<int32_t>(2*iGrade/MapZoom,1);
+		int32_t iRadius; iRadius=std::max<int32_t>(2*iGrade/MapZoom,1);
 		if (iRadius==1) { Map->SetPix(iX/MapZoom,iY/MapZoom,byCol); MapBkg->SetPix(iX/MapZoom, iY/MapZoom, byColBkg); }
 		else { Map->Circle(iX/MapZoom,iY/MapZoom,iRadius,byCol); MapBkg->Circle(iX/MapZoom, iY/MapZoom, iRadius, byColBkg); }
 		// Update landscape
@@ -3363,12 +3339,12 @@ bool C4Landscape::DrawLine(int32_t iX1, int32_t iY1, int32_t iX2, int32_t iY2, i
 	if (!GetMapColorIndex(szMaterial,szTexture,line_color)) return false;
 	if (!GetMapColorIndex(szBackMaterial,szBackTexture,line_color_bkg)) return false;
 	// Get material shape size
-	int32_t mat = PixCol2Mat(line_color);
-	int32_t shape_wdt=0, shape_hgt=0;
-	if (mat>=0 && MaterialMap.Map[mat].CustomShape)
+	C4Texture *texture = ::TextureMap.GetTexture(szTexture);
+	int32_t shape_wdt = 0, shape_hgt = 0;
+	if (texture && texture->GetMaterialShape())
 	{
-		shape_wdt = MaterialMap.Map[mat].CustomShape->max_poly_width/MapZoom;
-		shape_hgt = MaterialMap.Map[mat].CustomShape->max_poly_height/MapZoom;
+		shape_wdt = texture->GetMaterialShape()->GetMaxPolyWidth() / MapZoom;
+		shape_hgt = texture->GetMaterialShape()->GetMaxPolyHeight() / MapZoom;
 	}
 	// Draw
 	switch (Mode)
@@ -3379,12 +3355,12 @@ bool C4Landscape::DrawLine(int32_t iX1, int32_t iY1, int32_t iX2, int32_t iY2, i
 		// Static: draw to map by material-texture-index, chunk-o-zoom to landscape
 	case C4LSC_Static:
 		// Draw to map
-		int32_t iRadius; iRadius=Max<int32_t>(2*iGrade/MapZoom,1);
+		int32_t iRadius; iRadius=std::max<int32_t>(2*iGrade/MapZoom,1);
 		iX1/=MapZoom; iY1/=MapZoom; iX2/=MapZoom; iY2/=MapZoom;
 		ForLine(iX1, iY1, iX2, iY2, [this, line_color, line_color_bkg, iRadius](int32_t x, int32_t y) { return DrawLineMap(x, y, iRadius, line_color, line_color_bkg); });
 		// Update landscape
 		int32_t iUpX,iUpY,iUpWdt,iUpHgt;
-		iUpX=Min(iX1,iX2)-iRadius-1; iUpY=Min(iY1,iY2)-iRadius-1;
+		iUpX=std::min(iX1,iX2)-iRadius-1; iUpY=std::min(iY1,iY2)-iRadius-1;
 		iUpWdt=Abs(iX2-iX1)+2*iRadius+2; iUpHgt=Abs(iY2-iY1)+2*iRadius+2;
 		MapToLandscape(Map,MapBkg,iUpX-shape_wdt,iUpY-shape_hgt,iUpWdt+shape_wdt*2,iUpHgt+shape_hgt*2);
 		SetMapChanged();
@@ -3406,19 +3382,19 @@ bool C4Landscape::DrawLine(int32_t iX1, int32_t iY1, int32_t iX2, int32_t iY2, i
 bool C4Landscape::DrawBox(int32_t iX1, int32_t iY1, int32_t iX2, int32_t iY2, int32_t iGrade, const char *szMaterial, const char *szTexture, const char *szBackMaterial, const char *szBackTexture)
 {
 	// get upper-left/lower-right - corners
-	int32_t iX0=Min(iX1, iX2); int32_t iY0=Min(iY1, iY2);
-	iX2=Max(iX1, iX2); iY2=Max(iY1, iY2); iX1=iX0; iY1=iY0;
+	int32_t iX0=std::min(iX1, iX2); int32_t iY0=std::min(iY1, iY2);
+	iX2=std::max(iX1, iX2); iY2=std::max(iY1, iY2); iX1=iX0; iY1=iY0;
 	BYTE byCol, byColBkg;
 	// Get map color index by material-texture
 	if (!GetMapColorIndex(szMaterial,szTexture,byCol)) return false;
 	if (!GetMapColorIndex(szBackMaterial,szBackTexture,byColBkg)) return false;
 	// Get material shape size
-	int32_t mat = PixCol2Mat(byCol);
-	int32_t shape_wdt=0, shape_hgt=0;
-	if (mat>=0 && MaterialMap.Map[mat].CustomShape)
+	C4Texture *texture = ::TextureMap.GetTexture(szTexture);
+	int32_t shape_wdt = 0, shape_hgt = 0;
+	if (texture && texture->GetMaterialShape())
 	{
-		shape_wdt = MaterialMap.Map[mat].CustomShape->max_poly_width/MapZoom;
-		shape_hgt = MaterialMap.Map[mat].CustomShape->max_poly_height/MapZoom;
+		shape_wdt = texture->GetMaterialShape()->GetMaxPolyWidth() / MapZoom;
+		shape_hgt = texture->GetMaterialShape()->GetMaxPolyHeight() / MapZoom;
 	}
 	// Draw
 	switch (Mode)
@@ -3481,16 +3457,6 @@ bool C4Landscape::DrawChunks(int32_t tx, int32_t ty, int32_t wdt, int32_t hgt, i
 	return true;
 }
 
-C4Rect C4Landscape::getBoundingBox(int *vtcs, int length) const
-{
-	C4Rect BoundingBox(vtcs[0],vtcs[1],1,1);
-	for(int32_t i=2; i+1 < length; i+=2)
-	{
-		BoundingBox.Add(C4Rect(vtcs[i],vtcs[i+1],1,1));
-	}
-	return BoundingBox;
-}
-
 bool C4Landscape::DrawPolygon(int *vtcs, int length, const char *szMaterial, const char* szBackMaterial, bool fDrawBridge)
 {
 	if(length < 6) return false;
@@ -3546,7 +3512,7 @@ uint8_t *C4Landscape::GetBridgeMatConversion(int32_t for_material_col) const
 				conv_map[i] = i;
 			}
 		}
-		BridgeMatConversion[for_material] = conv_map;
+		BridgeMatConversion[for_material_col] = conv_map;
 	}
 	return conv_map;
 }
@@ -3877,12 +3843,12 @@ bool C4Landscape::Mat2Pal()
 void C4Landscape::UpdatePixCnt(const C4Rect &Rect, bool fCheck)
 {
 	int32_t PixCntWidth = (Width + 16) / 17;
-	for (int32_t y = Max<int32_t>(0, Rect.y / 15); y < Min<int32_t>(PixCntPitch, (Rect.y + Rect.Hgt + 14) / 15); y++)
-		for (int32_t x = Max<int32_t>(0, Rect.x / 17); x < Min<int32_t>(PixCntWidth, (Rect.x + Rect.Wdt + 16) / 17); x++)
+	for (int32_t y = std::max<int32_t>(0, Rect.y / 15); y < std::min<int32_t>(PixCntPitch, (Rect.y + Rect.Hgt + 14) / 15); y++)
+		for (int32_t x = std::max<int32_t>(0, Rect.x / 17); x < std::min<int32_t>(PixCntWidth, (Rect.x + Rect.Wdt + 16) / 17); x++)
 		{
 			int iCnt = 0;
-			for (int32_t x2 = x * 17; x2 < Min<int32_t>(x * 17 + 17, Width); x2++)
-				for (int32_t y2 = y * 15; y2 < Min<int32_t>(y * 15 + 15, Height); y2++)
+			for (int32_t x2 = x * 17; x2 < std::min<int32_t>(x * 17 + 17, Width); x2++)
+				for (int32_t y2 = y * 15; y2 < std::min<int32_t>(y * 15 + 15, Height); y2++)
 					if (_GetDensity(x2, y2))
 						iCnt++;
 			if (fCheck)

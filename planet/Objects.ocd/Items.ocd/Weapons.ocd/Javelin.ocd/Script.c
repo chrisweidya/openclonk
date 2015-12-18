@@ -8,6 +8,9 @@
 #include Library_Stackable
 
 public func MaxStackCount() { return 3; }
+// Note that the javelin damage also takes the speed into account. A direct eye-to-eye hit will do roughly this damage.
+public func JavelinStrength() { return 18; }
+public func TumbleStrength() { return 100; }
 
 local animation_set;
 
@@ -47,7 +50,7 @@ public func ControlUseStart(object clonk, int x, int y)
 
 	ControlUseHolding(clonk, x, y);
 	
-	Sound("DrawJavelin");
+	Sound("Objects::Weapons::Javelin::Draw");
 	return 1;
 }
 
@@ -113,13 +116,11 @@ public func DoThrow(object clonk, int angle)
 	javelin->AddEffect("Flight",javelin,1,1,javelin,nil);
 	javelin->AddEffect("HitCheck",javelin,1,1,nil,nil,clonk);
 	
-	Sound("ThrowJavelin?");
+	Sound("Objects::Weapons::Javelin::Throw?");
 	
 	aiming = -1;
 	clonk->UpdateAttach();
 }
-
-protected func JavelinStrength() { return 14; }
 
 //slightly modified HitObject() from arrow
 public func HitObject(object obj)
@@ -127,20 +128,23 @@ public func HitObject(object obj)
 	var relx = GetXDir() - obj->GetXDir();
 	var rely = GetYDir() - obj->GetYDir();
 	var speed = Sqrt(relx*relx+rely*rely);
+	
+	var dmg = JavelinStrength() * speed * 1000 / 60;
 
-	var dmg = JavelinStrength()*speed/100;
-	ProjectileHit(obj,dmg,ProjectileHit_tumble);
+	if (WeaponCanHit(obj))
+	{
+		if (obj->GetAlive())
+			Sound("Hits::ProjectileHitLiving?");
+		else
+			Sound("Objects::Weapons::Javelin::HitGround");
+		
+		obj->~OnProjectileHit(this);
+		WeaponDamage(obj, dmg, FX_Call_EngObjHit, true);
+		WeaponTumble(obj, this->TumbleStrength());
+		if (!this) return;
+	}
 	
 	Stick();
-}
-
-// called by successful hit of object after from ProjectileHit(...)
-public func OnStrike(object obj)
-{
-	if(obj->GetAlive())
-		Sound("ProjectileHitLiving?");
-	else
-		Sound("JavelinHitGround");
 }
 
 protected func Hit()
@@ -148,10 +152,10 @@ protected func Hit()
 	if(GetEffect("Flight",this))
 	{
 		Stick();
-		Sound("JavelinHitGround");
+		Sound("Objects::Weapons::Javelin::HitGround");
 	}
 	else
-		Sound("WoodHit?");
+		Sound("Hits::Materials::Wood::WoodHit?");
 }
 
 protected func Stick()

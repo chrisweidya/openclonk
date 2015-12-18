@@ -75,6 +75,10 @@ protected func InitializePlayer(int plr)
 	GivePlayerElementaryBaseMaterial(plr);
 	GivePlayerToolsBaseMaterial(plr);
 	
+	// Show wealth
+	var controller = FindObject(Find_ID(GUI_Controller), Find_Owner(plr));
+	if (controller) controller->ShowWealth();
+	
 	// Initialize the intro sequence if not yet started.
 	if (!intro_init)
 	{
@@ -96,7 +100,7 @@ private func InitEnvironment()
 	// Set time of day to evening and create some clouds and celestials.
 	Cloud->Place(10);
 	Cloud->SetPrecipitation("Water", 8);
-	var time = CreateObject(Environment_Time);
+	var time = CreateObject(Time);
 	time->SetTime(60 * 12);
 	time->SetCycleSpeed(20);
 	return;
@@ -105,7 +109,7 @@ private func InitEnvironment()
 private func InitVegetation(int map_size)
 {
 	// Place some trees in a forest shape.
-	PlaceForest([Tree_Coniferous], 0, LandscapeHeight() / 2 + 50, nil, true);
+	PlaceForest([Tree_Deciduous, Tree_Coniferous2], 0, LandscapeHeight() / 2 + 50, nil, true);
 
 	SproutBerryBush->Place();
 	PlaceGrass(100);

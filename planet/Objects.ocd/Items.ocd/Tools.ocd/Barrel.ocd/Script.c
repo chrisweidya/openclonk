@@ -30,13 +30,13 @@ protected func Initialize()
 
 private func Hit()
 {
-	Sound("DullWoodHit?");
+	Sound("Hits::Materials::Wood::DullWoodHit?");
 	if (iVolume >= 1)
 	{
 		if (GBackLiquid(0, 3) && GetMaterial(0, 3) != szLiquid)
 			return 0;
 		EmptyBarrel(GetR());
-		Sound("Splash1");
+		Sound("Liquids::Splash1");
 	}
 }
 
@@ -48,7 +48,6 @@ private func Check()
 	if (GBackLiquid(0, iSource))
 	{
 		FillWithLiquid();
-		this.Name = this.Prototype.Name;
 	}
 	
 	if (iVolume == 0)
@@ -222,10 +221,17 @@ public func IsBarrelForMaterial(string sznMaterial)
 
 public func IsLiquidContainer() { return true; }
 
+public func CanBeStackedWith(object other)
+{
+	// Does not take into account the fill level for now.
+	return inherited(other, ...) && (other->~GetBarrelMaterial() == this->GetBarrelMaterial());
+}
+
 public func SetFilled(material, volume)
 {
 	szLiquid = material;
 	iVolume = volume;
+	UpdateBarrel();
 }
 
 public func CalcValue(object in_base, int for_player)

@@ -11,7 +11,7 @@ local Rebuy = true;
 
 protected func Hit()
 {
-	Sound("GeneralHit?");
+	Sound("Hits::GeneralHit?");
 }
 
 public func IsToolProduct() { return true; }
@@ -44,21 +44,31 @@ protected func ControlUse(object clonk, int x, int y)
 	// Create and connect pipe.
 	var pipe = CreateObjectAbove(PipeLine, 0, 0, NO_OWNER);
 	pipe->SetActionTargets(this, liquid_pump);
-	Sound("Connect");
+	Sound("Objects::Connect");
 	
 	// If liquid pump has no source yet, create one.
 	if (!liquid_pump->GetSource())
 	{
 		liquid_pump->SetSource(pipe);
 		clonk->Message("$MsgCreatedSource$");
+		SetGraphics("Source", Pipe, GFX_Overlay, GFXOV_MODE_Picture);
+		pipe->SetSource();
 	}
 	// Otherwise if liquid pump has no drain, create one.
 	else
 	{
 		liquid_pump->SetDrain(pipe);
 		clonk->Message("$MsgCreatedDrain$");
+		SetGraphics("Drain", Pipe, GFX_Overlay, GFXOV_MODE_Picture);
+		pipe->SetDrain();
 	}
 	return true;
+}
+
+// Line broke or something
+public func ResetPicture()
+{
+	SetGraphics("", nil, GFX_Overlay, GFXOV_MODE_Picture);
 }
 
 /* Cycling through several aperture offset indices to prevent easy clogging */
@@ -76,4 +86,9 @@ public func CycleApertureOffset()
 	return true;
 }
 
+/* Container dies: Drop connected pipes so they don't draw huge lines over the landscape */
 
+public func IsDroppedOnDeath(object clonk)
+{
+	return !!FindObject(Find_Func("IsConnectedTo",this));
+}

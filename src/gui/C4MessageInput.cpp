@@ -412,7 +412,7 @@ bool C4MessageInput::ProcessInput(const char *szText)
 				if (eMsgType == C4CMT_Say) { ++szMsg; szEnd--; }
 			}
 			// get message
-			SCopy(szMsg, szMessage, Min<unsigned long>(C4MaxMessage, szEnd - szMsg + 1));
+			SCopy(szMsg, szMessage, std::min<ptrdiff_t>(C4MaxMessage, szEnd - szMsg + 1));
 		}
 		// get sending player (if any)
 		C4Player *pPlr = Game.IsRunning ? ::Players.GetLocalByIndex(0) : NULL;
@@ -453,7 +453,7 @@ bool C4MessageInput::ProcessCommand(const char *szCommand)
 			C4GameLobby::LobbyError(FormatString(LoadResStr("IDS_MSG_CMD_JOINPLR_NOFILE"), plrPath.getData()).getData());
 		}
 		else
-			::Network.Players.JoinLocalPlayer(plrPath.getData(), true);
+			::Network.Players.JoinLocalPlayer(plrPath.getData());
 		return true;
 	}
 	if (!Game.IsRunning && SEqualNoCase(szCmdName, "plrclr"))

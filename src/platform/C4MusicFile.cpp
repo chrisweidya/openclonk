@@ -21,10 +21,6 @@
 #include <C4Application.h>
 #include <C4Log.h>
 
-#if AUDIO_TK == AUDIO_TK_FMOD
-#include <fmod_errors.h>
-#endif
-
 #if AUDIO_TK == AUDIO_TK_OPENAL
 #if defined(__APPLE__)
 #import <CoreFoundation/CoreFoundation.h>
@@ -41,6 +37,12 @@
 #endif
 
 /* helpers */
+
+void C4MusicFile::Announce()
+{
+	LogF(LoadResStr("IDS_PRC_PLAYMUSIC"), GetFilename(FileName));
+	announced = true;
+}
 
 bool C4MusicFile::ExtractFile()
 {
@@ -68,245 +70,7 @@ bool C4MusicFile::Init(const char *szFile)
 	return true;
 }
 
-#if AUDIO_TK == AUDIO_TK_FMOD
-bool C4MusicFileMID::Play(bool loop)
-{
-	// check existance
-	if (!FileExists(FileName))
-		// try extracting it
-		if (!ExtractFile())
-			// doesn't exist - or file is corrupt
-			return false;
-
-	// init fmusic
-	mod = FMUSIC_LoadSong(SongExtracted ? Config.AtTempPath(C4CFN_TempMusic2) : FileName);
-
-	if (!mod)
-	{
-		LogF("FMod: %s", FMOD_ErrorString(FSOUND_GetError()));
-		return false;
-	}
-
-	// Play Song
-	FMUSIC_PlaySong(mod);
-
-	return true;
-}
-
-void C4MusicFileMID::Stop(int fadeout_ms)
-{
-	if (mod)
-	{
-		FMUSIC_StopSong(mod);
-		FMUSIC_FreeSong(mod);
-		mod = NULL;
-	}
-	RemTempFile();
-}
-
-void C4MusicFileMID::CheckIfPlaying()
-{
-	if (FMUSIC_IsFinished(mod))
-		Application.MusicSystem.NotifySuccess();
-}
-
-void C4MusicFileMID::SetVolume(int iLevel)
-{
-	FMUSIC_SetMasterVolume(mod, Clamp((iLevel * 256) / 100, 0, 255));
-}
-
-/* MOD */
-
-C4MusicFileMOD::C4MusicFileMOD()
-		: mod(NULL), Data(NULL)
-{
-
-}
-
-C4MusicFileMOD::~C4MusicFileMOD()
-{
-	Stop();
-}
-
-bool C4MusicFileMOD::Play(bool loop)
-{
-	// Load Song
-	size_t iFileSize;
-	if (!C4Group_ReadFile(FileName, &Data, &iFileSize))
-		return false;
-
-	// init fmusic
-	mod = FMUSIC_LoadSongEx(Data, 0, iFileSize, FSOUND_LOADMEMORY, 0, 0);
-
-	if (!mod)
-	{
-		LogF("FMod: %s", FMOD_ErrorString(FSOUND_GetError()));
-		return false;
-	}
-
-	// Play Song
-	FMUSIC_PlaySong(mod);
-
-	return true;
-}
-
-void C4MusicFileMOD::Stop(int fadeout_ms)
-{
-	if (mod)
-	{
-		FMUSIC_StopSong(mod);
-		FMUSIC_FreeSong(mod);
-		mod = NULL;
-	}
-	if (Data) { delete[] Data; Data = NULL; }
-}
-
-void C4MusicFileMOD::CheckIfPlaying()
-{
-	if (FMUSIC_IsFinished(mod))
-		Application.MusicSystem.NotifySuccess();
-}
-
-void C4MusicFileMOD::SetVolume(int iLevel)
-{
-	FMUSIC_SetMasterVolume(mod, (int) ((iLevel * 255) / 100));
-}
-
-/* MP3 */
-
-C4MusicFileMP3::C4MusicFileMP3()
-		: stream(NULL), Data(NULL), Channel(-1)
-{
-
-}
-
-C4MusicFileMP3::~C4MusicFileMP3()
-{
-	Stop();
-}
-
-bool C4MusicFileMP3::Play(bool loop)
-{
-#ifndef USE_MP3
-	return false;
-#endif
-
-	// Load Song
-	size_t iFileSize;
-	if (!C4Group_ReadFile(FileName, &Data, &iFileSize))
-		return false;
-
-	// init fsound
-	int loop_flag = loop ? FSOUND_LOOP_NORMAL : 0;
-	stream = FSOUND_Stream_Open(Data, FSOUND_LOADMEMORY | FSOUND_NORMAL | FSOUND_2D | loop_flag, 0, iFileSize);
-
-	if (!stream) return false;
-
-	// Play Song
-	Channel = FSOUND_Stream_Play(FSOUND_FREE, stream);
-	if (Channel == -1) return false;
-
-	// Set highest priority
-	if (!FSOUND_SetPriority(Channel, 255))
-		return false;
-
-	return true;
-}
-
-void C4MusicFileMP3::Stop(int fadeout_ms)
-{
-	if (stream)
-	{
-		FSOUND_Stream_Close(stream);
-		stream = NULL;
-	}
-	if (Data) { delete[] Data; Data = NULL; }
-}
-
-void C4MusicFileMP3::CheckIfPlaying()
-{
-	if (FSOUND_Stream_GetPosition(stream) >= (unsigned) FSOUND_Stream_GetLength(stream))
-		Application.MusicSystem.NotifySuccess();
-}
-
-void C4MusicFileMP3::SetVolume(int iLevel)
-{
-	FSOUND_SetVolume(Channel, (int) ((iLevel * 255) / 100));
-}
-
-/* Ogg Vobis */
-
-C4MusicFileOgg::C4MusicFileOgg()
-		: stream(NULL), Data(NULL), Channel(-1), Playing(false)
-{
-
-}
-
-C4MusicFileOgg::~C4MusicFileOgg()
-{
-	Stop();
-}
-
-bool C4MusicFileOgg::Play(bool loop)
-{
-	// Load Song
-	size_t iFileSize;
-	if (!C4Group_ReadFile(FileName, &Data, &iFileSize))
-		return false;
-
-	// init fsound
-	int loop_flag = loop ? FSOUND_LOOP_NORMAL : 0;
-	stream = FSOUND_Stream_Open(Data, FSOUND_LOADMEMORY | FSOUND_NORMAL | FSOUND_2D | loop_flag, 0, iFileSize);
-
-	if (!stream) return false;
-
-	// Play Song
-	Channel = FSOUND_Stream_Play(FSOUND_FREE, stream);
-	if (Channel == -1) return false;
-
-	// Set highest priority
-	if (!FSOUND_SetPriority(Channel, 255))
-		return false;
-
-	Playing = true;
-
-	FSOUND_Stream_SetEndCallback(stream, &C4MusicFileOgg::OnEnd, this);
-
-	return true;
-}
-
-// End Callback
-signed char __stdcall C4MusicFileOgg::OnEnd(FSOUND_STREAM* stream, void* buff, int length, void *param)
-{
-	C4MusicFileOgg* pFile = static_cast<C4MusicFileOgg*>(param);
-	pFile->Playing = false;
-	return 0;
-}
-
-void C4MusicFileOgg::Stop(int fadeout_ms)
-{
-	if (stream)
-	{
-		FSOUND_Stream_Close(stream);
-		stream = NULL;
-	}
-	if (Data) { delete[] Data; Data = NULL; }
-	Playing = false;
-}
-
-void C4MusicFileOgg::CheckIfPlaying()
-{
-
-	if (!Playing)
-		Application.MusicSystem.NotifySuccess();
-}
-
-void C4MusicFileOgg::SetVolume(int iLevel)
-{
-	FSOUND_SetVolume(Channel, (int) ((iLevel * 255) / 100));
-}
-
-#elif AUDIO_TK == AUDIO_TK_SDL_MIXER
+#if AUDIO_TK == AUDIO_TK_SDL_MIXER
 C4MusicFileSDL::C4MusicFileSDL():
 		Data(NULL),
 		Music(NULL)
@@ -318,7 +82,7 @@ C4MusicFileSDL::~C4MusicFileSDL()
 	Stop();
 }
 
-bool C4MusicFileSDL::Play(bool loop)
+bool C4MusicFileSDL::Play(bool loop, double max_resume_time)
 {
 	const SDL_version * link_version = Mix_Linked_Version();
 	if (link_version->major < 1
@@ -411,7 +175,7 @@ void C4MusicFileSDL::SetVolume(int iLevel)
 
 C4MusicFileOgg::C4MusicFileOgg() :
 	playing(false), streaming_done(false), loaded(false), channel(0), current_section(0), byte_pos_total(0), volume(1.0f),
-	is_loading_from_file(false), last_source_file_pos(0)
+	is_loading_from_file(false), last_source_file_pos(0), last_playback_pos_sec(0), last_interruption_time()
 {
 	for (size_t i=0; i<num_buffers; ++i)
 		buffers[i] = 0;
@@ -435,6 +199,8 @@ void C4MusicFileOgg::Clear()
 	is_loading_from_file = false;
 	source_file.Close();
 	last_source_file_pos = 0;
+	last_playback_pos_sec = 0;
+	last_interruption_time = C4TimeMilliseconds();
 }
 
 bool C4MusicFileOgg::Init(const char *strFile)
@@ -529,6 +295,23 @@ bool C4MusicFileOgg::Init(const char *strFile)
 	return loaded = true;
 }
 
+StdStrBuf C4MusicFileOgg::GetDebugInfo() const
+{
+	StdStrBuf result;
+	result.Append(FileName);
+	result.AppendFormat("[%.0lf]", last_playback_pos_sec);
+	result.AppendChar('[');
+	bool sec = false;
+	for (auto i = categories.cbegin(); i != categories.cend(); ++i)
+	{
+		if (sec) result.AppendChar(',');
+		result.Append(i->getData());
+		sec = true;
+	}
+	result.AppendChar(']');
+	return result;
+}
+
 void C4MusicFileOgg::UnprepareSourceFileReading()
 {
 	// The file loader could just keep all files open. But if someone symlinks
@@ -555,12 +338,16 @@ bool C4MusicFileOgg::PrepareSourceFileReading()
 	return true;
 }
 
-bool C4MusicFileOgg::Play(bool loop)
+bool C4MusicFileOgg::Play(bool loop, double max_resume_time)
 {
 	// Valid file?
 	if (!loaded) return false;
 	// stop previous
-	Stop();
+	if (playing)
+	{
+		if (max_resume_time > 0.0) return true; // no-op
+		Stop();
+	}
 	// Ensure data reading is ready
 	PrepareSourceFileReading();
 	// Get channel to use
@@ -572,13 +359,25 @@ bool C4MusicFileOgg::Play(bool loop)
 	this->loop = loop;
 	byte_pos_total = 0;
 
+	// Resume setting
+	if (max_resume_time > 0)
+	{
+		// Only resume if significant amount of data is left to be played
+		double time_remaining_sec = GetRemainingTime();
+		if (time_remaining_sec < max_resume_time) last_playback_pos_sec = 0.0;
+	}
+	else
+	{
+		last_playback_pos_sec = 0;
+	}
+
 	// initial volume setting
 	SetVolume(float(::Config.Sound.MusicVolume) / 100.0f);
 
 	// prepare read
 	ogg_info.sound_data.resize(num_buffers * buffer_size);
 	alGenBuffers(num_buffers, buffers);
-	ov_pcm_seek(&ogg_file, 0);
+	ov_time_seek(&ogg_file, last_playback_pos_sec);
 
 	// Fill initial buffers
 	for (size_t i=0; i<num_buffers; ++i)
@@ -590,11 +389,22 @@ bool C4MusicFileOgg::Play(bool loop)
 	return true;
 }
 
+double C4MusicFileOgg::GetRemainingTime()
+{
+	// Note: Only valid after piece has been stopped
+	return ov_time_total(&ogg_file, -1) - last_playback_pos_sec;
+}
 
 void C4MusicFileOgg::Stop(int fadeout_ms)
 {
 	if (playing)
 	{
+		// remember position for eventual later resume
+		ALfloat playback_pos_in_buffer = 0;
+		alErrorCheck(alGetSourcef(channel, AL_SEC_OFFSET, &playback_pos_in_buffer));
+		last_playback_pos_sec += playback_pos_in_buffer;
+		last_interruption_time = C4TimeMilliseconds::Now();
+		// stop!
 		alSourceStop(channel);
 		// clear queue
 		ALint num_queued=0;
@@ -695,9 +505,17 @@ void C4MusicFileOgg::Execute()
 		bool done = false;
 		while (num_processed--)
 		{
-			// refill processed buffers
-			ALuint buffer;
+			// release processed buffer
+			ALuint buffer; 
 			alErrorCheck(alSourceUnqueueBuffers(channel, 1, &buffer));
+			// add playback time of processed buffer to total playback time
+			ALint buf_bits = 16, buf_chans = 2, buf_freq = 44100;
+			alErrorCheck(alGetBufferi(buffer, AL_BITS, &buf_bits));
+			alErrorCheck(alGetBufferi(buffer, AL_CHANNELS, &buf_chans));
+			alErrorCheck(alGetBufferi(buffer, AL_FREQUENCY, &buf_freq));
+			double buffer_secs = double(buffer_size) / buf_bits / buf_chans / buf_freq * 8;
+			last_playback_pos_sec += buffer_secs;
+			// refill processed buffer
 			size_t buffer_idx;
 			for (buffer_idx=0; buffer_idx<num_buffers; ++buffer_idx)
 				if (buffers[buffer_idx] == buffer) break;
@@ -710,6 +528,8 @@ void C4MusicFileOgg::Execute()
 		if (state != AL_PLAYING && streaming_done)
 		{
 			Stop();
+			// reset playback to beginning for next time this piece is playing
+			last_playback_pos_sec = 0.0;
 		}
 		else if (state == AL_STOPPED)
 		{

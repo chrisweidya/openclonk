@@ -44,10 +44,10 @@
 #include <C4FoW.h>
 
 // undocumented!
-static bool FnIncinerateLandscape(C4PropList * _this, long iX, long iY)
+static bool FnIncinerateLandscape(C4PropList * _this, long iX, long iY, long caused_by_plr)
 {
 	if (Object(_this)) { iX += Object(_this)->GetX(); iY += Object(_this)->GetY(); }
-	return !!::Landscape.Incinerate(iX, iY);
+	return !!::Landscape.Incinerate(iX, iY, caused_by_plr);
 }
 
 static C4Void FnSetGravity(C4PropList * _this, long iGravity)
@@ -308,7 +308,7 @@ static C4Value FnObjectCount(C4PropList * _this, C4Value *pPars)
 	C4FindObject *pFO = CreateCriterionsFromPars(pPars, pFOs, NULL, Object(_this));
 	// Error?
 	if (!pFO)
-		throw new C4AulExecError("ObjectCount: No valid search criterions supplied");
+		throw C4AulExecError("ObjectCount: No valid search criterions supplied");
 	// Search
 	int32_t iCnt = pFO->Count(::Objects, ::Objects.Sectors);
 	// Free
@@ -325,7 +325,7 @@ static C4Value FnFindObject(C4PropList * _this, C4Value *pPars)
 	C4FindObject *pFO = CreateCriterionsFromPars(pPars, pFOs, pSOs, Object(_this));
 	// Error?
 	if (!pFO)
-		throw new C4AulExecError("FindObject: No valid search criterions supplied");
+		throw C4AulExecError("FindObject: No valid search criterions supplied");
 	// Search
 	C4Object *pObj = pFO->Find(::Objects, ::Objects.Sectors);
 	// Free
@@ -342,7 +342,7 @@ static C4Value FnFindObjects(C4PropList * _this, C4Value *pPars)
 	C4FindObject *pFO = CreateCriterionsFromPars(pPars, pFOs, pSOs, Object(_this));
 	// Error?
 	if (!pFO)
-		throw new C4AulExecError("FindObjects: No valid search criterions supplied");
+		throw C4AulExecError("FindObjects: No valid search criterions supplied");
 	// Search
 	C4ValueArray *pResult = pFO->FindMany(::Objects, ::Objects.Sectors);
 	// Free
@@ -613,16 +613,17 @@ static bool FnSetGlobalSoundModifier(C4PropList * _this, C4PropList *modifier_pr
 	return true;
 }
 
-static bool FnMusic(C4PropList * _this, C4String *szSongname, bool fLoop, long iFadeTime_ms)
+static bool FnMusic(C4PropList * _this, C4String *szSongname, bool fLoop, long iFadeTime_ms, long max_resume_time_ms)
 {
 	bool success;
+	if (max_resume_time_ms < 0) return false; // Safety
 	if (!szSongname)
 	{
 		success = Application.MusicSystem.Stop();
 	}
 	else
 	{
-		success = Application.MusicSystem.Play(FnStringPar(szSongname), !!fLoop, iFadeTime_ms);
+		success = Application.MusicSystem.Play(FnStringPar(szSongname), !!fLoop, iFadeTime_ms, double(max_resume_time_ms)/1000.0);
 	}
 	if (::Control.SyncMode()) return true;
 	return success;
@@ -630,12 +631,13 @@ static bool FnMusic(C4PropList * _this, C4String *szSongname, bool fLoop, long i
 
 static long FnMusicLevel(C4PropList * _this, long iLevel)
 {
-	Game.SetMusicLevel(iLevel);
-	return Application.MusicSystem.SetVolume(iLevel);
+	return ::Application.MusicSystem.SetGameMusicLevel(iLevel);
 }
 
-static long FnSetPlayList(C4PropList * _this, C4String *szPlayList, Nillable<long> iAtPlayer, bool fForceSwitch, long iFadeTime_ms)
+static long FnSetPlayList(C4PropList * _this, const C4Value & playlist_data, Nillable<long> iAtPlayer, bool fForceSwitch, long iFadeTime_ms, long max_resume_time_ms)
 {
+	// Safety
+	if (max_resume_time_ms < 0) return 0;
 	// If a player number is provided, set play list for clients where given player is local only
 	if (!iAtPlayer.IsNil() && iAtPlayer != NO_OWNER)
 	{
@@ -643,9 +645,25 @@ static long FnSetPlayList(C4PropList * _this, C4String *szPlayList, Nillable<lon
 		if (!at_plr) return 0;
 		if (!at_plr->LocalControl) return 0;
 	}
+	// Playlist might be a string for the new playlist, a proplist with more info, or nil to reset the playlist
+	C4String * szPlayList = playlist_data.getStr();
+	C4PropList *playlist_props = NULL;
+	if (!szPlayList)
+	{
+		playlist_props = playlist_data.getPropList();
+		if (playlist_props)
+		{
+			szPlayList = playlist_props->GetPropertyStr(P_PlayList);
+			// Update playlist properties
+			C4Value val;
+			if (playlist_props->GetProperty(P_MusicBreakMin, &val)) ::Application.MusicSystem.SetMusicBreakMin(val.getInt());
+			if (playlist_props->GetProperty(P_MusicBreakMax, &val)) ::Application.MusicSystem.SetMusicBreakMax(val.getInt());
+			if (playlist_props->GetProperty(P_MusicBreakChance, &val)) ::Application.MusicSystem.SetMusicBreakChance(val.getInt());
+			if (playlist_props->GetProperty(P_MusicMaxPositionMemory, &val)) ::Application.MusicSystem.SetMusicMaxPositionMemory(val.getInt());
+		}
+	}
 	// Set playlist; count entries
-	long iFilesInPlayList = Application.MusicSystem.SetPlayList(FnStringPar(szPlayList), fForceSwitch, iFadeTime_ms);
-	Game.PlayList.Copy(FnStringPar(szPlayList));
+	long iFilesInPlayList = ::Application.MusicSystem.SetPlayList(FnStringPar(szPlayList), fForceSwitch, iFadeTime_ms, double(max_resume_time_ms)/1000.0f);
 	// network/record/replay: return 0 for sync reasons
 	if (::Control.SyncMode()) return 0;
 	return iFilesInPlayList;
@@ -665,7 +683,7 @@ static bool FnGainMissionAccess(C4PropList * _this, C4String *szPassword)
 
 static C4Value FnPlayerMessage(C4PropList * _this, C4Value * Pars)
 {
-	if (!Object(_this)) throw new NeedObjectContext("PlayerMessage");
+	if (!Object(_this)) throw NeedObjectContext("PlayerMessage");
 	int iPlayer = Pars[0].getInt();
 	C4String * szMessage = Pars[1].getStr();
 	if (!szMessage) return C4VBool(false);
@@ -691,7 +709,7 @@ static C4Value FnPlayerMessage(C4PropList * _this, C4Value * Pars)
 
 static C4Value FnMessage(C4PropList * _this, C4Value * Pars)
 {
-	if (!Object(_this)) throw new NeedObjectContext("Message");
+	if (!Object(_this)) throw NeedObjectContext("Message");
 	C4String * szMessage = Pars[0].getStr();
 	if (!szMessage) return C4VBool(false);
 	StdStrBuf buf;
@@ -717,7 +735,7 @@ static C4Value FnMessage(C4PropList * _this, C4Value * Pars)
 // undocumented!
 static C4Value FnAddMessage(C4PropList * _this, C4Value * Pars)
 {
-	if (!Object(_this)) throw new NeedObjectContext("AddMessage");
+	if (!Object(_this)) throw NeedObjectContext("AddMessage");
 	C4String * szMessage = Pars[0].getStr();
 	if (!szMessage) return C4VBool(false);
 
@@ -783,10 +801,10 @@ static bool FnSetHostility(C4PropList * _this, long iPlr, long iPlr2, bool fHost
 	return true;
 }
 
-static bool FnSetPlrView(C4PropList * _this, long iPlr, C4Object *tobj)
+static bool FnSetPlrView(C4PropList * _this, long iPlr, C4Object *tobj, bool immediate_position)
 {
 	if (!ValidPlr(iPlr)) return false;
-	::Players.Get(iPlr)->SetViewMode(C4PVM_Target,tobj);
+	::Players.Get(iPlr)->SetViewMode(C4PVM_Target, tobj, immediate_position);
 	return true;
 }
 
@@ -797,10 +815,10 @@ static long FnGetPlrViewMode(C4PropList * _this, long iPlr)
 	return ::Players.Get(iPlr)->ViewMode;
 }
 
-static C4Void FnResetCursorView(C4PropList * _this, long plr)
+static C4Void FnResetCursorView(C4PropList * _this, long plr, bool immediate_position)
 {
 	C4Player *pplr = ::Players.Get(plr);
-	if (pplr) pplr->ResetCursorView();
+	if (pplr) pplr->ResetCursorView(immediate_position);
 	return C4Void();
 }
 
@@ -1597,7 +1615,7 @@ C4Value GetValByStdCompiler(const char *strEntry, const char *strSection, int iE
 static C4Value FnGetDefCoreVal(C4PropList * _this, C4String * strEntry, C4String * strSection, int iEntryNr)
 {
 	if (!_this || !_this->GetDef())
-		throw new NeedNonGlobalContext("GetDefCoreVal");
+		throw NeedNonGlobalContext("GetDefCoreVal");
 
 	return GetValByStdCompiler(FnStringPar(strEntry), strSection ? strSection->GetCStr() : NULL,
 			iEntryNr, mkNamingAdapt(*_this->GetDef(), "DefCore"));
@@ -2482,11 +2500,11 @@ static bool FnCustomMessage(C4PropList * _this, C4String *pMsg, C4Object *pObj, 
 	uint32_t vpos = dwFlags & (C4GM_Top | C4GM_VCenter | C4GM_Bottom);
 	if (((hpos | (hpos-1)) + 1)>>1 != hpos)
 	{
-		throw new C4AulExecError("CustomMessage: Only one horizontal positioning flag allowed");
+		throw C4AulExecError("CustomMessage: Only one horizontal positioning flag allowed");
 	}
 	if (((vpos | (vpos-1)) + 1)>>1 != vpos)
 	{
-		throw new C4AulExecError("CustomMessage: Only one vertical positioning flag allowed");
+		throw C4AulExecError("CustomMessage: Only one vertical positioning flag allowed");
 	}
 	// message color
 	if (!dwClr) dwClr = 0xffffffff;
@@ -2616,7 +2634,6 @@ static bool FnSetNextMission(C4PropList * _this, C4String *szNextMission, C4Stri
 	return true;
 }
 
-// undocumented!
 static long FnGetPlayerControlState(C4PropList * _this, long iPlr, long iControl)
 {
 	// get control set to check

@@ -94,7 +94,7 @@ private func FireBullet(object ammo)
 	var shot = ammo->TakeObject();
 	var angle = this->GetR();
 	shot->Launch(this, angle, 35, 200);
-	Sound("GunShoot?");
+	Sound("Objects::Weapons::Musket::GunShoot?");
 
 	// Muzzle Flash & gun smoke
 	var IX = Sin(GetR(), 30);
@@ -421,7 +421,7 @@ public func ActivateEntrance(object clonk)
 		clonk->Enter(this);
 		clonk->SetAction("Walk");
 		PlaneMount(clonk);
-		clonk->PlayAnimation("Drive", 5, Anim_Const(10), Anim_Const(1000));
+		clonk->PlayAnimation("Drive", CLONK_ANIM_SLOT_Movement, Anim_Const(10), Anim_Const(1000));
 	}
 }
 
@@ -488,9 +488,9 @@ private func PropellerSpeedTimer()
 private func SetPropellerSound(int speed)
 {
 	if (speed <= 0)
-		return Sound("PropellerLoop",0,100,nil,-1);
+		return Sound("Objects::Plane::PropellerLoop",0,100,nil,-1);
 	else
-		return Sound("PropellerLoop",0,100,nil,1,0,(speed-100)*2/3);
+		return Sound("Objects::Plane::PropellerLoop",0,100,nil,1,0,(speed-100)*2/3);
 }
 
 /* Properties */
@@ -532,9 +532,10 @@ local ActMap = {
 
 func Definition(def) 
 {
-	SetProperty("Name", "$Name$", def);
 	SetProperty("MeshTransformation", Trans_Mul(Trans_Rotate(90,0,0,1), Trans_Translate(-10000,-3375,0), Trans_Rotate(25,0,1,0)));
 	SetProperty("PictureTransformation",Trans_Mul(Trans_Rotate(-5,1,0,0),Trans_Rotate(40,0,1,0),Trans_Translate(-20000,-4000,20000)),def);
 }
 
+local Name="$Name$";
+local Description="$Description$";
 local Rebuy = true;

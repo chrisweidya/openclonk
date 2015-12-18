@@ -107,15 +107,7 @@ public func Redefine(idTo)
 protected func CatchBlow()
 {
 	if (GetAction() == "Dead") return;
-	if (!Random(5)) Hurt();
-}
-	
-protected func Hurt()
-{
-	if(gender == 0)
-		Sound("Hurt?");
-	else
-		Sound("FHurt?");
+	if (!Random(5)) PlaySoundHurt();
 }
 	
 protected func Grab(object pTarget, bool fGrab)
@@ -148,12 +140,16 @@ protected func Death(int killed_by)
 	// Some effects on dying.
 	if (!this.silent_death)
 	{
-		if(gender == 0)
-			Sound("Die");
-		else
-			Sound("FDie");
-			
+		PlaySkinSound("Die*");
 		DeathAnnounce();
+		
+		// When killed by a team member, the other Clonk randomly plays a sound.
+		if (!Random(5) && killed_by != NO_OWNER && killed_by != GetOwner() && !Hostile(killed_by, GetOwner()))
+		{
+			var other_cursor = GetCursor(killed_by);
+			if (other_cursor)
+				other_cursor->~PlaySoundTaunt();
+		}
 	}
 	CloseEyes(1);
 	
@@ -176,6 +172,12 @@ protected func DeepBreath()
 	Sound("Breath");
 }
 
+public func Incineration()
+{
+	PlaySoundShock();
+	return _inherited(...);
+}
+
 protected func CheckStuck()
 {
 	// Prevents getting stuck on middle vertex
@@ -188,9 +190,9 @@ public func Eat(object food)
 {
 	if(GetProcedure() == "WALK")
 	{
-		DoEnergy(food->NutritionalValue());
+		Heal(food->NutritionalValue());
 		food->RemoveObject();
-		Sound("Munch?");
+		Sound("Clonk::Action::Munch?");
 		SetAction("Eat");
 	}
 }
@@ -251,7 +253,20 @@ public func IsPrey() { return true; }
 
 public func IsJumping(){return WildcardMatch(GetAction(), "*Jump*");}
 public func IsWalking(){return GetProcedure() == "WALK";}
+public func IsSwimming(){return GetProcedure() == "SWIM";}
 public func IsBridging(){return WildcardMatch(GetAction(), "Bridge*");}
+
+// Clonks act as containers for the interaction menu as long as they are alive.
+public func IsContainer() { return GetAlive(); }
+
+// You can not interact with dead Clonks.
+// This would be the place to show a death message etc.
+public func RejectInteractionMenu(object to)
+{
+	if (!GetAlive())
+		return Format("$MsgDeadClonk$", GetName());
+	return _inherited(to, ...);
+}
 
 /* Carry items on the clonk */
 
@@ -349,7 +364,7 @@ func DoUpdateAttach(bool sec)
 		if(HasHandAction(sec, 1))
 		{
 			iHandMesh[sec] = AttachMesh(obj, pos_hand, bone, trans);
-			PlayAnimation(closehand, 6, Anim_Const(GetAnimationLength(closehand)), Anim_Const(1000));
+			PlayAnimation(closehand, CLONK_ANIM_SLOT_Hands, Anim_Const(GetAnimationLength(closehand)), Anim_Const(1000));
 		}
 	}
 	else if(iAttachMode == CARRY_HandBack)
@@ -357,7 +372,7 @@ func DoUpdateAttach(bool sec)
 		if(HasHandAction(sec, 1))
 		{
 			iHandMesh[sec] = AttachMesh(obj, pos_hand, bone, trans);
-			PlayAnimation(closehand, 6, Anim_Const(GetAnimationLength(closehand)), Anim_Const(1000));
+			PlayAnimation(closehand, CLONK_ANIM_SLOT_Hands, Anim_Const(GetAnimationLength(closehand)), Anim_Const(1000));
 		}
 		else
 			iHandMesh[sec] = AttachMesh(obj, pos_back, bone2, trans);
@@ -365,7 +380,7 @@ func DoUpdateAttach(bool sec)
 	else if(iAttachMode == CARRY_HandAlways)
 	{
 		iHandMesh[sec] = AttachMesh(obj, pos_hand, bone, trans);
-		PlayAnimation(closehand, 6, Anim_Const(GetAnimationLength(closehand)), Anim_Const(1000));
+		PlayAnimation(closehand, CLONK_ANIM_SLOT_Hands, Anim_Const(GetAnimationLength(closehand)), Anim_Const(1000));
 	}
 	else if(iAttachMode == CARRY_Back)
 	{
@@ -377,7 +392,7 @@ func DoUpdateAttach(bool sec)
 		if(HasHandAction(sec, 1) && !sec && !special_other)
 		{
 			iHandMesh[sec] = AttachMesh(obj, "pos_tool1", bone, trans);
-			PlayAnimation("CarryArms", 6, Anim_Const(obj->~GetCarryPhase(this)), Anim_Const(1000));
+			PlayAnimation("CarryArms", CLONK_ANIM_SLOT_Hands, Anim_Const(obj->~GetCarryPhase(this)), Anim_Const(1000));
 			fBothHanded = 1;
 		}
 	}
@@ -385,7 +400,7 @@ func DoUpdateAttach(bool sec)
 	{
 		if(HasHandAction(sec, 1) && !sec)
 		{
-			PlayAnimation("CarrySpear", 6, Anim_Const(0), Anim_Const(1000));
+			PlayAnimation("CarrySpear", CLONK_ANIM_SLOT_Hands, Anim_Const(0), Anim_Const(1000));
 		}
 		else
 			iHandMesh[sec] = AttachMesh(obj, pos_back, bone2, trans);
@@ -395,7 +410,7 @@ func DoUpdateAttach(bool sec)
 		if(HasHandAction(sec, 1) && !sec)
 		{
 			iHandMesh[sec] = AttachMesh(obj, "pos_hand2", bone, trans);
-			PlayAnimation("CarryMusket", 6, Anim_Const(0), Anim_Const(1000));
+			PlayAnimation("CarryMusket", CLONK_ANIM_SLOT_Hands, Anim_Const(0), Anim_Const(1000));
 			fBothHanded = 1;
 		}
 		else
@@ -406,7 +421,7 @@ func DoUpdateAttach(bool sec)
 		if(HasHandAction(sec, 1) && !sec)
 		{
 			iHandMesh[sec] = AttachMesh(obj, "pos_hand2", bone, trans);
-			PlayAnimation("CarryCrossbow", 6, Anim_Const(0), Anim_Const(1000));
+			PlayAnimation("CarryCrossbow", CLONK_ANIM_SLOT_Hands, Anim_Const(0), Anim_Const(1000));
 			fBothHanded = 1;
 		}
 		else
@@ -635,6 +650,61 @@ func GetSkinCount() { return 4; }
 func GetSkin() { return skin; }
 func GetSkinName() { return skin_name; }
 
+
+// Returns the skin name as used to select the right sound subfolder.
+public func GetSoundSkinName()
+{
+	if (skin_name == nil) return "Adventurer";
+	return skin_name;
+}
+
+public func PlaySkinSound(string sound, ...)
+{
+	Sound(Format("Clonk::Skin::%s::%s", GetSoundSkinName(), sound), ...);
+}
+
+/*
+Helper functions to play some sounds. This are encapsulated here in case sound names change.
+*/
+public func PlaySoundConfirm(...)
+{
+	if (skin_name != "Farmer")
+		PlaySkinSound("Confirm*", ...);
+}
+public func PlaySoundDecline(...)
+{
+	if (skin_name != "Farmer")
+		PlaySkinSound("Decline*", ...);
+}
+// Doubtful sound, e.g. when trying a clearly impossible action.
+public func PlaySoundDoubt(...)
+{
+	if (skin_name != "Farmer")
+		PlaySkinSound("Doubt*", ...);
+}
+
+public func PlaySoundHurt(...) { PlaySkinSound("Hurt*", ...); }
+// Sound that is supposed to be funny in situations where the Clonk maybe did something "evil" like killing a teammate.
+public func PlaySoundTaunt(...)
+{
+	if (skin_name == "Alchemist")
+		PlaySkinSound("EvilConfirm*", ...);
+	else if (skin_name == "Steampunk")
+		PlaySkinSound("Laughter*", ...);
+}
+// Surprised sounds, e.g. when catching fire.
+public func PlaySoundShock(...)
+{
+	if (skin_name == "Steampunk" || skin_name == "Adventurer")
+		PlaySkinSound("Shock*", ...);
+}
+public func PlaySoundScream() { PlaySkinSound("Scream*"); }
+// General idle sounds, played when also playing an idle animation.
+public func PlaySoundIdle(...)
+{
+	if (skin_name == "Steampunk")
+		PlaySkinSound("Singing*", ...);
+}
 //Portrait definition of this Clonk for messages
 func GetPortrait()
 {
@@ -644,6 +714,56 @@ func GetPortrait()
 func SetPortrait(proplist custom_portrait)
 {
 	this.portrait = custom_portrait;
+	return true;
+}
+
+/* Magic */
+
+local magic_energy;
+
+public func GetMagicEnergy(int precision)
+{
+	if (precision == nil) precision = 1000;
+
+	if (precision)
+		return magic_energy / precision;
+	else
+		return magic_energy;
+}
+
+public func GetMaxMagicEnergy(int precision)
+{
+	if (precision == nil) precision = 1000;
+
+	if (precision)
+		return this.MaxMagic / precision;
+	else
+		return this.MaxMagic;
+}
+
+public func SetMagicEnergy(int val, int precision)
+{
+	if (precision == nil) precision = 1000;
+
+	magic_energy = BoundBy(val * precision, 0, this.MaxMagic);
+	this->~OnMagicEnergyChange(val);
+
+	return true;
+}
+
+// Adjusts the magic energy but only if change can be applied completely. Returns true if successful, false otherwise.
+// Use partial to bypass the completeness check
+public func DoMagicEnergy(int change, bool partial, int precision)
+{
+	if (precision == nil) precision = 1000;
+	change = change * precision;
+
+	// Can't apply fully?
+	if (!Inside(magic_energy + change, 0, this.MaxMagic) && !partial)
+		return false;
+
+	magic_energy = BoundBy(magic_energy + change, 0, this.MaxMagic);
+	this->~OnMagicEnergyChange(change);
 	return true;
 }
 
@@ -667,27 +787,26 @@ func SaveScenarioObject(props)
 	return true;
 }
 
-
 /* AI editor helper */
 
 func EditCursorSelection(...)
 {
-	var ai = S2AI->GetAI(this);
-	if (ai) Call(S2AI.EditCursorSelection, ai, ...);
+	var ai = AI->GetAI(this);
+	if (ai) Call(AI.EditCursorSelection, ai, ...);
 	return _inherited(...);
 }
 
 func EditCursorDeselection(...)
 {
-	var ai = S2AI->GetAI(this);
-	if (ai) Call(S2AI.EditCursorDeselection, ai, ...);
+	var ai = AI->GetAI(this);
+	if (ai) Call(AI.EditCursorDeselection, ai, ...);
 	return _inherited(...);
 }
 
 func AI_Add()
 {
 	// Create AI and re-select
-	S2AI->AddAI(this);
+	AI->AddAI(this);
 	EditCursorDeselection();
 	EditCursorSelection();
 	return true;
@@ -1047,6 +1166,7 @@ local Name = "Clonk";
 local Description = "$Description$";
 local MaxEnergy = 50000;
 local MaxBreath = 720; // Clonk can breathe for 20 seconds under water.
+local MaxMagic = 50000;
 local JumpSpeed = 400;
 local ThrowSpeed = 294;
 local NoBurnDecay = 1;

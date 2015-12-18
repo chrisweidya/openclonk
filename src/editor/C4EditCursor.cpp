@@ -75,7 +75,7 @@ void C4EditCursor::Execute()
 		// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 	}
 	if (!::Game.iTick35)
-		Console.PropertyDlgUpdate(Selection);
+		Console.PropertyDlgUpdate(Selection, false);
 }
 
 bool C4EditCursor::Init()
@@ -204,7 +204,7 @@ void C4EditCursor::UpdateStatusBar()
 
 void C4EditCursor::OnSelectionChanged()
 {
-	Console.PropertyDlgUpdate(Selection);
+	Console.PropertyDlgUpdate(Selection, false);
 	Console.ObjectListDlg.Update(Selection);
 }
 
@@ -480,7 +480,7 @@ bool C4EditCursor::OpenPropTools()
 	{
 	case C4CNS_ModeEdit: case C4CNS_ModePlay:
 		Console.PropertyDlgOpen();
-		Console.PropertyDlgUpdate(Selection);
+		Console.PropertyDlgUpdate(Selection, false);
 		break;
 	case C4CNS_ModeDraw:
 		Console.ToolsDlg.Open();
@@ -537,8 +537,8 @@ void C4EditCursor::Draw(C4TargetFacet &cgo)
 	// Draw drag frame
 	if (DragFrame)
 		pDraw->DrawFrameDw(cgo.Surface,
-		                               Min(X, X2) + cgo.X - cgo.TargetX, Min(Y, Y2) + cgo.Y - cgo.TargetY,
-		                               Max(X, X2) + cgo.X - cgo.TargetX, Max(Y, Y2) + cgo.Y - cgo.TargetY, 0xffffffff);
+		                               std::min(X, X2) + cgo.X - cgo.TargetX, std::min(Y, Y2) + cgo.Y - cgo.TargetY,
+		                               std::max(X, X2) + cgo.X - cgo.TargetX, std::max(Y, Y2) + cgo.Y - cgo.TargetY, 0xffffffff);
 	// Draw drag line
 	if (DragLine)
 		pDraw->DrawLineDw(cgo.Surface,
@@ -600,7 +600,7 @@ void C4EditCursor::FrameSelection()
 	{
 		if (cobj->Status && cobj->OCF & OCF_NotContained)
 		{
-			if (Inside(cobj->GetX(),Min(X,X2),Max(X,X2)) && Inside(cobj->GetY(),Min(Y,Y2),Max(Y,Y2)))
+			if (Inside(cobj->GetX(),std::min(X,X2),std::max(X,X2)) && Inside(cobj->GetY(),std::min(Y,Y2),std::max(Y,Y2)))
 				AddToSelection(cobj);
 		}
 	}
@@ -609,7 +609,9 @@ void C4EditCursor::FrameSelection()
 
 bool C4EditCursor::In(const char *szText)
 {
+	::Console.RegisterRecentInput(szText, C4Console::MRU_Object);
 	EMMoveObject(EMMO_Script, Fix0, Fix0, NULL, &Selection, szText);
+	::Console.PropertyDlgUpdate(Selection, true);
 	return true;
 }
 

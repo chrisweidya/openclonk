@@ -6,12 +6,13 @@ static npc_tuesday;
 func Intro_Start()
 {
 	// Intro starts high up in the clouds
+	Music("TheSkylands");
 	LoadScenarioSection("Intro");
 	SetWind(-100);
 	this.intro_skyscroll_xdir = -10;
 	SetSkyParallax(0, 20, 20, this.intro_skyscroll_xdir, 0);
 	
-	this.plane = CreateObjectAbove(Plane, 500, 200);
+	this.plane = CreateObjectAbove(Airplane, 500, 200);
 	this.plane->SetColor(0xa04000);
 	this.pilot = CreateObjectAbove(Clonk, 100, 100, NO_OWNER);
 	this.pilot->MakeInvincible();
@@ -23,6 +24,7 @@ func Intro_Start()
 	this.pilot->SetColor(0xff0000);
 	this.pilot->SetDir(DIR_Left);
 	this.pilot->SetObjectLayer(this.pilot);
+	this.pilot->AttachMesh(Hat, "skeleton_head", "main", Trans_Translate(5500, 0, 0)); // Hat is seen in the cockpit!
 
 	this.plane.FxIntPlaneTimer = this.Intro_PlaneTimer;
 	RemoveEffect("IntPlane", this.plane);
@@ -40,7 +42,7 @@ func Intro_Start()
 func Intro_PlaneTimer(...)
 {
 	// Plane flight overload: Just move sky and have plane do turbulent movement during initial part of intro
-	var rv = Call(Plane.FxIntPlaneTimer, ...);
+	var rv = Call(Airplane.FxIntPlaneTimer, ...);
 	if (g_intro_sky_moving)
 	{
 		if (!Random(4)) this.rdir = BoundBy((80+Random(21)-GetR())/5,-1,1);
@@ -114,8 +116,8 @@ func Intro_10()
 {
 	g_intro_sky_moving = false;
 	Schedule(this, "SetSkyParallax(0, 20, 20, ++this.intro_skyscroll_xdir, 0)", 10, -this.intro_skyscroll_xdir);
-	GetHero()->Sound("Hurt1");
-	GetHero()->Sound("Hurt2");
+	GetHero()->Sound("Clonk::Verbal::Hurt1");
+	GetHero()->Sound("Clonk::Verbal::Hurt2");
 	this.plane.rdir = 0;
 	this.plane->StartInstantFlight(this.plane->GetR(), 15);
 	MessageBoxAll("$Intro10$", GetHero(), true); // aaaah

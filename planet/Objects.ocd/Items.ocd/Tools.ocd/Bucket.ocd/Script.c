@@ -12,10 +12,6 @@
 // Maximum distance at which material is collected / spilled
 local maxreach = 15;
 
-// This is only temporary during drawing. The contents define the actual material & amount;
-local material_amount;
-local material_name;
-
 public func GetCarryMode() { return CARRY_HandBack; }
 public func GetCarryBone() { return "main"; }
 public func GetCarryTransform()
@@ -30,15 +26,12 @@ public func RejectUse(object clonk)
 
 public func ControlUse(object clonk, int iX, int iY)
 {
-	var angle = Angle(0,0,iX,iY);
-	var distance = GetBucketReachDistance(angle);
-	var x2 = Sin(180-angle,distance);
-	var y2 = Cos(180-angle,distance);
+	var angle = Angle(0, 0, iX, iY);
 
 	// spill bucket
 	if (IsBucketFilled())
 	{
-		Spill(x2, y2, distance >= maxreach);
+		Spill(angle);
 		EmptyBucket();
 		PlayAnimation(clonk);
 		return true;
@@ -64,12 +57,6 @@ public func EmptyBucket()
 	var i = ContentsCount();
 	while (--i >= 0)
 		if (Contents(0)) Contents(0)->RemoveObject();
-	this.PictureTransformation = Trans_Mul(Trans_Translate(500,400,0), Trans_Rotate(-10,1,0,0), Trans_Rotate(30,0,1,0), Trans_Rotate(+25,0,0,1), Trans_Scale(1350));
-}
-
-public func FillBucket()
-{
-	this.PictureTransformation = Trans_Mul(Trans_Translate(500,400,0), Trans_Rotate(-20,1,0,0), Trans_Rotate(20,0,1,0), Trans_Rotate(-15,0,0,1), Trans_Scale(1350));
 }
 
 public func IsBucketFilled()
@@ -79,17 +66,6 @@ public func IsBucketFilled()
 public func IsBucketEmpty()
 {
 	return !IsBucketFilled();
-}
-
-/** Creates an imaginary line which runs for 'maxreach' distance (units in pixels) or until it hits a solid wall */
-private func GetBucketReachDistance(int angle)
-{
-	var distance = 0;
-	while(!GBackSolid(Sin(180-angle,distance),Cos(180-angle,distance)) && distance < maxreach)
-	{
-		++distance;
-	}
-	return distance;
 }
 
 private func PlayAnimation(object clonk)
@@ -118,113 +94,27 @@ private func PlayAnimation(object clonk)
 	else
 		animation = Format("SwordSlash2.%s", arm);
 
-	clonk->PlayAnimation(animation, 10, Anim_Linear(0, 0, clonk->GetAnimationLength(animation), length, ANIM_Remove), Anim_Const(1000));
+	clonk->PlayAnimation(animation, CLONK_ANIM_SLOT_Arms, Anim_Linear(0, 0, clonk->GetAnimationLength(animation), length, ANIM_Remove), Anim_Const(1000));
 	clonk->UpdateAttach();
 }
 
-private func Spill(int x, int y, bool soft_spill)
+private func Spill(int angle)
 {
 	var obj = Contents(0);
 	if (!obj) return;
-	material_name = obj->GetMaterialName();
-	material_amount = obj->GetMaterialAmount();
+	var material_name = obj->GetMaterialName();
+	var material_amount = obj->GetMaterialAmount();
 	var stack_count = obj->~GetStackCount();
 	if (stack_count > 1) material_amount *= stack_count;
-	
+
 	// This will only spray out the material because no solid base to stick it on was found
-	if (soft_spill)
-	{
-		var angle = Angle(0,0, x,y);
-		CastPXS(material_name, material_amount, 20, 0,0, angle, 15);
-		return;
-	}
-	
-	// Store as property. This is solely done so that we don't have to pass it as a parameter everywhere.
-	
-	for (var i = 0; i < 5; i++)
-	{
-		// Fix some holes
-		if (i == 1)
-		{
-			DrawPixel(GetX()+x-1, GetY()+y-1);
-			if (!material_amount) break;
-			DrawPixel(GetX()+x+1, GetY()+y-1);
-			if (!material_amount) break;
-			DrawPixel(GetX()+x-1, GetY()+y+1);
-			if (!material_amount) break;
-			DrawPixel(GetX()+x+1, GetY()+y+1);
-			if (!material_amount) break;
-		}
-		if (!DrawCircle(GetX()+x,GetY()+y,i))
-			break;
-	}
-}
-
-private func DrawCircle(int x0, int y0, int radius)
-{
-	// Midpoint circle algorithm
-
-	var f = 1 - radius;
-	var ddF_x = 1;
-	var ddF_y = -2 * radius;
-	var x = 0;
-	var y = radius;
-
-	DrawPixel(x0, y0 + radius);
-	if (!material_amount) return false;
-	DrawPixel(x0, y0 - radius);
-	if (!material_amount) return false;
-	DrawPixel(x0 + radius, y0);
-	if (!material_amount) return false;
-	DrawPixel(x0 - radius, y0);
-	if (!material_amount) return false;
-
-	while(x < y)
-	{
-		if (f >= 0)
-		{
-			y--;
-			ddF_y += 2;
-			f += ddF_y;
-		}
-		x++;
-		ddF_x += 2;
-		f += ddF_x;
-		DrawPixel(x0 + x, y0 + y);
-		if (!material_amount) return false;
-		DrawPixel(x0 - x, y0 + y);
-		if (!material_amount) return false;
-		DrawPixel(x0 + x, y0 - y);
-		if (!material_amount) return false;
-		DrawPixel(x0 - x, y0 - y);
-		if (!material_amount) return false;
-		DrawPixel(x0 + y, y0 + x);
-		if (!material_amount) return false;
-		DrawPixel(x0 - y, y0 + x);
-		if (!material_amount) return false;
-		DrawPixel(x0 + y, y0 - x);
-		if (!material_amount) return false;
-		DrawPixel(x0 - y, y0 - x);
-		if (!material_amount) return false;
-	}
-
-	return true;
-}
-
-private func DrawPixel(int x, int y)
-{
-	// Don't overwrite solid material
-	if (GBackSolid(AbsX(x), AbsY(y))) return;
-
-	DrawMaterialQuad(material_name, x,y, x+1,y, x+1,y+1, x,y+1, true);
-	material_amount--;
+	CastPXS(material_name, material_amount, 20, 0,0, angle, 15);
 }
 
 protected func Hit()
 {
-	Sound("DullWoodHit?");
+	Sound("Hits::Materials::Wood::DullWoodHit?");
 }
-
 
 // Can collect IsBucketMaterial?
 public func IsBucket() { return true; }
@@ -257,7 +147,7 @@ public func SaveScenarioObject(props)
 
 protected func Definition(def)
 {
-	SetProperty("PictureTransformation", Trans_Mul(Trans_Translate(500,400,0), Trans_Rotate(-10,1,0,0), Trans_Rotate(30,0,1,0), Trans_Rotate(+25,0,0,1), Trans_Scale(1350)),def);
+	SetProperty("PictureTransformation", Trans_Mul(Trans_Translate(500,400,0), Trans_Rotate(-10,1,0,0), Trans_Rotate(30,0,1,0), Trans_Rotate(+25,0,0,1), Trans_Scale(1100)),def);
 }
 
 local Name = "$Name$";

@@ -178,7 +178,7 @@ bool C4Surface::ReadPNG(CStdStream &hGroup, int iFlags)
 			C4TexRef *pTexRef = &textures[tY*iTexX + tX];
 			if (!pTexRef->Lock()) continue;
 			// At the edges, not the whole texture is used
-			int maxY = Min(iTexSize, Hgt - tY * iTexSize), maxX = Min(iTexSize, Wdt - tX * iTexSize);
+			int maxY = std::min(iTexSize, Hgt - tY * iTexSize), maxX = std::min(iTexSize, Wdt - tX * iTexSize);
 			for (int iY = 0; iY < maxY; ++iY)
 			{
 				// The global, not texture-relative position
@@ -224,7 +224,7 @@ bool C4Surface::ReadPNG(CStdStream &hGroup, int iFlags)
 	return fSuccess;
 }
 
-bool C4Surface::SavePNG(C4Group &hGroup, const char *szFilename, bool fSaveAlpha, bool fApplyGamma, bool fSaveOverlayOnly)
+bool C4Surface::SavePNG(C4Group &hGroup, const char *szFilename, bool fSaveAlpha, bool fSaveOverlayOnly)
 {
 	// Using temporary file at C4Group temp path
 	char szTemp[_MAX_PATH+1];
@@ -232,7 +232,7 @@ bool C4Surface::SavePNG(C4Group &hGroup, const char *szFilename, bool fSaveAlpha
 	SAppend(GetFilename(szFilename),szTemp);
 	MakeTempFilename(szTemp);
 	// Save to temporary file
-	if (!C4Surface::SavePNG(szTemp, fSaveAlpha, fApplyGamma, fSaveOverlayOnly)) return false;
+	if (!C4Surface::SavePNG(szTemp, fSaveAlpha, fSaveOverlayOnly, false)) return false;
 	// Move temp file to group
 	if (!hGroup.Move(szTemp,GetFilename(szFilename))) return false;
 	// Success
@@ -284,7 +284,7 @@ static boolean fill_input_buffer (j_decompress_ptr cinfo)
 	// The doc says to give fake end-of-inputs if there is no more data
 	cinfo->src->next_input_byte = &end_of_input;
 	cinfo->src->bytes_in_buffer = 1;
-	return true;
+	return (boolean)true;
 }
 static void skip_input_data (j_decompress_ptr cinfo, long num_bytes)
 {
@@ -335,7 +335,7 @@ bool C4Surface::ReadJPEG(CStdStream &hGroup, int iFlags)
 	blub.term_source = jpeg_noop;
 
 	// a missing image is an error
-	jpeg_read_header(&cinfo, true);
+	jpeg_read_header(&cinfo, (boolean)true);
 
 	// Let libjpeg convert for us
 	cinfo.out_color_space = JCS_RGB;
@@ -375,9 +375,9 @@ bool C4Surface::ReadJPEG(CStdStream &hGroup, int iFlags)
 
 #else // ifndef USE_CONSOLE
 
-bool C4Surface::ReadJPEG(CStdStream &hGroup, bool fTileable) {
+bool C4Surface::ReadJPEG(CStdStream &, int) {
 	// Dummy surface
-	if (!Create(1, 1)) return false;
+	if (!Create(1, 1, false, 1, 0)) return false;
 	return true;
 }
 

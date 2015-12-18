@@ -42,6 +42,9 @@ static const ACTIONTYPE_STRUCTURE = 2;
 static const ACTIONTYPE_SCRIPT = 3;
 static const ACTIONTYPE_EXTRA = 4;
 
+// elevators within this range (x) can be called
+static const ELEVATOR_CALL_DISTANCE = 30;
+
 /* ++++++++++++++++++++++++ Clonk Inventory Control ++++++++++++++++++++++++ */
 
 /*
@@ -165,7 +168,10 @@ public func GetExtraInteractions()
 		if(effect.flipable)
 			PushBack(functions, {Fn = "Flip", Description=ConstructionPreviewer->GetFlipDescription(), Object=effect.preview, IconID=ConstructionPreviewer_IconFlip, Priority=0});
 	}
-		
+	// call elevator cases
+	var elevators = FindObjects(Find_ID(ElevatorCase), Find_InRect(-ELEVATOR_CALL_DISTANCE, AbsY(0), ELEVATOR_CALL_DISTANCE * 2, GetY() + AbsY(LandscapeHeight())), Find_Func("Ready", this));
+	for (var elevator in elevators)
+		PushBack(functions, { Fn = "CallCase", Object=elevator, Description=elevator->GetCallDescription(), Priority=0 });
 	return functions;
 }
 
@@ -182,7 +188,6 @@ public func ObjectControl(int plr, int ctrl, int x, int y, int strength, bool re
 	{
 		if (!release)
 		{
-						
 			if(GetMenu())
 			{
 				// close a possible menu but still open the action bar later
@@ -205,11 +210,11 @@ public func ObjectControl(int plr, int ctrl, int x, int y, int strength, bool re
 		else
 		{
 			var closed = this->~StopInteractionCheck(); // for GUI_Controller_ActionBar
-						
+
 			// releasing of space cancels the action bar without selecting anything
 			if (closed)
 				return true;
-			
+
 			// if the first actionbar item can not be handled, look for interaction objects and use the one with the best priority
 			var interaction_objects = GetInteractableObjects();
 			// look for minimum priority
@@ -377,7 +382,7 @@ public func ObjectControl(int plr, int ctrl, int x, int y, int strength, bool re
 	// Throwing and dropping
 	// only if not in house, not grabbing a vehicle and an item selected
 	// only act on press, not release
-	if ((ctrl == CON_Throw || ctrl == CON_ThrowDelayed || ctrl == CON_Drop) && !house && (!vehicle || proc == "ATTACH") && !release)
+	if ((ctrl == CON_Throw || ctrl == CON_ThrowDelayed) && !house && (!vehicle || proc == "ATTACH") && !release)
 	{		
 		if (contents)
 		{
@@ -424,12 +429,6 @@ public func ObjectControl(int plr, int ctrl, int x, int y, int strength, bool re
 					return true;
 				}
 			}
-			// drop
-			if (ctrl == CON_Drop)
-			{
-				CancelUse();
-				return ObjectCommand("Drop", contents);
-			}
 		}
 	}
 	
@@ -450,16 +449,19 @@ public func ObjectControl(int plr, int ctrl, int x, int y, int strength, bool re
 	}
 	
 	// Do a roll on landing or when standing. This means that the CON_Down was not handled previously.
-	if (ctrl == CON_Roll)
+	if (ctrl == CON_Roll && ComDir2XY(GetComDir())[0] != 0)
 	{
 		if (this->IsWalking())
 		{
-			this->DoRoll();
-			return true;
-		}
-		else if (this->IsJumping())
-		{
-			AddEffect("ScheduleRollOnLanding", this, 1, 30, this);
+			if (this->Stuck())
+			{
+				// Still show some visual feedback for the player.
+				this->DoKneel();
+			}
+			else
+			{
+				this->DoRoll();
+			}
 			return true;
 		}
 	}
@@ -630,6 +632,8 @@ func GetUseCallString(string action)
 
 func CanReIssueCommand(proplist data)
 {
+	if (!data.obj) return false;
+	
 	if(data.ctrl == CON_Use)
 		return !data.obj->~RejectUse(this);
 	
@@ -1154,7 +1158,8 @@ public func ControlJump()
 			ydir = BoundBy(this.JumpSpeed * 3 / 5, 240, 380);
 	}
 
-	if (GetProcedure() == "SCALE")
+	// Jump speed of the wall kick is halved.
+	if (GetProcedure() == "SCALE" || GetAction() == "Climb")
 	{
 		ydir = this.JumpSpeed/2;
 	}
@@ -1163,8 +1168,8 @@ public func ControlJump()
 	{
 		SetPosition(GetX(),GetY()-1);
 
-		//Wall kick
-		if(GetProcedure() == "SCALE")
+		// Wall kick if scaling or climbing.
+		if(GetProcedure() == "SCALE" || GetAction() == "Climb")
 		{
 			AddEffect("WallKick",this,1);
 			SetAction("Jump");

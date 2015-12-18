@@ -22,7 +22,7 @@ protected func Initialize()
 
 private func Hit()
 {
-	Sound("WoodHit?");
+	Sound("Hits::Materials::Wood::WoodHit?");
 	return;
 }
 
@@ -31,6 +31,12 @@ public func GetCarryMode() { return CARRY_HandBack; }
 public func IsWorkshopProduct() { return true; }
 public func IsTool() { return true; }
 public func IsToolProduct() { return true; }
+
+// Returns whether the torch currently is a source of light.
+public func IsLightSource()
+{
+	return !!GetEffect("IntBurning", this);
+}
 
 
 /*-- Usage --*/
@@ -80,7 +86,7 @@ public func Interact(object clonk)
 public func AttachToWall(bool fixed)
 {
 	// Exit the torch and make it a non-collectible static back, also change its state.
-	Exit(0, 3);
+	if (Contained()) Exit(0, 3);
 	SetCategory(C4D_StaticBack);
 	this.Collectible = false;
 	state = TRCH_Attached;
@@ -167,6 +173,7 @@ private func FxIntBurningStart(object target, effect fx, int temporary)
 	};
 	// Set the light range for this torch.
 	SetLightRange(80, 60);
+	SetLightColor(FIRE_LIGHT_COLOR);
 	return 1;
 }
 
@@ -190,6 +197,18 @@ protected func FxIntBurningStop(object target, proplist effect, int reason, bool
 	// Remove the light from this torch.	
 	SetLightRange(0);
 	return 1;
+}
+
+public func SaveScenarioObject(proplist props, ...)
+{
+	if (!_inherited(props, ...)) return false;
+	if (state == TRCH_Attached || state == TRCH_Fixed)
+	{
+		props->AddCall("Attach", this, "AttachToWall", state == TRCH_Fixed);
+		props->Remove("Category");
+		props->Remove("Plane");
+	}
+	return true;
 }
 
 

@@ -261,7 +261,7 @@ namespace C4GUI
 		if (pActiveSheet)
 		{
 			// effect
-			if (fByUser) GUISound("Command");
+			if (fByUser) GUISound("UI::Select");
 			// update in sheet
 			pActiveSheet->OnShown(fByUser);
 		}
@@ -290,7 +290,7 @@ namespace C4GUI
 				int32_t iTabWidth, iTabHeight;
 				pSheet->GetCaptionSize(&iTabWidth, &iTabHeight, HasLargeCaptions(), pSheet == pActiveSheet, pfctClip, pfctIcons, pSheetCaptionFont);
 				iTabWidth += (eTabPos == tbLeft) ? 20 : iSheetSpacing;
-				iMaxTabWidth = Max(iTabWidth, iMaxTabWidth);
+				iMaxTabWidth = std::max(iTabWidth, iMaxTabWidth);
 				if (eTabPos == tbLeft)
 				{
 					iTotalHgt += iTabHeight;
@@ -494,7 +494,7 @@ namespace C4GUI
 					if (iButton == C4MC_Button_LeftDown && fScrollingRight && Inside(iX, rcBounds.Wdt-iScrollSize,rcBounds.Wdt))
 					{
 						fProcessed = fScrollingRightDown = true;
-						GUISound("Command");
+						GUISound("UI::Select");
 						DoCaptionScroll(+1);
 					}
 					else if (fScrollingLeft)
@@ -502,7 +502,7 @@ namespace C4GUI
 						if (iButton == C4MC_Button_LeftDown && Inside(iX, d,d+iScrollSize))
 						{
 							fProcessed = fScrollingLeftDown = true;
-							GUISound("Command");
+							GUISound("UI::Select");
 							DoCaptionScroll(-1);
 						}
 						d -= iCaptionScrollPos + iScrollSize;
@@ -564,7 +564,7 @@ namespace C4GUI
 		if (fScrollingLeftDown || fScrollingRightDown)
 		{
 			// stop scrolling
-			GUISound("Command");
+			GUISound("UI::Select");
 			fScrollingLeftDown = fScrollingRightDown = false;
 		}
 	}

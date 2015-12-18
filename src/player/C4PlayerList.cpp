@@ -124,7 +124,7 @@ int C4PlayerList::CheckColorDw(DWORD dwColor, C4Player *pExclude)
 			// get color
 			DWORD dwClr2=pPlr->ColorDw;
 			// assign difference, if less than smallest difference found
-			iDiff=Min(iDiff,
+			iDiff=std::min(iDiff,
 			          Abs(GetBlueValue(dwColor) - GetBlueValue(dwClr2))
 			          + Abs(GetGreenValue(dwColor) - GetGreenValue(dwClr2))
 			          + Abs(GetRedValue(dwColor) - GetRedValue(dwClr2)));
@@ -317,7 +317,7 @@ void C4PlayerList::JoinNew(const char *szFilename)
 {
 	if (::Network.isEnabled())
 	{
-		::Network.Players.JoinLocalPlayer(szFilename, true);
+		::Network.Players.JoinLocalPlayer(szFilename);
 		return;
 	}
 	// security
@@ -412,7 +412,7 @@ int C4PlayerList::AverageScoreGain() const
 	if (First)
 	{
 		for (C4Player *pPlr=First; pPlr; pPlr=pPlr->Next)
-			iResult+=Max<int32_t>(pPlr->CurrentScore-pPlr->InitialScore,0);
+			iResult+=std::max<int32_t>(pPlr->CurrentScore-pPlr->InitialScore,0);
 		iResult/=GetCount();
 	}
 	return iResult;

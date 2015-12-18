@@ -117,6 +117,9 @@ global func ExplosionParticles_Init()
 global func Explode(int level, bool silent, int damage_level)
 {
 	if(!this) FatalError("Function Explode must be called from object context");
+	
+	// Special: Implode
+	if (level <= 0) return RemoveObject();
 
 	// Shake the viewport.
 	ShakeViewport(level);
@@ -139,6 +142,8 @@ global func Explode(int level, bool silent, int damage_level)
 
 global func DoExplosion(int x, int y, int level, object inobj, int cause_plr, object layer, bool silent, int damage_level)
 {
+	// Zero-size explosion doesn't affect anything
+	if (level <= 0) return;
 	// If the object is contained, loop through all parent containers until the blast is contained or no container is found.
 	// Blast the containers it passes through and the objects inside them.
 	var container = inobj;
@@ -165,10 +170,10 @@ global func DoExplosion(int x, int y, int level, object inobj, int cause_plr, ob
 		// Blast objects outside if there was no final container containing the blast.
 		BlastObjects(x + GetX(), y + GetY(), level, container, cause_plr, damage_level, layer, prev_container);
 		// Incinerate oil.
-		if (!IncinerateLandscape(x, y))
-			if (!IncinerateLandscape(x, y - 10))
-				if (!IncinerateLandscape(x - 5, y - 5))
-					IncinerateLandscape(x + 5, y - 5);
+		if (!IncinerateLandscape(x, y, cause_plr))
+			if (!IncinerateLandscape(x, y - 10, cause_plr))
+				if (!IncinerateLandscape(x - 5, y - 5, cause_plr))
+					IncinerateLandscape(x + 5, y - 5, cause_plr);
 		// Graphic effects.
 		Call("ExplosionEffect", level, x, y, 0, silent, damage_level);
 		// Landscape destruction. Happens after BlastObjects, so that recently blown-free materials are not affected
@@ -180,72 +185,13 @@ global func DoExplosion(int x, int y, int level, object inobj, int cause_plr, ob
 
 /*
 Creates a visual explosion effect at a position.
-smoothness (in percent) determines how round the effect will look like
-*/
-global func ExplosionEffect(int level, int x, int y, int smoothness, bool silent, int damage_level)
-{
-	if(!silent) //Does object use it's own explosion sound effect?
-	{
-		var grade = BoundBy(level / 10 - 1, 1, 3);
-		if(GBackLiquid(x, y))
-			SoundAt(Format("BlastLiquid%d",grade), x, y);
-		else
-			SoundAt(Format("Blast%d", grade), x, y);
-	}
-	
-	// possibly init particle definitions?
-	if (!ExplosionParticles_Blast)
-		ExplosionParticles_Init();
-	
-	smoothness = smoothness ?? 0;
-	var level_pow = level ** 2;
-	var level_pow_fraction = Max(level_pow / 25, 5 * level);
-	var wilderness_level = level * (100 - smoothness) / 100;
-	var smoothness_level = level * smoothness / 100;
-	
-	var smoke_size = PV_KeyFrames(0, 180, level, 1000, level * 2);
-	var blast_size = PV_KeyFrames(0, 0, 0, 260, level * 2, 1000, level);
-	var blast_smooth_size = PV_KeyFrames(0, 0, 0, 250, PV_Random(level, level * 2), 1000, level);
-	var star_size = PV_KeyFrames(0, 0, 0, 500, level * 2, 1000, 0);
-	var shockwave_size = PV_Linear(0, level * 4);
-	
-	CreateParticle("SmokeDirty", PV_Random(x - 10,x + 10), PV_Random(y - 10, y + 10), 0, PV_Random(-2, 0), PV_Random(50, 100), {Prototype = ExplosionParticles_Smoke, Size = smoke_size}, Max(2, wilderness_level / 10));
-	CreateParticle("SmokeDirty", PV_Random(x - 5, x + 5), PV_Random(y - 5, y + 5), PV_Random(-1, 1), PV_Random(-1, 1), PV_Random(20, 40), {Prototype = ExplosionParticles_BlastSmoothBackground, Size = blast_smooth_size}, smoothness_level / 5);
-	CreateParticle("SmokeDirty", PV_Random(x - 5, x + 5), PV_Random(y - 5, y + 5), PV_Random(-1, 1), PV_Random(-1, 1), PV_Random(20, 40), {Prototype = ExplosionParticles_BlastSmooth, Size = blast_smooth_size}, smoothness_level / 5);
-	CreateParticle("Dust", PV_Random(x - 5, x + 5), PV_Random(y - 5, y + 5), 0, 0, PV_Random(18, 25), {Prototype = ExplosionParticles_Blast, Size = blast_size}, smoothness_level / 5);
-	CreateParticle("StarFlash", PV_Random(x - 6, x + 6), PV_Random(y - 6, y + 6), PV_Random(-wilderness_level/4, wilderness_level/4), PV_Random(-wilderness_level/4, wilderness_level/4), PV_Random(10, 12), {Prototype = ExplosionParticles_Star, Size = star_size}, wilderness_level / 3);
-	CreateParticle("Shockwave", x, y, 0, 0, 15, {Prototype = ExplosionParticles_Shockwave, Size = shockwave_size}, nil);
-	
-	// cast either some sparks on land or bubbles under water
-	if(GBackLiquid(x, y) && Global.CastBubbles)
-	{
-		Global->CastBubbles(level * 7 / 10, level, x, y);
-	}
-	else
-	{
-		CreateParticle("Magic", PV_Random(x - 5, x + 5), PV_Random(y - 5, y + 5), PV_Random(-level_pow_fraction, level_pow_fraction), PV_Random(-level_pow_fraction, level_pow_fraction), PV_Random(25, 70), ExplosionParticles_Glimmer, level);
-	}
-	
-	// very wild explosion? Smoke trails!
-	var smoke_trail_count = wilderness_level / 10;
-	var angle  = Random(360);
-	var failsafe = 0; // against infinite loops
-	while (smoke_trail_count > 0 && (++failsafe < smoke_trail_count * 10))
-	{
-		angle += RandomX(40, 80);
-		var smokex = Sin(angle, RandomX(level / 4, level / 2));
-		var smokey = -Cos(angle, RandomX(level / 4, level / 2));
-		if (GBackSolid(x + smokex, y + smokey))
-			continue;
-		var lvl = 2 * wilderness_level;
-		CreateSmokeTrail(lvl, angle, x + smokex, y + smokey);
-		smoke_trail_count--;
-	}
-	
-	// Temporary light effect
-	if (level>5) CreateLight(x, y, level, Fx_Light.LGT_Blast);
+smoothness (in percent) determines how round the effect will look like.
 
-	return;
+Defined in Objects.ocd/System.ocg because it depends on particles/definitions to be loaded.
+*/
+global func ExplosionEffect(...)
+{
+	return _inherited(...);
 }
 
 /*-- Blast objects & shockwaves --*/
@@ -318,6 +264,9 @@ global func BlastObject(int level, int caused_by)
 
 global func DoShockwave(int x, int y, int level, int cause_plr, object layer)
 {
+	// Zero-size shockwave
+	if (level <= 0) return;
+	
 	// Coordinates are always supplied globally, convert to local coordinates.
 	var l_x = x - GetX(), l_y = y - GetY();
 	
@@ -328,7 +277,7 @@ global func DoShockwave(int x, int y, int level, int cause_plr, object layer)
 
 	// Hurl objects in explosion radius.
 	var shockwave_objs = FindObjects(Find_Distance(level, l_x, l_y), Find_NoContainer(), Find_Layer(layer),
-		Find_Or(Find_Category(C4D_Object|C4D_Living|C4D_Vehicle), Find_Func("CanBeHitByShockwaves")), Find_Func("DoShockwaveCheck", x, y));
+		Find_Or(Find_Category(C4D_Object|C4D_Living|C4D_Vehicle), Find_Func("CanBeHitByShockwaves", cause_plr)), Find_Func("DoShockwaveCheck", x, y, cause_plr));
 	var cnt = GetLength(shockwave_objs);
 	if (cnt)
 	{
@@ -374,7 +323,7 @@ global func DoShockwave(int x, int y, int level, int cause_plr, object layer)
 	}
 }
 
-global func DoShockwaveCheck(int x, int y)
+global func DoShockwaveCheck(int x, int y, int cause_plr)
 {
 	var def = GetID();
 	// Some special cases, which won't go into FindObjects.
@@ -409,16 +358,17 @@ strength falls off linearly by distance from 100% to 0% when the player is 700 p
              as the explosion level.
 @param x_off x offset in relative coordinates from the calling object
 @param y_off y offset in relative coordinates from the calling object
+@param range range of clonk to explosion at which shaking falls off to 0%
 */
-global func ShakeViewport(int level, int x_off, int y_off)
+global func ShakeViewport(int level, int x_off, int y_off, range)
 {
 	if (level <= 0)
 		return false;
 		
 	x_off += GetX();
 	y_off += GetY();
-
-	AddEffect("ShakeViewport", nil, 300, 1, nil, nil, level, x_off, y_off);
+	
+	AddEffect("ShakeViewport", nil, 300, 1, nil, nil, level, x_off, y_off, range ?? 700);
 }
 
 global func FxShakeViewportEffect(string new_name)
@@ -429,17 +379,17 @@ global func FxShakeViewportEffect(string new_name)
 	return;
 }
 
-global func FxShakeViewportStart(object target, effect e, int temporary, level, xpos, ypos)
+global func FxShakeViewportStart(object target, effect e, int temporary, level, xpos, ypos, range)
 {
 	if(temporary != 0) return;
 	
 	e.shakers = CreateArray();
-	e.shakers[0] = { x = xpos, y = ypos, strength = level, time = 0 };
+	e.shakers[0] = { x = xpos, y = ypos, strength = level, time = 0, range = range };
 }
 
-global func FxShakeViewportAdd(object target, effect e, string new_name, int new_timer, level, xpos, ypos)
+global func FxShakeViewportAdd(object target, effect e, string new_name, int new_timer, level, xpos, ypos, range)
 {
-	e.shakers[GetLength(e.shakers)] = { x = xpos, y = ypos, strength = level, time = e.Time};
+	e.shakers[GetLength(e.shakers)] = { x = xpos, y = ypos, strength = level, time = e.Time, range = range };
 }
 
 global func FxShakeViewportTimer(object target, effect e, int time)
@@ -460,7 +410,7 @@ global func FxShakeViewportTimer(object target, effect e, int time)
 
 			// shake strength lowers as a function of the distance
 			var distance = Distance(cursor->GetX(), cursor->GetY(), shaker.x, shaker.y);
-			var maxDistance = 700;
+			var maxDistance = shaker.range;
 			var level = shaker.strength * BoundBy(100-100*distance/maxDistance,0,100)/100;
 
 			// calculate total shake strength by adding up all shake positions in the player's vicinity

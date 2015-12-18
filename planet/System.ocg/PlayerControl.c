@@ -158,6 +158,9 @@ global func Control2Player(int plr, int ctrl, int x, int y, int strength, bool r
 		return SetCursor(plr, crew);
 	}
 	
+	// Modifier keys - do not handle the key. The GetPlayerControlState will still return the correct value when the key is held down.
+	if (ctrl == CON_ModifierMenu1) return false;
+		
 	// cursor pos info - store in player values
 	if (ctrl == CON_CursorPos)
 	{
@@ -324,6 +327,15 @@ global func ObjectControlMovement(int plr, int ctrl, int strength, bool release,
 		{
 			if (ctrl == CON_Left) SetDir(DIR_Left);
 			else if (ctrl == CON_Right) SetDir(DIR_Right);
+		}
+	}
+	else // release
+	{
+		// If rolling, allow to instantly switch to walking again.
+		if (GetAction() == "Roll")
+		{
+			if (ctrl == CON_Left && GetDir() == DIR_Left || ctrl == CON_Right && GetDir() == DIR_Right)
+				SetAction("Walk");
 		}
 	}
 	return ObjectControlUpdateComdir(plr);

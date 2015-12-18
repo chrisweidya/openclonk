@@ -325,7 +325,7 @@ namespace C4GUI
 		Container::UpdateOwnPos();
 		// set client rect
 		int32_t iMarginL=GetMarginLeft(), iMarginT=GetMarginTop();
-		rcClientRect.Set(rcBounds.x + iMarginL, rcBounds.y + iMarginT, Max<int32_t>(rcBounds.Wdt - iMarginL - GetMarginRight(), 0), Max<int32_t>(rcBounds.Hgt - iMarginT - GetMarginBottom(), 0));
+		rcClientRect.Set(rcBounds.x + iMarginL, rcBounds.y + iMarginT, std::max<int32_t>(rcBounds.Wdt - iMarginL - GetMarginRight(), 0), std::max<int32_t>(rcBounds.Hgt - iMarginT - GetMarginBottom(), 0));
 	}
 
 
@@ -444,11 +444,11 @@ namespace C4GUI
 					OnPosChanged();
 					// start dragging
 					rMouse.pDragElement = this;
-					GUISound("Command");
+					GUISound("UI::Select");
 				}
 			}
 		// sound effekt when buttons are pressed
-		if ((fTopDown || fBottomDown) != fPrevDown) GUISound("ArrowHit");
+		if ((fTopDown || fBottomDown) != fPrevDown) GUISound("UI::Tick");
 	}
 
 	void ScrollBar::DoDragging(CMouse &rMouse, int32_t iX, int32_t iY, DWORD dwKeyParam)
@@ -524,7 +524,7 @@ namespace C4GUI
 		// not if window is being refilled
 		if (iFrozen) return;
 		// do not scroll outside range
-		iScrollY = Clamp<int32_t>(iScrollY, 0, Max<int32_t>(iClientHeight - GetBounds().Hgt, 0));
+		iScrollY = Clamp<int32_t>(iScrollY, 0, std::max<int32_t>(iClientHeight - GetBounds().Hgt, 0));
 		// update client rect
 		rcClientRect.x = 0;
 		rcClientRect.y = -iScrollY;

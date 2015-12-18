@@ -258,13 +258,13 @@ void C4MapFolderData::ConvertFacet2ScreenCoord(C4Rect &rcMapArea, bool fAspect)
 		{
 			// background image is limited by width
 			fBGZoomX = fBGZoomY = (float) rcMapArea.Wdt / fctBackgroundPicture.Wdt;
-			iOffY = Max<int>(0, (int)(rcMapArea.Hgt - (fBGZoomX * fctBackgroundPicture.Hgt)))/2;
+			iOffY = std::max<int>(0, (int)(rcMapArea.Hgt - (fBGZoomX * fctBackgroundPicture.Hgt)))/2;
 		}
 		else
 		{
 			// background image is limited by height
 			fBGZoomX = fBGZoomY = (float) rcMapArea.Hgt / fctBackgroundPicture.Hgt;
-			iOffX = Max<int>(0, (int)(rcMapArea.Wdt - (fBGZoomY * fctBackgroundPicture.Wdt)))/2;
+			iOffX = std::max<int>(0, (int)(rcMapArea.Wdt - (fBGZoomY * fctBackgroundPicture.Wdt)))/2;
 		}
 	}
 	else
@@ -667,6 +667,8 @@ bool C4ScenarioListLoader::Scenario::LoadCustomPre(C4Group &rGrp)
 	if (!rGrp.LoadEntryString(C4CFN_ScenarioCore, &sFileContents)) return false;
 	if (!CompileFromBuf_LogWarn<StdCompilerINIRead>(mkParAdapt(C4S, false), sFileContents, (rGrp.GetFullName() + DirSep C4CFN_ScenarioCore).getData()))
 		return false;
+	// Mission access
+	fNoMissionAccess = (C4S.Head.MissionAccess[0] && !SIsModule(Config.General.MissionAccess, C4S.Head.MissionAccess));
 	// Localized parameter definitions. needed for achievements and parameter input boxes.
 	// Only show them for "real" scenarios
 	if (!C4S.Head.SaveGame && !C4S.Head.Replay)
@@ -767,7 +769,7 @@ bool C4ScenarioListLoader::Scenario::CanOpen(StdStrBuf &sErrOut)
 	C4StartupScenSelDlg *pDlg = C4StartupScenSelDlg::pInstance;
 	if (!pDlg) return false;
 	// check mission access
-	if (C4S.Head.MissionAccess[0] && !SIsModule(Config.General.MissionAccess, C4S.Head.MissionAccess))
+	if (!HasMissionAccess())
 	{
 		sErrOut.Copy(LoadResStr("IDS_PRC_NOMISSIONACCESS"));
 		return false;
@@ -792,7 +794,7 @@ bool C4ScenarioListLoader::Scenario::CanOpen(StdStrBuf &sErrOut)
 		{
 			// Some scenarios have adjusted MaxPlayerCount to 0 after starting to prevent future joins
 			// make sure it's possible to start the savegame anyway
-			iMaxPlrCount = Max<int32_t>(iMinPlrCount, iMaxPlrCount);
+			iMaxPlrCount = std::max<int32_t>(iMinPlrCount, iMaxPlrCount);
 		}
 		// normal scenarios: At least one player except in network mode, where it is possible to wait for the additional players
 		// Melees need at least two
@@ -1595,6 +1597,7 @@ void C4StartupScenSelDlg::UpdateList()
 		// add what has been loaded
 		for (C4ScenarioListLoader::Entry *pEnt = pScenLoader->GetFirstEntry(); pEnt; pEnt = pEnt->GetNext())
 		{
+			if (pEnt->IsHidden()) continue; // no UI entry at all for hidden items
 			ScenListItem *pEntItem = new ScenListItem(pScenSelList, pEnt);
 			if (pEnt == pOldSelection) pScenSelList->SelectEntry(pEntItem, false);
 		}
@@ -1688,7 +1691,7 @@ void C4StartupScenSelDlg::UpdateSelection()
 	{
 		// custom options present: Info box reduced; options box at bottom
 		// set options box max size to 1/3rd of selection info area
-		int32_t options_hgt = Min<int32_t>(pLastOption->GetBounds().GetBottom() + pSelectionOptions->GetMarginTop() + pSelectionOptions->GetMarginTop(), rcSelBounds.Hgt/3);
+		int32_t options_hgt = std::min<int32_t>(pLastOption->GetBounds().GetBottom() + pSelectionOptions->GetMarginTop() + pSelectionOptions->GetMarginTop(), rcSelBounds.Hgt/3);
 		rcSelBounds.Hgt = ymax - options_hgt - rcSelBounds.y;
 		pSelectionInfo->SetBounds(rcSelBounds);
 		rcSelBounds.y = ymax - options_hgt;
@@ -1927,7 +1930,7 @@ void C4StartupScenSelDlg::OnButtonScenario(C4GUI::Control *pEl)
 void C4StartupScenSelDlg::DeselectAll()
 {
 	// Deselect all so current folder info is displayed
-	if (GetFocus()) C4GUI::GUISound("ArrowHit");
+	if (GetFocus()) C4GUI::GUISound("UI::Tick");
 	SetFocus(NULL, true);
 	if (pMapData) pMapData->ResetSelection();
 	UpdateSelection();

@@ -27,7 +27,7 @@ public func GetLampFadeRange() { return 160; }
 
 /** Lamp property: Which color it shines in.
 */
-public func GetLampColor() { return 0xffa000; }
+public func GetLampColor() { return FIRE_LIGHT_COLOR; }
 
 /** Overload as needed to define a custom offset by the lamp.
 */
@@ -60,6 +60,12 @@ public func TurnOff()
 	return true;
 }
 
+// Returns whether the lamp currently is a source of light.
+public func IsLightSource()
+{
+	return lib_lamp_lit;
+}
+
 /*-- Usage --*/
 
 /** Standard control procedure. Overload as needed.
@@ -76,7 +82,7 @@ public func ControlUse(object clonk)
 	} else {
 		TurnOn();
 	}
-	Sound("Click2");
+	Sound("UI::Click2");
 	return true;
 }
 

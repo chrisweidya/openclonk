@@ -1,10 +1,18 @@
 /**
 	Time Controller
-	Creates time based on the 24-hour time scheme.
-	Time is computed in minutes, which are by default
-	1/2 a second in real life (18 frames). This will
-	make each complete day/night cycle last 12 minutes
-	in real life.
+	Creates time based on the 24-hour time scheme. Time is 
+	computed in minutes, which are by default 1/2 a second in
+	real life (18 frames). This will make each complete 
+	day/night cycle last 12 minutes in real life.
+	
+	The time controller has an interface which is accessed by:
+		Time->HasDayNightCycle(): whether time controller is active.
+		Time->SetTime(int to_time): sets the time.
+		Time->GetTime(): returns the time.
+		Time->IsDay(): whether it is day.
+		Time->IsNight(): whether it is night.
+		Time->SetCycleSpeed(int seconds_per_tick): set the speed of the day/night cycle.
+		Time->GetCycleSpeed(): returns the speed of the day/night cycle.
 
 	@author Ringwall, Maikel
 */
@@ -12,13 +20,44 @@
 local time_set;
 local time; 
 local advance_seconds_per_tick;
-
+local daycolour_global;
 
 /*-- Interface --*/
 
-// Sets the current time using a 24*60 minute clock scheme. 
+// Creates the time controller object if it does not exist otherwise returns the existing controller.
+public func Init()
+{
+	// Only a definition call if needed.
+	if (GetType(this) != C4V_Def)
+		return;
+	// Create and return time controller if it does not exist.
+	var time_controller = FindObject(Find_ID(Time));
+	if (!time_controller)
+		time_controller = CreateObject(Time);
+	return time_controller;
+}
+
+// Returns whether the time controller is active.
+public func HasDayNightCycle()
+{
+	// Do definition call if needed.
+	if (GetType(this) == C4V_Def)
+		return FindObject(Find_ID(Time));
+	return;
+}
+
+// Sets the current time using a 24*60 minute clock scheme.
 public func SetTime(int to_time) 
 {
+	// Do definition call if needed.
+	if (GetType(this) == C4V_Def)
+	{
+		var time_controller = FindObject(Find_ID(Time));
+		if (time_controller)
+			time_controller->SetTime(to_time);
+		return;
+	}
+	// Otherwise normal behavior.
 	// Set time.
 	time = (to_time * 60) % (24 * 60 * 60);
 	// Hide celestials during day.
@@ -34,19 +73,84 @@ public func SetTime(int to_time)
 // Returns the time in minutes.
 public func GetTime()
 {
+	// Do definition call if needed.
+	if (GetType(this) == C4V_Def)
+	{
+		var time_controller = FindObject(Find_ID(Time));
+		if (time_controller)
+			return time_controller->GetTime();
+		return;
+	}
+	// Otherwise normal behavior.
 	return time / 60;
+}
+
+public func IsDay()
+{
+	// Do definition call if needed.
+	if (GetType(this) == C4V_Def)
+	{
+		var time_controller = FindObject(Find_ID(Time));
+		if (time_controller)
+			return time_controller->IsDay();
+		// If there is no time controller active it is day.	
+		return true;
+	}
+	// Otherwise normal behavior.
+	var day_start = (time_set.sunrise_start + time_set.sunrise_end) / 2;
+	var day_end = (time_set.sunset_start + time_set.sunset_end) / 2;
+	if (Inside(time, day_start, day_end))
+		return true;
+	return false;
+}
+
+public func IsNight()
+{
+	// Do definition call if needed.
+	if (GetType(this) == C4V_Def)
+	{
+		var time_controller = FindObject(Find_ID(Time));
+		if (time_controller)
+			return time_controller->IsNight();
+		// If there is no time controller active it is not night.
+		return false;
+	}
+	// Otherwise normal behavior.
+	var night_start = (time_set.sunset_start + time_set.sunset_end) / 2;
+	var night_end = (time_set.sunrise_start + time_set.sunrise_end) / 2;
+	if (!Inside(time, night_end, night_start))
+		return true;
+	return false;
 }
 
 // Sets the number of seconds the day will advance each tick (10 frames).
 // Setting to 0 will stop day-night cycle. Default is 30 seconds.
 public func SetCycleSpeed(int seconds_per_tick)
 {
+	// Do definition call if needed.
+	if (GetType(this) == C4V_Def)
+	{
+		var time_controller = FindObject(Find_ID(Time));
+		if (time_controller)
+			time_controller->SetCycleSpeed(seconds_per_tick);
+		return;
+	}
+	// Otherwise normal behavior.
 	advance_seconds_per_tick = seconds_per_tick;
 }
 
 // Returns the number of seconds the day advances each tick (10 frames). 
 public func GetCycleSpeed()
 {
+	// Do definition call if needed.
+	if (GetType(this) == C4V_Def)
+	{
+		var time_controller = FindObject(Find_ID(Time));
+		if (time_controller)
+			return time_controller->GetCycleSpeed();
+		return;
+	}
+	// Otherwise normal behavior.
 	return advance_seconds_per_tick;
 }
 
@@ -56,7 +160,7 @@ public func GetCycleSpeed()
 protected func Initialize()
 {
 	// Only one time control object.
-	if (ObjectCount(Find_ID(Environment_Time)) > 1) 
+	if (ObjectCount(Find_ID(Time)) > 1) 
 		return RemoveObject();
 	
 	// Determine the frame times for day and night events.
@@ -80,25 +184,9 @@ protected func Initialize()
 	// Add effect that controls time cycle.
 	SetCycleSpeed(30);
 	AddEffect("IntTimeCycle", this, 100, 10, this);
-	return;
-}
 
-public func IsDay()
-{
-	var day_start = (time_set.sunrise_start + time_set.sunrise_end) / 2;
-	var day_end = (time_set.sunset_start + time_set.sunset_end) / 2;
-	if (Inside(time, day_start, day_end))
-		return true;
-	return false;
-}
-
-public func IsNight()
-{
-	var night_start = (time_set.sunset_start + time_set.sunset_end) / 2;
-	var night_end = (time_set.sunrise_start + time_set.sunrise_end) / 2;
-	if (!Inside(time, night_end, night_start))
-		return true;
-	return false;
+	// Set standard colour of the day
+	daycolour_global = [255, 255, 255];
 }
 
 private func PlaceStars()
@@ -200,9 +288,10 @@ private func DoSkyShade()
 	// Specify colors in terms of R, G, B, A arrays.
 	var skyshade = [0, 0, 0, 0];
 	var nightcolour = [10, 25, 40];
-	var daycolour = [255, 255, 255];
+	var daycolour = daycolour_global;
 	var sunsetcolour = [140, 45, 10];
 	var sunrisecolour = [140, 100, 70];
+	var ambient_brightness = 0;
 	
 	// Darkness of night dependent on the moon-phase.
 	if (!day)
@@ -214,7 +303,7 @@ private func DoSkyShade()
 			nightcolour = [ 6 * lightness / 100, 8 + 25 * lightness / 100, 15 + 60 * lightness / 100 ];
 		}
 	}
-		
+
 	// Sunrise.
 	if (sunrise)
 	{
@@ -230,11 +319,14 @@ private func DoSkyShade()
 			skyshade[i] = Min(255, dayfade + nightfade + sunrisefade);
 		}
 		skyshade[3] = Min(255, progress / 2);
+		ambient_brightness = 100 * (40 + 215 * progress / 1800) / 255;
 	}
 	// Day.
 	else if (day)
 	{
-		skyshade = [255, 255, 255, 255];
+		skyshade = [daycolour[0], daycolour[1], daycolour[2], 255];
+		//daycolour_global = [GetRGBaValue(GetSkyAdjust(), RGBA_RED), GetRGBaValue(GetSkyAdjust(), RGBA_GREEN), GetRGBaValue(GetSkyAdjust(), RGBA_BLUE)];
+		ambient_brightness = 100;
 	}
 	// Sunset.
 	else if (sunset)
@@ -251,30 +343,28 @@ private func DoSkyShade()
 			skyshade[i] = Min(255, dayfade + nightfade + sunsetfade);
 		}		
 		skyshade[3] = Min(255, 900 - progress / 2);
+		ambient_brightness = 100 * (255 - 215 * progress / 1800) / 255;
 	}
 	// Night.
 	else if (night)
 	{
 		skyshade = nightcolour;
 		skyshade[3] = 0;
+		ambient_brightness = 15;
 	}
-	
+
 	// Shade the sky using sky adjust.
-	SetSkyAdjust(RGB(skyshade[0], skyshade[1], skyshade[2]));
-	
+	SetSkyAdjust(RGBa(skyshade[0], skyshade[1], skyshade[2], GetRGBaValue(GetSkyAdjust(), RGBA_ALPHA)), GetSkyAdjust(true));
+
 	// Shade the landscape and the general feeling by reducing the ambient light.
-	var new_ambient = 100 * skyshade[2] / 255;
-	if (GetAmbientBrightness() != new_ambient)
-		SetAmbientBrightness(new_ambient);
-	
+	if (GetAmbientBrightness() != ambient_brightness)
+		SetAmbientBrightness(ambient_brightness);
+
 	// Adjust celestial objects and clouds.
-	if (!day && !night)
-	{
-		for (var celestial in FindObjects(Find_Func("IsCelestial")))
-			celestial->SetObjAlpha(255 - skyshade[3]);
-		for (var cloud in FindObjects(Find_ID(Cloud)))
-			cloud->SetLightingShade(255 - skyshade[2]);
-	}
+	for (var celestial in FindObjects(Find_Func("IsCelestial")))
+		celestial->SetObjAlpha(255 - skyshade[3]);
+	for (var cloud in FindObjects(Find_ID(Cloud)))
+		cloud->SetLightingShade(255 - skyshade[3]);
 	return;
 }
 

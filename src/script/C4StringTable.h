@@ -50,11 +50,10 @@ public:
 	C4RefCntPointer(T* p): p(p) { IncRef(); }
 	C4RefCntPointer(): p(0) { }
 	template <class U> C4RefCntPointer(const C4RefCntPointer<U> & r): p(r.p) { IncRef(); }
-#ifdef HAVE_RVALUE_REF
 	// Move constructor
-	template <class U> C4RefCntPointer(C4RefCntPointer<U> RREF r): p(r.p) { r.p = 0; }
+	template <class U> C4RefCntPointer(C4RefCntPointer<U> &&r): p(r.p) { r.p = 0; }
 	// Move assignment
-	template <class U> C4RefCntPointer& operator = (C4RefCntPointer<U> RREF r)
+	template <class U> C4RefCntPointer& operator = (C4RefCntPointer<U> &&r)
 	{
 		if (p != r.p)
 		{
@@ -64,7 +63,6 @@ public:
 		}
 		return *this;
 	}
-#endif
 	~C4RefCntPointer() { DecRef(); }
 	template <class U> C4RefCntPointer& operator = (U* new_p)
 	{
@@ -113,17 +111,15 @@ template<typename T> class C4Set
 		*p = e;
 		return p;
 	}
-#ifdef HAVE_RVALUE_REF
 	T * AddInternal(T && e)
 	{
 		T * p = GetPlaceFor(e);
 		*p = std::move(e);
 		return p;
 	}
-#endif
 	void MaintainCapacity()
 	{
-		if (Capacity - Size < Max(2u, Capacity / 4))
+		if (Capacity - Size < std::max(2u, Capacity / 4))
 		{
 			unsigned int OCapacity = Capacity;
 			Capacity *= 2;
@@ -198,7 +194,6 @@ public:
 		++Size;
 		return r;
 	}
-#ifdef HAVE_RVALUE_REF
 	T * Add(T && e)
 	{
 		MaintainCapacity();
@@ -206,7 +201,6 @@ public:
 		++Size;
 		return r;
 	}
-#endif
 	template<typename H> void Remove(H e)
 	{
 		unsigned int h = Hash(e);
@@ -441,6 +435,12 @@ enum C4PropertyName
 	P_Equalizer_High_Gain,
 	P_Equalizer_High_Cutoff,
 	P_LightOffset,
+	P_PlayList,
+	P_MusicBreakMin,
+	P_MusicBreakMax,
+	P_MusicBreakChance,
+	P_MusicMaxPositionMemory,
+	P_InflameLandscape,
 // Default Action Procedures
 	DFA_WALK,
 	DFA_FLIGHT,

@@ -10,7 +10,7 @@ protected func Initialize()
 {
 	// Environment 
 	CreateObject(Rule_ObjectFade)->DoFadeTime(10 * 36);
-	var time=CreateObject(Environment_Time);
+	var time=CreateObject(Time);
 	time->SetTime();
 	time->SetCycleSpeed();
 	FindObject(Find_ID(Moon))->SetMoonPhase(3);
@@ -51,7 +51,7 @@ protected func Initialize()
 	AddEffect("FillOtherChest", chest, 100, 5 * 36);
 	
 	AddEffect("SnowyWinter", nil, 100, 1);
-	Sound("WindLoop",true,20,nil,+1);
+	Sound("Environment::WindLoop",true,20,nil,+1);
 	AddEffect("GeysirExplosion", nil, 100, 1);
 	// Brick edges, notice the symmetric landscape.
 	PlaceEdges();

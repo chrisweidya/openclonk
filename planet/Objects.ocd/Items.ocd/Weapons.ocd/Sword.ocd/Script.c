@@ -4,9 +4,11 @@
 
 static const Sword_Standard_StrikingLength = 15; // in frames
 
+local movement_effect;
+
 func Hit()
 {
-	Sound("LightMetalHit?");
+	Sound("Hits::Materials::Metal::LightMetalHit?");
 }
 
 public func Initialize()
@@ -53,7 +55,7 @@ public func ControlUse(object clonk, int x, int y)
 	if(clonk->IsWalking())
 	{
 		if(!GetEffect("SwordStrikeStop", clonk))
-			AddEffect("SwordStrikeStop", clonk, 2, length, this);
+			movement_effect = AddEffect("SwordStrikeStop", clonk, 2, length, nil, GetID());
 	}
 	else
 	if(clonk->IsJumping())
@@ -106,7 +108,7 @@ public func ControlUse(object clonk, int x, int y)
 	magic_number = ObjectNumber();
 	StartWeaponHitCheckEffect(clonk, length, 1);
 	
-	this->Sound("WeaponSwing?");
+	this->Sound("Objects::Weapons::WeaponSwing?");
 	return true;
 }
 
@@ -177,7 +179,7 @@ func CheckStrike(iTime)
 	if(!(Contained()->GetContact(-1) & CNAT_Bottom))
 		offset_y=10;
 	
-	var width=10;
+	var width=15;
 	var height=20;
 	var angle=0;
 	
@@ -224,11 +226,11 @@ func CheckStrike(iTime)
 					continue;
 					
 				// Sound before damage to prevent null pointer access if callbacks delete this
-				Sound("WeaponHit?", false);
+				Sound("Objects::Weapons::WeaponHit?", false);
 				
 				// fixed damage (9)
 				var damage = SwordDamage(shield);
-				ProjectileHit(obj, damage, ProjectileHit_no_query_catch_blow_callback | ProjectileHit_exact_damage | ProjectileHit_no_on_projectile_hit_callback, FX_Call_EngGetPunched);
+				WeaponDamage(obj, damage, FX_Call_EngGetPunched, true);
 				
 				// object has not been deleted?
 				if(obj)
@@ -276,6 +278,7 @@ func FxSwordStrikeStopStop(pTarget, effect, iCause, iTemp)
 {
 	if(iTemp) return;
 	pTarget->PopActionSpeed("Walk");
+	if (this) movement_effect = nil;
 }
 
 func FxSwordStrikeStopTimer(pTarget, effect)
@@ -320,6 +323,16 @@ func FxSwordStrikeSlowTimer(pTarget, effect, iEffectTime)
 func FxSwordStrikeSlowStop(pTarget, effect, iCause, iTemp)
 {
 	pTarget->PopActionSpeed("Walk");
+}
+
+private func Departure(object container)
+{
+	// Always end the movement impairing effect when exiting
+	if (movement_effect)
+	{
+		RemoveEffect(nil, container, movement_effect);
+		movement_effect = nil;
+	}
 }
 
 public func IsWeapon() { return true; }

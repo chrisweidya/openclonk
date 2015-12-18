@@ -7,7 +7,7 @@ static npc_pyrit, g_goal;
 func Intro_Init(object flagpole)
 {
 	// Fix plane outside landscape for now
-	this.plane = CreateObjectAbove(Plane, 100,-20);
+	this.plane = CreateObjectAbove(Airplane, 100,-20);
 	this.plane->FaceRight();
 	this.plane->SetR(80);
 	this.plane->SetColor(0xa04000);
@@ -78,7 +78,7 @@ func Intro_2()
 {
 	// Plane drop sound when it enters view range
 	if (this.plane->GetY() > 900)
-		Sound("PlaneDrop", true);
+		Sound("Goal_TreasureHunt::PlaneDrop", true);
 	else
 		ScheduleSame(2);
 	return true;
@@ -87,7 +87,7 @@ func Intro_2()
 func Intro_PlaneHit()
 {
 	// Plane hit ground! Continue sequence.
-	Sound("PlaneCrash", true);
+	Sound("Objects::Plane::PlaneCrash", true);
 	SetR(-90);
 	var particles = Particles_Smoke(true);
 	particles.Size = PV_Linear(PV_Random(20, 60), PV_Random(50, 100));
@@ -105,7 +105,7 @@ func Intro_PlaneHit()
 		}
 	}
 	SetMeshMaterial("CrashedAirplane");
-	this.MeshTransformation=Trans_Mul(Trans_Rotate(10,0,2,1), Plane.MeshTransformation);
+	this.MeshTransformation=Trans_Mul(Trans_Rotate(10,0,2,1), Airplane.MeshTransformation);
 	this.Hit = this.intro_seq.plane_Hit;
 	this.intro_seq.plane_crashed = true;
 	this.intro_seq->ScheduleNext(50);

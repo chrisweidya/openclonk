@@ -118,7 +118,7 @@ public func FxIntAirshipMovementTimer(object target, proplist effect, int time)
 		{
 			// Fade pitch from -45 to 0
 			enginesound += 5;
-			Sound("FanLoop",nil,nil,nil, 1, 0, enginesound - 50);
+			Sound("Structures::FanLoop",nil,nil,nil, 1, 0, enginesound - 50);
 		}
 	}
 	else if(enginesound)
@@ -126,9 +126,9 @@ public func FxIntAirshipMovementTimer(object target, proplist effect, int time)
 		// Fade pitch from 0 to minimum -45, then turn off
 		enginesound = Max(enginesound - 10);
 		if (enginesound)
-			Sound("FanLoop", nil, nil, nil, 1, 0, enginesound - 50);
+			Sound("Structures::FanLoop", nil, nil, nil, 1, 0, enginesound - 50);
 		else
-			Sound("FanLoop", nil, nil, nil, -1);
+			Sound("Structures::FanLoop", nil, nil, nil, -1);
 	}
 
 	// Wind movement if in the air
@@ -292,13 +292,8 @@ func ControlStop(object clonk, int control)
 
 private func AirshipPilot()
 {
-	//Looks for a clonk within the Gondola
-	var g = gondola;
-	var clonk = FindObject(Find_ID(Clonk), Find_OCF(OCF_Alive),Find_InRect(g[0],g[1],g[2],g[3]));
-	if(clonk)
-		return clonk;
-	else
-		return false;
+	// Looks for a clonk within the gondola.
+	return FindObject(Find_ID(Clonk), Find_OCF(OCF_Alive), Find_InRect(gondola[0], gondola[1], gondola[2], gondola[3]));
 }
 
 /* -- Airship Destruction --*/
@@ -319,7 +314,7 @@ func AirshipDeath()
 	burntairship->Incinerate();
 
 	//Make sure engine sound is gone
-	Sound("FanLoop",nil,nil,nil,-1);
+	Sound("Structures::FanLoop",nil,nil,nil,-1);
 
 	//This object has served its purpose.
 	Explode(27);

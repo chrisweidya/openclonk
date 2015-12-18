@@ -359,7 +359,7 @@ void C4StartupPlrSelDlg::CrewListItem::OnDeathMessageSet(const StdStrBuf &rsNewM
 	// save
 	RewriteCore();
 	// acoustic feedback
-	C4GUI::GUISound("Connect");
+	C4GUI::GUISound("UI::Confirmed");
 }
 
 void C4StartupPlrSelDlg::CrewListItem::RewriteCore()
@@ -482,7 +482,7 @@ C4StartupPlrSelDlg::C4StartupPlrSelDlg() : C4StartupDlg("W"), eMode(PSDM_Player)
 	int iButtonXSpacing = (GetClientRect().Wdt > 700) ? GetClientRect().Wdt/58 : 2;
 	int iButtonCount = 6;
 	C4GUI::ComponentAligner caMain(GetClientRect(), 0,0, true);
-	C4GUI::ComponentAligner caButtonArea(caMain.GetFromBottom(Max(caMain.GetHeight()/15, iButtonHeight)),0,0);
+	C4GUI::ComponentAligner caButtonArea(caMain.GetFromBottom(std::max(caMain.GetHeight()/15, iButtonHeight)),0,0);
 	rcBottomButtons = caButtonArea.GetCentered(caMain.GetWidth(), iButtonHeight);
 	iBottomButtonWidth = (caButtonArea.GetWidth() - iButtonXSpacing * (iButtonCount-1)) / iButtonCount;
 	C4Rect rcMain = caMain.GetAll();
@@ -795,7 +795,7 @@ void C4StartupPlrSelDlg::OnNewBtn(C4GUI::Control *btn)
 	if (eMode != PSDM_Player) return;
 	C4GUI::Dialog *pDlg;
 	GetScreen()->ShowRemoveDlg(pDlg=new C4StartupPlrPropertiesDlg(NULL, this));
-	pDlg->SetPos(Min<int32_t>(GetBounds().Wdt/10, GetBounds().Wdt - pDlg->GetBounds().Wdt), Min<int32_t>(GetBounds().Hgt/4, GetBounds().Hgt - pDlg->GetBounds().Hgt));
+	pDlg->SetPos(std::min<int32_t>(GetBounds().Wdt/10, GetBounds().Wdt - pDlg->GetBounds().Wdt), std::min<int32_t>(GetBounds().Hgt/4, GetBounds().Hgt - pDlg->GetBounds().Hgt));
 }
 
 bool C4StartupPlrSelDlg::CheckPlayerName(const StdStrBuf &Playername, StdStrBuf &Filename, const StdStrBuf *pPrevFilename, bool fWarnEmpty)
@@ -846,7 +846,7 @@ void C4StartupPlrSelDlg::OnCrewBtn(C4GUI::Control *btn)
 void C4StartupPlrSelDlg::SetPlayerMode()
 {
 	// change view to listing players
-	C4GUI::GUISound("DoorClose");
+	C4GUI::GUISound("UI::Close");
 	StdStrBuf LastPlrFilename;
 	LastPlrFilename.Copy(static_cast<const StdStrBuf &>(CurrPlayer.Grp.GetFullName()));
 	CurrPlayer.Grp.Close();
@@ -875,7 +875,7 @@ void C4StartupPlrSelDlg::SetCrewMode(PlayerListItem *pSel)
 		                         strCrew.getData(), C4GUI::Ico_Player);
 		return;
 	}
-	C4GUI::GUISound("DoorOpen");
+	C4GUI::GUISound("UI::Open");
 	eMode = PSDM_Crew;
 	UpdatePlayerList();
 	UpdateSelection();
@@ -954,7 +954,7 @@ void C4StartupPlrSelDlg::OnPropertyBtn(C4GUI::Control *btn)
 		if (!pSel) return;
 		C4GUI::Dialog *pDlg;
 		GetScreen()->ShowRemoveDlg(pDlg=new C4StartupPlrPropertiesDlg(pSel, this));
-		pDlg->SetPos(Min<int32_t>(GetBounds().Wdt/10, GetBounds().Wdt - pDlg->GetBounds().Wdt),
+		pDlg->SetPos(std::min<int32_t>(GetBounds().Wdt/10, GetBounds().Wdt - pDlg->GetBounds().Wdt),
 		             (GetBounds().Hgt - pDlg->GetBounds().Hgt) / 2);
 	}
 	break;
@@ -1018,7 +1018,7 @@ void C4StartupPlrSelDlg::ResortCrew()
 		if (i == SortData.end())
 			SortData.push_back(C4StartupPlrSelDlg_CrewSortDataEntry(pCrewItem->GetCore().Experience, pCrewItem->GetCore().id));
 		else
-			(*i).iMaxExp = Max<int32_t>((*i).iMaxExp, pCrewItem->GetCore().Experience);
+			(*i).iMaxExp = std::max<int32_t>((*i).iMaxExp, pCrewItem->GetCore().Experience);
 	}
 	pPlrListBox->SortElements(&CrewSortFunc, &SortData);
 }
@@ -1290,7 +1290,7 @@ void C4StartupPlrColorPickerDlg::Picker::MouseInput(C4GUI::CMouse &rMouse, int32
 		if (HandleMouseDown(iX, iY))
 		{
 			rMouse.pDragElement = this;
-			C4GUI::GUISound("Command");
+			C4GUI::GUISound("UI::Select");
 		}
 		else
 		{

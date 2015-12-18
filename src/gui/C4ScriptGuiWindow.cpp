@@ -1,18 +1,16 @@
 /*
  * OpenClonk, http://www.openclonk.org
  *
- * Copyright (c) 2013 David Dormagen
+ * Copyright (c) 2014-2015, The OpenClonk Team and contributors
  *
- * Portions might be copyrighted by other authors who have contributed
- * to OpenClonk.
+ * Distributed under the terms of the ISC license; see accompanying file
+ * "COPYING" for details.
  *
- * Permission to use, copy, modify, and/or distribute this software for any
- * purpose with or without fee is hereby granted, provided that the above
- * copyright notice and this permission notice appear in all copies.
- * See isc_license.txt for full license and disclaimer.
+ * "Clonk" is a registered trademark of Matthes Bender, used with permission.
+ * See accompanying file "TRADEMARK" for details.
  *
- * "Clonk" is a registered trademark of Matthes Bender.
- * See clonk_trademark_license.txt for full license.
+ * To redistribute this file separately, substitute the full license texts
+ * for the above references.
  */
 
  /*
@@ -346,7 +344,7 @@ void C4ScriptGuiWindowProperty::CleanUpAll()
 
 const C4Value C4ScriptGuiWindowProperty::ToC4Value()
 {
-	C4PropList *proplist = nullptr; 
+	C4PropList *proplist = nullptr;
 	
 	bool onlyOneTag = taggedProperties.size() == 1;
 	if (!onlyOneTag) // we will need a tagged proplist
@@ -501,8 +499,14 @@ void C4ScriptGuiWindowProperty::Set(const C4Value &value, C4String *tag)
 	case C4ScriptGuiWindowPropertyName::backgroundColor:
 	case C4ScriptGuiWindowPropertyName::style:
 	case C4ScriptGuiWindowPropertyName::priority:
-	case C4ScriptGuiWindowPropertyName::player:
 		current->d = value.getInt();
+		break;
+
+	case C4ScriptGuiWindowPropertyName::player:
+		if (value == C4VNull)
+			current->d = ANY_OWNER;
+		else
+			current->d = value.getInt();
 		break;
 
 	case C4ScriptGuiWindowPropertyName::symbolObject:
@@ -669,7 +673,7 @@ void C4ScriptGuiWindow::Init()
 	props[C4ScriptGuiWindowPropertyName::onCloseAction].SetNull();
 	props[C4ScriptGuiWindowPropertyName::style].SetNull();
 	props[C4ScriptGuiWindowPropertyName::priority].SetNull();
-	props[C4ScriptGuiWindowPropertyName::player].SetInt(-1);
+	props[C4ScriptGuiWindowPropertyName::player].SetInt(ANY_OWNER);
 
 	wasRemoved = false;
 	closeActionWasExecuted = false;
@@ -778,47 +782,54 @@ void C4ScriptGuiWindow::SetPositionStringProperties(const C4Value &property, C4S
 		return;
 	}
 	// safety
-	if (property.GetType() != C4V_Type::C4V_String) return;
-	StdStrBuf buf(property.getStr()->GetData());
-	
-	std::string trimmedString;
-	size_t maxLength = buf.getLength();
-	trimmedString.reserve(maxLength);
-	// add all non-whitespace characters to the new string (strtod could abort the parsing otherwise)
-	for (size_t i = 0; i < maxLength; ++i)
-	{
-		if (!isspace(buf[i]))
-			trimmedString.push_back(buf[i]);
+	if (property.GetType() != C4V_Type::C4V_String) {
+		if(property.GetType() != C4V_Type::C4V_Nil)
+			LogF("Warning: Got %s instead of expected menu format string.", property.GetTypeName());
+		return;
 	}
 
 	float relativeValue = 0.0;
 	float absoluteValue = 0.0;
 
-	const char *currentPosition = trimmedString.data();
-	char *nextPosition;
-	const char *lastPosition = trimmedString.data() + trimmedString.size();
+	std::locale c_locale("C");
+	std::istringstream reader(std::string(property.getStr()->GetCStr()));
+	reader.imbue(c_locale);
+	if(!reader.good()) return;
 
-	while (currentPosition < lastPosition)
+	while (!reader.eof())
 	{
+		reader >> std::ws; // eat white space
+
 		// look for next float
-		nextPosition = 0;
-		float value = static_cast<float>(strtod(currentPosition, &nextPosition));
+		float value;
+		// here comes the fun.
+		// strtod is locale dependent
+		// istringstream will try to parse scientific notation, so things like 3em will be tried to be parsed as 3e<exponent> and consequently fail
+		// thus, per stackoverflow recommendation, parse the float into a separate string and then let that be parsed
+		std::stringstream floatss;
+		floatss.imbue(c_locale);
+		if(reader.peek() == '+' || reader.peek() == '-') floatss.put(reader.get());
+		reader >> std::ws;
+		while(std::isdigit(reader.peek()) || reader.peek() == '.') floatss.put(reader.get());
+		floatss >> value;
+		reader >> std::ws;
 
-		// fail? exit right here (there must be some space left in the string for a unit, too)
-		if (currentPosition == nextPosition || nextPosition == 0 || nextPosition >= lastPosition) break;
-
-		if (*nextPosition == '%')
+		if (reader.peek() == '%')
 		{
 			relativeValue += value;
-			currentPosition = nextPosition + 1;
+			reader.get();
 		}
-		else if (*nextPosition == 'e' && *(nextPosition+1) == 'm')
+		else if (reader.get() == 'e' && reader.get() == 'm')
 		{
 			absoluteValue += value;
-			currentPosition = nextPosition + 2;
 		}
-		else // error, abort!
-			break;
+		else // error, abort! (readere is not in a clean state anyway)
+		{
+			LogF("Warning: Could not parse menu format string \"%s\"!", property.getStr()->GetCStr());
+			return;
+		}
+
+		reader.peek(); // get eof bit to be set
 	}
 	props[relative].SetFloat(relativeValue / 100.0f, tag);
 	props[absolute].SetFloat(absoluteValue, tag);
@@ -1400,9 +1411,21 @@ void C4ScriptGuiWindow::UpdateLayoutGrid()
 		const float childWdtF = float(child->rcBounds.Wdt) + childLeftMargin + childRightMargin;
 		const float childHgtF = float(child->rcBounds.Hgt) + childTopMargin + childBottomMargin;
 
+		auto doLineBreak = [&]()
+		{
+			currentX = borderX;
+			currentY += maxChildHeight + borderY;
+			maxChildHeight = 0;
+		};
+
 		// do all the rounding after the calculations
 		const int32_t childWdt = (int32_t)(childWdtF + 0.5f);
 		const int32_t childHgt = (int32_t)(childHgtF + 0.5f);
+
+		// Check if the child even fits in the remainder of the row
+		const bool fitsInRow = (width - currentX) >= childWdt;
+		if (!fitsInRow) doLineBreak();
+
 		// remember the highest child to make sure rows don't overlap
 		if (!maxChildHeight || (childHgt > maxChildHeight))
 		{
@@ -1413,16 +1436,10 @@ void C4ScriptGuiWindow::UpdateLayoutGrid()
 		child->rcBounds.y = currentY + static_cast<int32_t>(childTopMargin);
 
 		currentX += childWdt + borderX;
-		if (currentX + childWdt >= width)
-		{
-			currentX = borderX;
-			currentY += maxChildHeight + borderY;
-			maxChildHeight = 0;
-		}
 	}
 
 	// do we need a scroll bar?
-	EnableScrollBar(currentY > height, lowestChildRelY);
+	EnableScrollBar(lowestChildRelY > height, lowestChildRelY);
 }
 
 void C4ScriptGuiWindow::UpdateLayoutVertical()
@@ -1553,7 +1570,7 @@ void C4ScriptGuiWindow::RequestLayoutUpdate()
 			return;
 		}
 		else // we are one of the multiple windows.. the root better do a full refresh
-			;
+		{}
 	}
 	// propagate to parent window
 	static_cast<C4ScriptGuiWindow*>(GetParent())->RequestLayoutUpdate();
@@ -1674,9 +1691,10 @@ bool C4ScriptGuiWindow::UpdateLayout(C4TargetFacet &cgo, float parentWidth, floa
 	rcBounds.Wdt = width;
 	rcBounds.Hgt = height;
 
-	// if this window contains text, we auto-fit to the text height
+	// If this window contains text, we auto-fit to the text height;
+	// but we only break text when the window /would/ crop it otherwise.
 	StdCopyStrBuf *strBuf = props[C4ScriptGuiWindowPropertyName::text].GetStrBuf();
-	if (strBuf)
+	if (strBuf && !(style & C4ScriptGuiWindowStyleFlag::NoCrop))
 	{
 		StdStrBuf sText;
 		int32_t textHgt = ::GraphicsResource.FontRegular.BreakMessage(strBuf->getData(), rcBounds.Wdt, &sText, true);
@@ -1758,7 +1776,7 @@ bool C4ScriptGuiWindow::Draw(C4TargetFacet &cgo, int32_t player, C4Rect *current
 
 	// message hidden?
 	const int32_t &myPlayer = props[C4ScriptGuiWindowPropertyName::player].GetInt();
-	if (!IsVisible() || (myPlayer != -1 && player != myPlayer) || (target && !target->IsVisible(player, false)))
+	if (!IsVisible() || (myPlayer != ANY_OWNER && player != myPlayer) || (target && !target->IsVisible(player, false)))
 	{
 		return false;
 	}
@@ -1793,9 +1811,9 @@ bool C4ScriptGuiWindow::Draw(C4TargetFacet &cgo, int32_t player, C4Rect *current
 	{
 		// the frame decoration will adjust for cgo.TargetX/Y itself
 		C4Rect rect(
-			outDrawX - frameDecoration->iBorderLeft - cgo.TargetX, 
-			outDrawY - frameDecoration->iBorderTop - cgo.TargetY, 
-			outDrawWdt + frameDecoration->iBorderRight + frameDecoration->iBorderLeft, 
+			outDrawX - frameDecoration->iBorderLeft - cgo.TargetX,
+			outDrawY - frameDecoration->iBorderTop - cgo.TargetY,
+			outDrawWdt + frameDecoration->iBorderRight + frameDecoration->iBorderLeft,
 			outDrawHgt + frameDecoration->iBorderBottom + frameDecoration->iBorderTop);
 		frameDecoration->Draw(cgo, rect);
 	}
@@ -1821,7 +1839,11 @@ bool C4ScriptGuiWindow::Draw(C4TargetFacet &cgo, int32_t player, C4Rect *current
 	{
 		StdStrBuf sText;
 		int alignment = ALeft;
-		int32_t textHgt = ::GraphicsResource.FontRegular.BreakMessage(strBuf->getData(), outDrawWdt, &sText, true);
+		// If we are set to NoCrop, the message will be split by string-defined line breaks only.
+		int allowedTextWidth = outDrawWdt;
+		if (style & C4ScriptGuiWindowStyleFlag::NoCrop)
+			allowedTextWidth = std::numeric_limits<int>::max();
+		int32_t textHgt = ::GraphicsResource.FontRegular.BreakMessage(strBuf->getData(), allowedTextWidth, &sText, true);
 		float textYOffset = 0.0f, textXOffset = 0.0f;
 		if (style & C4ScriptGuiWindowStyleFlag::TextVCenter)
 			textYOffset = float(outDrawHgt) / 2.0f - float(textHgt) / 2.0f;
@@ -2085,7 +2107,8 @@ bool C4ScriptGuiWindow::ProcessMouseInput(int32_t button, int32_t mouseX, int32_
 	//C4GUI::Element::MouseInput(rMouse, button, mouseX, mouseY, dwKeyParam);
 
 	// remember button-down events. The action will only be executed on button-up
-	if (button == C4MC_Button_LeftDown)
+	// The sequence for double-clicks is LeftDown-LeftUp-LeftDouble-LeftUp, so treat double as down
+	if (button == C4MC_Button_LeftDown || button == C4MC_Button_LeftDouble)
 		currentMouseState |= MouseState::MouseDown;
 	// trigger!
 	if (button == C4MC_Button_LeftUp && (currentMouseState & MouseState::MouseDown))

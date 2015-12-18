@@ -1,4 +1,0 @@
-Production=Production
-QueueRemove=Produce one less.
-QueueInf=Always produce if material is available.
-infinite=always

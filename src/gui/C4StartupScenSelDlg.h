@@ -92,6 +92,7 @@ public:
 
 		virtual bool CanOpen(StdStrBuf &sError) { return true; } // whether item can be started/opened (e.g. mission access, unregistered)
 		virtual bool IsGrayed() { return false; } // additional condition for graying out - notice unreg folders are grayed but can still be opened
+		virtual bool IsHidden() { return false; } // condition for hiding element completely
 		virtual bool HasMissionAccess() const { return true; }
 		virtual bool HasUnregisteredAccess() const { return false; }
 		virtual StdStrBuf GetOpenText() = 0; // get open button text
@@ -129,6 +130,7 @@ public:
 
 		virtual bool CanOpen(StdStrBuf &sError); // check mission access, player count, etc.
 		virtual bool IsGrayed() { return false; } // additional option for graying out
+		virtual bool IsHidden() { return C4S.Head.Secret && !HasMissionAccess(); } // condition for hiding element completely
 		virtual bool HasMissionAccess() const { return !fNoMissionAccess; };         // check mission access only
 		virtual StdStrBuf GetOpenText(); // get open button text
 		virtual StdStrBuf GetOpenTooltip();
@@ -261,7 +263,7 @@ public:
 
 	int32_t GetProgress() const { return iProgress; }
 	int32_t GetMaxProgress() const { return iMaxProgress; }
-	int32_t GetProgressPercent() const { return iProgress * 100 / Max<int32_t>(iMaxProgress, 1); }
+	int32_t GetProgressPercent() const { return iProgress * 100 / std::max<int32_t>(iMaxProgress, 1); }
 
 	const C4ScenarioParameters &GetAchievements() const { return Achievements; }
 };

@@ -21,7 +21,7 @@ func Attack_1()
 	this.planes = CreateArray(n_planes);
 	for (var i=0; i<n_planes; ++i)
 	{
-		var plane = CreateObjectAbove(Plane, plane_x[i], plane_y[i]);
+		var plane = CreateObjectAbove(Airplane, plane_x[i], plane_y[i]);
 		var pilot = CreateObjectAbove(Clonk, plane_x[i], plane_y[i]);
 		pilot->SetSkin(2);
 		pilot->Enter(plane);
@@ -144,7 +144,7 @@ func Attack_DropBomb(int plane_idx, int delay)
 		bomb->SetXDir(plane->GetXDir() + (i-2) * 10);
 		bomb->Fuse(true); // fuse and explode on hit
 	}
-	plane->Sound("BombDrop");
+	plane->Sound("Goal_Raid::BombDrop");
 	return true;
 }
 

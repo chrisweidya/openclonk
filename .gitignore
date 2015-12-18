@@ -1,35 +1,20 @@
-autom4te.cache
 *~
 *.bak
 .deps
 deps
 *.o
 /openclonk
-/netpuncher
 /c4group
 /c4script
-.dirstamp
 *.a
 *.c4p
 planet/Records.c4f
 *.lib
 *.dll
-stamp-h1
 config.h
-config.log
-config.status
 C4Version.h
 Makefile
 C4Include.h.gch
-Makefile.in
-aclocal.m4
-autotools/config.guess
-autotools/config.sub
-autotools/compile
-autotools/depcomp
-autotools/install-sh
-autotools/missing
-configure
 intermediate
 build*
 CMakeScripts
@@ -145,3 +130,5 @@ tests/openclonk_unittest.sln
 
 # Packed groups created directly in root path
 /*.oc*
+
+openclonk.VC.opendb

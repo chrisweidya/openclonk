@@ -111,7 +111,7 @@ protected func FxFlightTimer(object pTarget, effect, int iEffectTime)
 		JumpOff(rider,30);
 	}
 
-	if(!Random(105)) Sound("Cracker");
+	if(!Random(105)) Sound("Fire::Cracker");
 
 	if(fuel<=0)
 	{
@@ -156,6 +156,10 @@ private func JumpOff(object clonk, int speed)
 	clonk->SetAction("Tumble");
 	clonk->SetXDir(GetXDir(50)+speed*xdir/100,100);
 	clonk->SetYDir(GetYDir(50)-speed*ydir/100,100);
+	
+	// Add hit check to explode on mid-air contact.
+	// This increases the military efficacy of the boompack.
+	AddEffect("HitCheck", this, 1, 2, nil, nil, clonk);
 }
 
 protected func Hit()
@@ -165,15 +169,24 @@ protected func Hit()
 		JumpOff(rider);
 	}
 	//Message("I have hit something",this);
-	Sound("GeneralHit?");
+	Sound("Hits::GeneralHit?");
 	if(GetEffect("Flight",this)) DoFireworks();
+}
+
+// Called when hitting something mid-air after the Clonk jumped off.
+public func HitObject(object target)
+{
+	if (target && WeaponCanHit(target))
+		target->~OnProjectileHit(this);
+	if (this)
+		DoFireworks();
 }
 
 public func OnMount(clonk)
 {
 	var iDir = 1;
 	if(clonk->GetDir() == 1) iDir = -1;
-	clonk->PlayAnimation("PosRocket", 10, Anim_Const(0), Anim_Const(1000));
+	clonk->PlayAnimation("PosRocket", CLONK_ANIM_SLOT_Arms, Anim_Const(0), Anim_Const(1000));
 	riderattach = AttachMesh(clonk, "main", "pos_tool1", Trans_Mul(Trans_Translate(-1000,2000*iDir,2000), Trans_Rotate(-90*iDir,1,0,0)));
 	
 	//Modify picture transform to fit icon on clonk mount
@@ -198,9 +211,9 @@ func Launch(int angle, object clonk)
 	SetCategory(C4D_Vehicle);
 
 	Exit();
-	Sound("BoompackLaunch");
+	Sound("Objects::Boompack::Launch");
 	AddEffect("Flight",this,150,1,this);
-	Sound("BoompackFly", false, 60, nil, 1);
+	Sound("Objects::Boompack::Fly", false, 60, nil, 1);
 	//AddEffect("HitCheck", this, 1,1, nil,nil, clonk, true);
 
 	//Ride the rocket!
@@ -232,7 +245,7 @@ func DoFireworks()
 {
 	RemoveEffect("Flight",this);
 	Fireworks();
-	Sound("BlastFirework", false, 200);
+	Sound("Fire::BlastFirework", false, 200);
 	Explode(30);
 }
 

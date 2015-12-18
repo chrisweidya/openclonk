@@ -84,6 +84,8 @@ void C4ConfigDeveloper::CompileFunc(StdCompiler *pComp)
 	pComp->Value(mkNamingAdapt(ExtraWarnings,      "ExtraWarnings",       0                   , false, true));
 	pComp->Value(mkNamingAdapt(s(TodoFilename),    "TodoFilename",       "{SCENARIO}/TODO.txt", false, true));
 	pComp->Value(mkNamingAdapt(s(AltTodoFilename), "AltTodoFilename2",   "{USERPATH}/TODO.txt", false, true));
+	pComp->Value(mkNamingAdapt(MaxScriptMRU,        "MaxScriptMRU",       30                  , false, false));
+	pComp->Value(mkNamingAdapt(DebugShapeTextures,  "DebugShapeTextures", 0                   , false, true));
 }
 
 void C4ConfigGraphics::CompileFunc(StdCompiler *pComp)
@@ -95,7 +97,6 @@ void C4ConfigGraphics::CompileFunc(StdCompiler *pComp)
 	pComp->Value(mkNamingAdapt(RefreshRate,           "RefreshRate",          0             ));
 	pComp->Value(mkNamingAdapt(SplitscreenDividers,   "SplitscreenDividers",  1             ));
 	pComp->Value(mkNamingAdapt(ShowStartupMessages,   "ShowStartupMessages",  1             ,false, true));
-	pComp->Value(mkNamingAdapt(ColorAnimation,        "ColorAnimation",       0             ,false, true));
 	pComp->Value(mkNamingAdapt(HighResLandscape,      "HighResLandscape",     1             ,false, true));
 	pComp->Value(mkNamingAdapt(VerboseObjectLoading,  "VerboseObjectLoading", 0             ));
 	pComp->Value(mkNamingAdapt(VideoModule,           "VideoModule",          0             ,false, true));
@@ -165,7 +166,6 @@ void C4ConfigNetwork::CompileFunc(StdCompiler *pComp)
 	pComp->Value(mkNamingAdapt(PacketLogging,           "PacketLogging",        0             ));
 	
 
-	pComp->Value(mkNamingAdapt(s(PuncherAddress),       "PuncherAddress",       "clonk.de:11115")); // maybe store default for this one?
 	pComp->Value(mkNamingAdapt(mkParAdapt(LastLeagueServer, StdCompiler::RCT_All),     "LastLeagueServer",     ""            ));
 	pComp->Value(mkNamingAdapt(mkParAdapt(LastLeaguePlayerName, StdCompiler::RCT_All), "LastLeaguePlayerName", ""            ));
 	pComp->Value(mkNamingAdapt(mkParAdapt(LastLeagueAccount, StdCompiler::RCT_All),    "LastLeagueAccount",    ""            ));

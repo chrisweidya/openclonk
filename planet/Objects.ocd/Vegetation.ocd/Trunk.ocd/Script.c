@@ -15,6 +15,9 @@ protected func Initialize()
 public func IsPlant() { return true; }
 public func IsTree() { return true; }
 
+// Not supported by this tree
+public func CreateObjectInTreetop() { return nil; }
+
 public func IsStanding() { return GetCategory() & C4D_StaticBack; }
 
 public func ChopDown()
@@ -37,7 +40,7 @@ public func ChopDown()
 		}
 	}
 	// Effect
-	Sound("TreeCrack");
+	Sound("Environment::Tree::Crack");
 	AddEffect("TreeFall", this, 1, 1, nil, Library_Plant);
 }
 

@@ -85,6 +85,8 @@ public:
 	int32_t ExtraWarnings;
 	char TodoFilename[CFG_MaxString + 1];
 	char AltTodoFilename[CFG_MaxString + 1];
+	int32_t MaxScriptMRU; // maximum number of remembered elements in recently used scripts
+	int32_t DebugShapeTextures; // if nonzero, show messages about loaded shape textures
 	void CompileFunc(StdCompiler *pComp);
 };
 
@@ -94,7 +96,6 @@ public:
 	int32_t SplitscreenDividers;
 	int32_t ShowStartupMessages;
 	int32_t VerboseObjectLoading;
-	int32_t ColorAnimation;
 	int32_t HighResLandscape;
 	int32_t VideoModule;
 	int32_t MenuTransparency;
@@ -159,7 +160,6 @@ public:
 	int32_t MaxLoadFileSize;
 	char LastPassword[CFG_MaxString+1];
 	char AlternateServerAddress[CFG_MaxString+1];
-	char PuncherAddress[CFG_MaxString+1];
 	StdCopyStrBuf LastLeagueServer, LastLeaguePlayerName, LastLeagueAccount, LastLeagueLoginToken;
 #ifdef WITH_AUTOMATIC_UPDATE
 	char UpdateServerAddress[CFG_MaxString+1];

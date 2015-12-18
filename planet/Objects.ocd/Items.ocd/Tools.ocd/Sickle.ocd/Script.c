@@ -7,7 +7,7 @@
 
 private func Hit()
 {
-	Sound("WoodHit?");
+	Sound("Hits::Materials::Wood::WoodHit?");
 }
 
 public func GetCarryMode()	{	return CARRY_HandBack;	}
@@ -35,11 +35,12 @@ public func ControlUseStart(object clonk, int x, int y)
 	if(clonk->IsJumping())
 		animation = Format("SwordJump2.%s",arm);
 
-	clonk->PlayAnimation(animation, 10, Anim_Linear(0, 0, clonk->GetAnimationLength(animation), length, ANIM_Remove), Anim_Const(1000));
+	clonk->PlayAnimation(animation, CLONK_ANIM_SLOT_Arms, Anim_Linear(0, 0, clonk->GetAnimationLength(animation), length, ANIM_Remove), Anim_Const(1000));
 	clonk->UpdateAttach();
-
+	Sound("Objects::Weapons::WeaponSwing?", nil, nil, nil, nil, nil, 100);
+	
 	// Search for harvestable plants
-	var crop = FindObject(Find_InRect(AbsX(clonk->GetX()-8), AbsY(clonk->GetY()-10), 16,20), Find_NoContainer(), Find_Func("SickleHarvesting"), Find_Func("IsHarvestable"));
+	var crop = FindObject(Find_AtRect(AbsX(clonk->GetX()-8), AbsY(clonk->GetY()-10), 16,20), Find_NoContainer(), Find_Func("SickleHarvesting"), Find_Func("IsHarvestable"));
 	if (crop)
 		crop->Harvest();
 

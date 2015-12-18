@@ -22,6 +22,21 @@
 
 --*/
 
+/* Predefined animation slots */
+
+// Any kind of movement, either legs only (like Walk or Stand) or whole body (like Swim).
+// In cases of whole body animation, make sure to let other effect know that the clonk
+// can do arms animation (e.g. check ReadyToAction in the Clonk's script).
+static const CLONK_ANIM_SLOT_Movement = 5;
+// Arms or upper body animations (like Aiming or Throwing)
+static const CLONK_ANIM_SLOT_Arms = 10;
+// Eye animations (like Blinking or Closing)
+static const CLONK_ANIM_SLOT_Eyes = 3;
+// Hand animations (like closing the hand)
+static const CLONK_ANIM_SLOT_Hands = 6;
+// Make sure to never use a higher slot than this, so Death will always overwrite all other animations.
+static const CLONK_ANIM_SLOT_Death = 20;
+
 
 local lAnim; // proplist containing all the specific variables. "Pseudo-Namespace"
 
@@ -295,9 +310,9 @@ func CloseEyes(iCounter)
 	StopAnimation(GetRootAnimation(3));
 	lAnim.closedEyes += iCounter;
 	if(lAnim.closedEyes >= 1)
-		PlayAnimation("CloseEyes" , 3, Anim_Linear(0, 0, GetAnimationLength("CloseEyes")/2, 3, ANIM_Hold), Anim_Const(1000));
+		PlayAnimation("CloseEyes" , CLONK_ANIM_SLOT_Eyes, Anim_Linear(0, 0, GetAnimationLength("CloseEyes")/2, 3, ANIM_Hold), Anim_Const(1000));
 	else
-		PlayAnimation("CloseEyes" , 3, Anim_Linear(GetAnimationLength("CloseEyes")/2, GetAnimationLength("CloseEyes")/2, GetAnimationLength("CloseEyes"), 3, ANIM_Remove), Anim_Const(1000));
+		PlayAnimation("CloseEyes" , CLONK_ANIM_SLOT_Eyes, Anim_Linear(GetAnimationLength("CloseEyes")/2, GetAnimationLength("CloseEyes")/2, GetAnimationLength("CloseEyes"), 3, ANIM_Remove), Anim_Const(1000));
 }
 
 /*--
@@ -380,7 +395,7 @@ func GetCurrentWalkAnimation()
 func Footstep()
 {
 	if (GetMaterialVal("DigFree", "Material", GetMaterial(0,10)) == 0)
-		Sound("StepHard?");
+		Sound("Clonk::Movement::StepHard?");
 	else
 	{
 		var dir = Sign(GetXDir());
@@ -393,7 +408,7 @@ func Footstep()
 			B = clr & 0xff,
 		};
 		CreateParticle("Dust", PV_Random(dir * -2, dir * -1), 8, PV_Random(dir * 2, dir * 1), PV_Random(-2, -3), PV_Random(36, 2 * 36), particles, 5);
-		Sound("StepSoft?");
+		Sound("Clonk::Movement::StepSoft?");
 	}
 }
 
@@ -441,7 +456,7 @@ func FxIntWalkStart(pTarget, effect, fTmp)
 	// Always start in Stand for now... should maybe fade properly from previous animation instead
 	var anim = "Stand";  //GetCurrentWalkAnimation();
 	effect.animation_name = anim;
-	effect.animation_id = PlayAnimation(anim, 5, GetWalkAnimationPosition(anim), Anim_Linear(0, 0, 1000, 5, ANIM_Remove));
+	effect.animation_id = PlayAnimation(anim, CLONK_ANIM_SLOT_Movement, GetWalkAnimationPosition(anim), Anim_Linear(0, 0, 1000, 5, ANIM_Remove));
 	effect.idle_animation_time = 0;
 
 	effect.idle_time = 0; // Idle counter
@@ -479,7 +494,7 @@ func FxIntWalkTimer(pTarget, effect)
 	{
 		effect.animation_name = anim;
 		effect.idle_time = 0;
-		effect.animation_id = PlayAnimation(anim, 5, GetWalkAnimationPosition(anim, 0), Anim_Linear(0, 0, 1000, 5, ANIM_Remove));
+		effect.animation_id = PlayAnimation(anim, CLONK_ANIM_SLOT_Movement, GetWalkAnimationPosition(anim, 0), Anim_Linear(0, 0, 1000, 5, ANIM_Remove));
 	}
 	// The clonk has to stand, not making a pause animation yet and not doing other actions with the hands (e.g. loading the bow)
 	else if(anim == Clonk_WalkStand && !GetHandAction())
@@ -493,8 +508,10 @@ func FxIntWalkTimer(pTarget, effect)
 				effect.idle_time = 0;
 				effect.idle_offset = Random(300);
 				var rand = Random(GetLength(Clonk_IdleActions));
-				PlayAnimation(Clonk_IdleActions[rand][0], 5, Anim_Linear(0, 0, GetAnimationLength(Clonk_IdleActions[rand][0]), Clonk_IdleActions[rand][1], ANIM_Remove), Anim_Linear(0, 0, 1000, 5, ANIM_Remove));
+				PlayAnimation(Clonk_IdleActions[rand][0], CLONK_ANIM_SLOT_Movement, Anim_Linear(0, 0, GetAnimationLength(Clonk_IdleActions[rand][0]), Clonk_IdleActions[rand][1], ANIM_Remove), Anim_Linear(0, 0, 1000, 5, ANIM_Remove));
 				effect.idle_animation_time = Clonk_IdleActions[rand][1]-5;
+				if (!Random(5))
+					this->PlaySoundIdle();
 			}
 		}
 	}
@@ -508,11 +525,21 @@ func FxIntWalkTimer(pTarget, effect)
 		}
 		if (anim == Clonk_WalkRun)
 		{
-			effect.footstep_time++;
-			if (effect.footstep_time == 12)
+			// There are roughly two animation positions in Run when a foot touches the ground:
+			// 550 and 1700
+			// This here is trying to trigger a footstep as close as possible to these two moments.
+			var pos = GetAnimationPosition(effect.animation_id);
+			if (pos < 550 && effect.footstep_time)
+				effect.footstep_time = 0;
+			if (Inside(pos, 550, 1699) && effect.footstep_time != 1)
 			{
 				Footstep();
-				effect.footstep_time = 0;
+				effect.footstep_time = 1;
+			}
+			if (pos >= 1700 && effect.footstep_time != 2)
+			{
+				Footstep();
+				effect.footstep_time = 2;
 			}
 		}
 		else if(effect.footstep_time) effect.footstep_time = 0;
@@ -526,7 +553,7 @@ func FxIntWalkReset(pTarget, effect)
 
 func StartStand()
 {
-	PlayAnimation(Clonk_WalkStand, 5, GetWalkAnimationPosition(Clonk_WalkStand), Anim_Linear(0, 0, 1000, 5, ANIM_Remove));
+	PlayAnimation(Clonk_WalkStand, CLONK_ANIM_SLOT_Movement, GetWalkAnimationPosition(Clonk_WalkStand), Anim_Linear(0, 0, 1000, 5, ANIM_Remove));
 	// Update carried items
 	UpdateAttach();
 	// Set proper turn type
@@ -565,7 +592,7 @@ func CheckScaleTop()
 func FxIntScaleStart(target, effect, tmp)
 {
 	if(tmp) return;
-	effect.animation_id = PlayAnimation("Scale", 5, Anim_Y(0, GetAnimationLength("Scale"), 0, 15), Anim_Linear(0, 0, 1000, 5, ANIM_Remove));
+	effect.animation_id = PlayAnimation("Scale", CLONK_ANIM_SLOT_Movement, Anim_Y(0, GetAnimationLength("Scale"), 0, 15), Anim_Linear(0, 0, 1000, 5, ANIM_Remove));
 	effect.animation_mode = 0;
 }
 
@@ -583,7 +610,7 @@ func FxIntScaleTimer(target, number, time)
 		dist -= GetY(100)-GetY()*100;
 		if(number.animation_mode != 1)
 		{
-			number.animation_id = PlayAnimation("ScaleTop", 5, Anim_Const(GetAnimationLength("ScaleTop")*dist/800), Anim_Linear(0, 0, 1000, 5, ANIM_Remove));
+			number.animation_id = PlayAnimation("ScaleTop", CLONK_ANIM_SLOT_Movement, Anim_Const(GetAnimationLength("ScaleTop")*dist/800), Anim_Linear(0, 0, 1000, 5, ANIM_Remove));
 			number.animation_mode = 1;
 		}
 		this.dist = dist;
@@ -597,8 +624,8 @@ func FxIntScaleTimer(target, number, time)
 		if(number.animation_mode != 2)
 		{
 			var pos = GetAnimationPosition(number.animation_id);
-			number.animation_id = PlayAnimation("ScaleHands" , 5, Anim_Y(pos, GetAnimationLength("ScaleHands"), 0, 15), Anim_Linear(0, 0, 1000, 5, ANIM_Remove));
-			number.animation_id2 = PlayAnimation("ScaleHands2", 5, Anim_Y(pos, GetAnimationLength("ScaleHands2"), 0, 15), Anim_Const(1000), number.animation_id);
+			number.animation_id = PlayAnimation("ScaleHands" , CLONK_ANIM_SLOT_Movement, Anim_Y(pos, GetAnimationLength("ScaleHands"), 0, 15), Anim_Linear(0, 0, 1000, 5, ANIM_Remove));
+			number.animation_id2 = PlayAnimation("ScaleHands2", CLONK_ANIM_SLOT_Movement, Anim_Y(pos, GetAnimationLength("ScaleHands2"), 0, 15), Anim_Const(1000), number.animation_id);
 			number.animation_id2++;
 			number.animation_mode = 2;
 		}
@@ -615,7 +642,7 @@ func FxIntScaleTimer(target, number, time)
 		}
 		var pos = 0;
 		if(number.animation_mode == 2) pos = GetAnimationPosition(number.animation_id);
-		number.animation_id = PlayAnimation("Scale", 5, Anim_Y(0, GetAnimationLength("Scale"), 0, 15), Anim_Linear(0, 0, 1000, 5, ANIM_Remove));
+		number.animation_id = PlayAnimation("Scale", CLONK_ANIM_SLOT_Movement, Anim_Y(0, GetAnimationLength("Scale"), 0, 15), Anim_Linear(0, 0, 1000, 5, ANIM_Remove));
 		number.animation_mode = 0;
 		SetScaleRotation(0);
 	}
@@ -672,7 +699,7 @@ func FxIntScaleStop(target, number, reason, tmp)
 {
 	if(tmp) return;
 	// Set the animation to stand without blending! That's cause the animation of Scale moves the clonkmesh wich would result in a stange blend moving the clonk around while blending
-/*	if(number.animation_mode == 1) PlayAnimation(Clonk_WalkStand, 5, GetWalkAnimationPosition(Clonk_WalkStand), Anim_Const(1000));
+/*	if(number.animation_mode == 1) PlayAnimation(Clonk_WalkStand, CLONK_ANIM_SLOT_Movement, GetWalkAnimationPosition(Clonk_WalkStand), Anim_Const(1000));
 	// Finally stop if the user has scheduled a stop
 	if(number.ScheduleStop) SetComDir(COMD_Stop);*/
 	// and reset the transform
@@ -694,19 +721,19 @@ func StartJump()
 
 	//Normal forward jump
 	if(Abs(GetXDir()) >= 1)
-	PlayAnimation(Format("Jump.%s",side), 5, Anim_Linear(0, 0, GetAnimationLength("Jump.L"), 8*5, ANIM_Hold), Anim_Linear(0, 0, 1000, 5, ANIM_Remove));
+	PlayAnimation(Format("Jump.%s",side), CLONK_ANIM_SLOT_Movement, Anim_Linear(0, 0, GetAnimationLength("Jump.L"), 8*5, ANIM_Hold), Anim_Linear(0, 0, 1000, 5, ANIM_Remove));
 	//Walk kick jump
 	if(GetEffect("WallKick",this))
 	{
 		SetAction("WallJump");
 		var side = "L";
 		if(GetDir() == DIR_Left) side = "R";
-		PlayAnimation(Format("JumpWall.%s", side), 5, Anim_Linear(0, 0, GetAnimationLength("JumpWall.L"), 8*5, ANIM_Hold), Anim_Linear(0, 0, 1000, 5, ANIM_Remove));
+		PlayAnimation(Format("JumpWall.%s", side), CLONK_ANIM_SLOT_Movement, Anim_Linear(0, 0, GetAnimationLength("JumpWall.L"), 8*5, ANIM_Hold), Anim_Linear(0, 0, 1000, 5, ANIM_Remove));
 	}
 	//Upwards jump
 	else if(GetXDir() == 0)
 	{
-		PlayAnimation(Format("JumpUp.%s", side), 5, Anim_Linear(0, 0, GetAnimationLength("JumpUp.L"), 8*5, ANIM_Hold), Anim_Linear(0, 0, 1000, 5, ANIM_Remove));
+		PlayAnimation(Format("JumpUp.%s", side), CLONK_ANIM_SLOT_Movement, Anim_Linear(0, 0, GetAnimationLength("JumpUp.L"), 8*5, ANIM_Hold), Anim_Linear(0, 0, 1000, 5, ANIM_Remove));
 	}
 
 	// Update carried items
@@ -719,7 +746,7 @@ func StartJump()
 		var flight = SimFlight(AbsX(GetX()), AbsY(GetY()), GetXDir()*2, GetYDir()*2, 25); //I have no clue why the dirs must be doubled... but it seems to fix it
 		if(GBackLiquid(flight[0] - GetX(), flight[1] - GetY()) && GBackLiquid(flight[0] - GetX(), flight[1] + GetDefHeight() / 2 - GetY()))
 		{
-			PlayAnimation("JumpDive", 5, Anim_Linear(0, 0, GetAnimationLength("JumpDive"), 60, ANIM_Hold), Anim_Linear(0, 0, 1000, 5, ANIM_Remove));
+			PlayAnimation("JumpDive", CLONK_ANIM_SLOT_Movement, Anim_Linear(0, 0, GetAnimationLength("JumpDive"), 60, ANIM_Hold), Anim_Linear(0, 0, 1000, 5, ANIM_Remove));
 			return 1;
 		}
 	}
@@ -740,16 +767,16 @@ func FxFallTimer(object target, effect, int timer)
 	//falling off ledges without jumping results in fall animation
 	if(timer == 2 && GetYDir() > 1)
 	{
-		PlayAnimation("FallShort", 5, Anim_Linear(0, 0, GetAnimationLength("FallShort"), 8*3, ANIM_Hold), Anim_Linear(0, 0, 1000, 5, ANIM_Remove));
+		PlayAnimation("FallShort", CLONK_ANIM_SLOT_Movement, Anim_Linear(0, 0, GetAnimationLength("FallShort"), 8*3, ANIM_Hold), Anim_Linear(0, 0, 1000, 5, ANIM_Remove));
 	}
 	if(timer == 2 && GetYDir() < 1)
 	{
-		Sound("Rustle?");
+		Sound("Clonk::Movement::Rustle?");
 	}
 
 	if(GetYDir() > 55 && GetAction() == "Jump")
 	{
-		PlayAnimation("FallLong", 5, Anim_Linear(0, 0, GetAnimationLength("FallLong"), 8*3, ANIM_Hold), Anim_Linear(0, 0, 1000, 5, ANIM_Remove));
+		PlayAnimation("FallLong", CLONK_ANIM_SLOT_Movement, Anim_Linear(0, 0, GetAnimationLength("FallLong"), 8*3, ANIM_Hold), Anim_Linear(0, 0, 1000, 5, ANIM_Remove));
 		return -1;
 	}
 	if(GetAction() != "Jump")
@@ -807,7 +834,7 @@ func FxIntHangleStart(pTarget, effect, fTmp)
 	// request_stop: Player requested the clonk to stop
 	// facing_front: Whether the HangleStand animation is shown front-facing or back-facing
 
-	effect.animation_id = PlayAnimation("HangleStand", 5, Anim_Linear(0, 0, 2000, 100, ANIM_Loop), Anim_Linear(0, 0, 1000, 5, ANIM_Remove));
+	effect.animation_id = PlayAnimation("HangleStand", CLONK_ANIM_SLOT_Movement, Anim_Linear(0, 0, 2000, 100, ANIM_Loop), Anim_Linear(0, 0, 1000, 5, ANIM_Remove));
 
 }
 
@@ -864,7 +891,7 @@ func FxIntHangleTimer(pTarget, effect, iTime)
 			// Change to HangleStand animation
 			var begin = 4000*effect.facing_front;
 			var end = 2000+begin;
-			effect.animation_id = PlayAnimation("HangleStand", 5, Anim_Linear(begin, begin, end, 100, ANIM_Loop), Anim_Linear(0, 0, 1000, 5, ANIM_Remove));
+			effect.animation_id = PlayAnimation("HangleStand", CLONK_ANIM_SLOT_Movement, Anim_Linear(begin, begin, end, 100, ANIM_Loop), Anim_Linear(0, 0, 1000, 5, ANIM_Remove));
 			effect.is_moving = 0;
 		}
 	}
@@ -877,7 +904,7 @@ func FxIntHangleTimer(pTarget, effect, iTime)
 			effect.is_moving = 1;
 			// start with frame 100 or from the back hanging pose frame 600
 			var begin = 10*(100 + 500*effect.facing_front);
-			effect.animation_id = PlayAnimation("Hangle", 5, Anim_Const(begin), Anim_Linear(0, 0, 1000, 5, ANIM_Remove));
+			effect.animation_id = PlayAnimation("Hangle", CLONK_ANIM_SLOT_Movement, Anim_Const(begin), Anim_Linear(0, 0, 1000, 5, ANIM_Remove));
 		}
 	}
 }
@@ -957,7 +984,7 @@ func FxIntSwimStart(pTarget, effect, fTmp)
 	if(fTmp) return;
 
 	effect.animation_name = "SwimStand";
-	effect.animation = PlayAnimation("SwimStand", 5, Anim_Linear(0, 0, GetAnimationLength("SwimStand"), 20, ANIM_Loop), Anim_Linear(0, 0, 1000, 5, ANIM_Remove));
+	effect.animation = PlayAnimation("SwimStand", CLONK_ANIM_SLOT_Movement, Anim_Linear(0, 0, GetAnimationLength("SwimStand"), 20, ANIM_Loop), Anim_Linear(0, 0, 1000, 5, ANIM_Remove));
 
 	// Set proper turn type
 	SetTurnType(0);
@@ -982,7 +1009,7 @@ func FxIntSwimTimer(pTarget, effect, iTime)
 		if(effect.animation_name != "SwimStand")
 		{
 			effect.animation_name = "SwimStand";
-			effect.animation = PlayAnimation("SwimStand", 5, Anim_Linear(0, 0, GetAnimationLength("SwimStand"), 20, ANIM_Loop), Anim_Linear(0, 0, 1000, 15, ANIM_Remove));
+			effect.animation = PlayAnimation("SwimStand", CLONK_ANIM_SLOT_Movement, Anim_Linear(0, 0, GetAnimationLength("SwimStand"), 20, ANIM_Loop), Anim_Linear(0, 0, 1000, 15, ANIM_Remove));
 		}
 	}
 	// Swimming
@@ -1010,14 +1037,14 @@ func FxIntSwimTimer(pTarget, effect, iTime)
 				};
 				CreateParticle("Wave", 0, -4, (RandomX(-5,5)-(-1+2*GetDir())*4)/4, 0, 16, particles);
 			}
-			Sound("Splash?");
+			Sound("Liquids::Splash?");
 		}
 		// Animation speed by X
 		if(effect.animation_name != "Swim")
 		{
 			effect.animation_name = "Swim";
 			// TODO: Determine starting position from previous animation
-			PlayAnimation("Swim", 5, Anim_AbsX(0, 0, GetAnimationLength("Swim"), 25), Anim_Linear(0, 0, 1000, 15, ANIM_Remove));
+			PlayAnimation("Swim", CLONK_ANIM_SLOT_Movement, Anim_AbsX(0, 0, GetAnimationLength("Swim"), 25), Anim_Linear(0, 0, 1000, 15, ANIM_Remove));
 		}
 	}
 	// Diving
@@ -1027,8 +1054,8 @@ func FxIntSwimTimer(pTarget, effect, iTime)
 		{
 			effect.animation_name = "SwimDive";
 			// TODO: Determine starting position from previous animation
-			effect.animation2 = PlayAnimation("SwimDiveUp", 5, Anim_Linear(0, 0, GetAnimationLength("SwimDiveUp"), 40, ANIM_Loop), Anim_Linear(0, 0, 1000, 15, ANIM_Remove));
-			effect.animation3 = PlayAnimation("SwimDiveDown", 5, Anim_Linear(0, 0, GetAnimationLength("SwimDiveDown"), 40, ANIM_Loop), Anim_Const(500), effect.animation2);
+			effect.animation2 = PlayAnimation("SwimDiveUp", CLONK_ANIM_SLOT_Movement, Anim_Linear(0, 0, GetAnimationLength("SwimDiveUp"), 40, ANIM_Loop), Anim_Linear(0, 0, 1000, 15, ANIM_Remove));
+			effect.animation3 = PlayAnimation("SwimDiveDown", CLONK_ANIM_SLOT_Movement, Anim_Linear(0, 0, GetAnimationLength("SwimDiveDown"), 40, ANIM_Loop), Anim_Const(500), effect.animation2);
 			effect.animation = effect.animation3 + 1;
 
 			// TODO: This should depend on which animation we come from
@@ -1063,16 +1090,16 @@ func GetSwimRotation()
 
 func Hit(int iXSpeed, int iYSpeed)
 {
-	if (this->IsWalking())
+	if (this->IsWalking() && iYSpeed > 450)
 	{
 		// roll :D
-		var e;
-		if (e = GetEffect("ScheduleRollOnLanding", this))
+		var x_movement = ComDir2XY(GetComDir())[0];
+		var looking_right = GetDir() == DIR_Right;
+		if ((x_movement > 0 && looking_right) || (x_movement < 0 && !looking_right))
 		{
 			DoRoll();
-			RemoveEffect(nil, this, e);
 		}
-		else if (iYSpeed > 450) // Force kneel-down when hitting the ground at high velocity.
+		else // Force kneel-down when hitting the ground at high velocity.
 			DoKneel(true);
 	}
 	return _inherited(iXSpeed, iYSpeed, ...);
@@ -1084,8 +1111,8 @@ func DoKneel(bool create_dust)
 
 	SetXDir(0);
 	SetAction("Kneel");
-	Sound("RustleLand");
-	PlayAnimation("KneelDown", 5, Anim_Linear(0, 0, GetAnimationLength("KneelDown"), iKneelDownSpeed, ANIM_Remove), Anim_Linear(0, 0, 1000, 5, ANIM_Remove));
+	Sound("Clonk::Movement::RustleLand");
+	PlayAnimation("KneelDown", CLONK_ANIM_SLOT_Movement, Anim_Linear(0, 0, GetAnimationLength("KneelDown"), iKneelDownSpeed, ANIM_Remove), Anim_Linear(0, 0, 1000, 5, ANIM_Remove));
 
 	ScheduleCall(this, "EndKneel", iKneelDownSpeed, 1);
 	
@@ -1117,15 +1144,6 @@ func EndKneel()
 // Start a roll into the current direction.
 func DoRoll()
 {
-	// make sure the Clonk does not roll in place..
-	var comd = GetComDir();
-	if (comd != COMD_Left && comd != COMD_Right)
-	{
-		var dir = GetDir();
-		if (dir == DIR_Left) SetComDir(COMD_Left);
-		else SetComDir(COMD_Right);
-	}
-	
 	SetAction("Roll");
 }
 
@@ -1134,13 +1152,13 @@ func DoRoll()
 func OnStartRoll()
 {	
 	SetTurnForced(GetDir());
-	Sound("Roll");
+	Sound("Clonk::Movement::Roll");
 	if(GetDir() == 1) lAnim.rollDir = 1;
 	else
 		lAnim.rollDir = -1;
 
 	lAnim.rollLength = 22;
-	PlayAnimation("KneelRoll", 5, Anim_Linear(0, 0, 1500, lAnim.rollLength, ANIM_Remove), Anim_Linear(0, 0, 1000, 5, ANIM_Remove));
+	PlayAnimation("KneelRoll", CLONK_ANIM_SLOT_Movement, Anim_Linear(0, 0, 1500, lAnim.rollLength, ANIM_Remove), Anim_Linear(0, 0, 1000, 5, ANIM_Remove));
 	AddEffect("Rolling", this, 1, 1, this);
 }
 
@@ -1215,13 +1233,13 @@ func StopDigging()
 func FxIntDigStart(pTarget, effect, fTmp)
 {
 	if(fTmp) return;
-	effect.var1 = PlayAnimation("Dig", 5, Anim_Linear(0, 0, GetAnimationLength("Dig"), 36, ANIM_Loop), Anim_Linear(0, 0, 1000, 5, ANIM_Remove));
+	effect.var1 = PlayAnimation("Dig", CLONK_ANIM_SLOT_Movement, Anim_Linear(0, 0, GetAnimationLength("Dig"), 36, ANIM_Loop), Anim_Linear(0, 0, 1000, 5, ANIM_Remove));
 
 	// Update carried items
 	UpdateAttach();
 
 	// Sound
-	Sound("Dig?");
+	Sound("Clonk::Action::Dig::Dig?");
 
 	// Set proper turn type
 	SetTurnType(0);
@@ -1231,7 +1249,7 @@ func FxIntDigTimer(pTarget, effect, iTime)
 {
 	if(iTime % 36 == 0)
 	{
-		Sound("Dig?");
+		Sound("Clonk::Action::Dig::Dig?");
 	}
 	if( (iTime-18) % 36 == 0 ||  iTime > 35)
 	{
@@ -1287,7 +1305,7 @@ func FxIntThrowStart(target, effect, tmp, targetobj, throwAngle)
 {
 	var iThrowTime = 16;
 	if(tmp) return;
-	PlayAnimation("ThrowArms", 10, Anim_Linear(0, 0, GetAnimationLength("ThrowArms"), iThrowTime), Anim_Const(1000));
+	PlayAnimation("ThrowArms", CLONK_ANIM_SLOT_Arms, Anim_Linear(0, 0, GetAnimationLength("ThrowArms"), iThrowTime), Anim_Const(1000));
 	effect.targetobj = targetobj;
 	effect.angle = throwAngle;
 }
@@ -1320,7 +1338,7 @@ func FxIntThrowStop(target, effect, reason, tmp)
 
 func StartDead()
 {
-	PlayAnimation("Dead", 5, Anim_Linear(0, 0, GetAnimationLength("Dead"), 20, ANIM_Hold), Anim_Linear(0, 0, 1000, 5, ANIM_Remove));
+	PlayAnimation("Dead", CLONK_ANIM_SLOT_Death, Anim_Linear(0, 0, GetAnimationLength("Dead"), 20, ANIM_Hold), Anim_Linear(0, 0, 1000, 5, ANIM_Remove));
 	// Update carried items
 	UpdateAttach();
 	// Set proper turn type
@@ -1338,7 +1356,7 @@ func StartTumble()
 	if(GetEffect("IntTumble", this)) return;
 	// Close eyes
 	CloseEyes(1);
-	PlayAnimation("Tumble", 5, Anim_Linear(0, 0, GetAnimationLength("Tumble"), 20, ANIM_Loop), Anim_Linear(0, 0, 1000, 5, ANIM_Remove));
+	PlayAnimation("Tumble", CLONK_ANIM_SLOT_Movement, Anim_Linear(0, 0, GetAnimationLength("Tumble"), 20, ANIM_Loop), Anim_Linear(0, 0, 1000, 5, ANIM_Remove));
 	// Update carried items
 	UpdateAttach();
 	// Set proper turn type
@@ -1416,7 +1434,7 @@ func StartPushing()
 {
 //	if(GetEffect("IntTumble", this)) return;
 	// Close eyes
-	PlayAnimation("Push", 5, Anim_AbsX(0, 0, GetAnimationLength("Push"), 20), Anim_Linear(0, 0, 1000, 5, ANIM_Remove));
+	PlayAnimation("Push", CLONK_ANIM_SLOT_Movement, Anim_AbsX(0, 0, GetAnimationLength("Push"), 20), Anim_Linear(0, 0, 1000, 5, ANIM_Remove));
 	// Update carried items
 	UpdateAttach();
 	// Set proper turn type
@@ -1439,7 +1457,7 @@ func StartHangOnto()
 {
 //	if(GetEffect("IntTumble", this)) return;
 	// Close eyes
-	PlayAnimation("OnRope", 5, Anim_Linear(0, 0, GetAnimationLength("OnRope"), 20, ANIM_Loop), Anim_Linear(0, 0, 1000, 5, ANIM_Remove));
+	PlayAnimation("OnRope", CLONK_ANIM_SLOT_Movement, Anim_Linear(0, 0, GetAnimationLength("OnRope"), 20, ANIM_Loop), Anim_Linear(0, 0, 1000, 5, ANIM_Remove));
 	// Update carried items
 	UpdateAttach();
 	// Set proper turn type
@@ -1463,7 +1481,7 @@ protected func AbortHangOnto()
 func StartEat()
 {
 	// Nom nom
-	PlayAnimation("Eat", 10, Anim_Linear(0,0, GetAnimationLength("Eat"), 45, ANIM_Remove), Anim_Linear(0, 0, 1000, 5, ANIM_Remove));
+	PlayAnimation("Eat", CLONK_ANIM_SLOT_Arms, Anim_Linear(0,0, GetAnimationLength("Eat"), 45, ANIM_Remove), Anim_Linear(0, 0, 1000, 5, ANIM_Remove));
 	// Update carried items
 	UpdateAttach();
 }

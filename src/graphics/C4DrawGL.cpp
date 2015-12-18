@@ -238,27 +238,19 @@ bool CStdGL::PrepareSpriteShader(C4Shader& shader, const char* name, int ssc, C4
 		shader.AddTexCoord("texcoord");
 
 	// Then load slices for fragment shader
-	shader.AddFragmentSlice(-1, "#define OPENCLONK");
+	shader.AddFragmentSlice(-1, "#define OPENCLONK\n#define OC_SPRITE");
 	if (ssc & C4SSC_MOD2) shader.AddFragmentSlice(-1, "#define OC_CLRMOD_MOD2");
 	if (ssc & C4SSC_NORMAL) shader.AddFragmentSlice(-1, "#define OC_WITH_NORMALMAP");
 	if (ssc & C4SSC_LIGHT) shader.AddFragmentSlice(-1, "#define OC_DYNAMIC_LIGHT");
+	if (ssc & C4SSC_BASE) shader.AddFragmentSlice(-1, "#define OC_HAVE_BASE");
+	if (ssc & C4SSC_OVERLAY) shader.AddFragmentSlice(-1, "#define OC_HAVE_OVERLAY");
 
 	if (additionalDefines)
 		for (const char* const* define = additionalDefines; *define != NULL; ++define)
 			shader.AddFragmentSlice(-1, FormatString("#define %s", *define).getData());
 
-	shader.LoadSlices(pGroups, "UtilShader.glsl");
-	shader.LoadSlices(pGroups, "ObjectBaseShader.glsl");
-
-	if (ssc & C4SSC_BASE) shader.LoadSlices(pGroups, "SpriteTextureShader.glsl");
-	if (ssc & C4SSC_OVERLAY) shader.LoadSlices(pGroups, "SpriteOverlayShader.glsl");
-
-	// In case light is disabled, these shaders use a default light source
-	// (typically ambient light everywhere).
-	shader.LoadSlices(pGroups, "ObjectLightShader.glsl");
-	shader.LoadSlices(pGroups, "LightShader.glsl");
-	shader.LoadSlices(pGroups, "AmbientShader.glsl");
-	shader.LoadSlices(pGroups, "GammaShader.glsl");
+	shader.LoadSlices(pGroups, "CommonShader.glsl");
+	shader.LoadSlices(pGroups, "ObjectShader.glsl");
 
 	if (additionalSlices)
 		for (const char* const* slice = additionalSlices; *slice != NULL; ++slice)
@@ -331,15 +323,6 @@ CStdGLCtx *CStdGL::CreateContext(C4Window * pWindow, C4AbstractApp *pApp)
 				const char *gl_extensions = reinterpret_cast<const char *>(glGetString(GL_EXTENSIONS));
 				LogSilentF("GLExt: %s", gl_extensions ? gl_extensions : "");
 			}
-		}
-
-		// Check which workarounds we have to apply
-		{
-			// If we have less than 2048 uniform components available, we
-			// need to upload bone matrices in a different way
-			GLint count;
-			glGetIntegerv(GL_MAX_VERTEX_UNIFORM_COMPONENTS, &count);
-			Workarounds.LowMaxVertexUniformCount = count < 2048;
 		}
 	}
 	if (!success)
@@ -787,6 +770,27 @@ bool CStdGL::InvalidateDeviceObjects()
 		glDeleteTextures(1, &lines_tex);
 		lines_tex = 0;
 	}
+	// invalidate shaders
+
+	// TODO: We don't do this here because we cannot re-validate them in
+	// RestoreDeviceObjects. This should be refactored.
+
+	/*SpriteShader.Clear();
+	SpriteShaderMod2.Clear();
+	SpriteShaderBase.Clear();
+	SpriteShaderBaseMod2.Clear();
+	SpriteShaderBaseOverlay.Clear();
+	SpriteShaderBaseOverlayMod2.Clear();
+	SpriteShaderLight.Clear();
+	SpriteShaderLightMod2.Clear();
+	SpriteShaderLightBase.Clear();
+	SpriteShaderLightBaseMod2.Clear();
+	SpriteShaderLightBaseOverlay.Clear();
+	SpriteShaderLightBaseOverlayMod2.Clear();
+	SpriteShaderLightBaseNormal.Clear();
+	SpriteShaderLightBaseNormalMod2.Clear();
+	SpriteShaderLightBaseNormalOverlay.Clear();
+	SpriteShaderLightBaseNormalOverlayMod2.Clear();*/
 	return fSuccess;
 }
 

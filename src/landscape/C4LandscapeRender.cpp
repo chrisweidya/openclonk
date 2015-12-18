@@ -141,15 +141,15 @@ void C4LandscapeRenderGL::Clear()
 
 bool C4LandscapeRenderGL::InitLandscapeTexture()
 {
-
-	// Round up to nearest power of two
-	int iSfcWdt = 1, iSfcHgt = 1;
-	while(iSfcWdt < iWidth) iSfcWdt *= 2;
-	while(iSfcHgt < iHeight) iSfcHgt *= 2;
-
-	// One bit more of information to safe more space
-	if(iSfcWdt * 3 / 4 >= iWidth) iSfcWdt = iSfcWdt * 3 / 4;
-	if(iSfcHgt * 3 / 4 >= iHeight) iSfcHgt = iSfcHgt * 3 / 4;
+	// Don't round up to the nearest power-of-two here. Modern
+	// hardware should handle NPOT-textures just fine, and they
+	// are already used in other places in Clonk. This avoids
+	// accessing one row or column of pixels below the actually
+	// used surface in the shader, which can lead to strange
+	// one-pixel edges at the bottom or right of the landscape
+	// (see e.g. http://bugs.openclonk.org/view.php?id=771).
+	int iSfcWdt = iWidth;
+	int iSfcHgt = iHeight;
 
 	// Create our surfaces
 	for(int i = 0; i < C4LR_SurfaceCount; i++)
@@ -189,8 +189,8 @@ bool C4LandscapeRenderGL::InitMaterialTexture(C4TextureMap *pTexs)
 	glGetIntegerv(GL_MAX_ARRAY_TEXTURE_LAYERS, &iMaxTexLayers);
 	if (iTexWdt > iMaxTexSize || iTexHgt > iMaxTexSize)
 	{
-		iTexWdt = Min(iTexWdt, iMaxTexSize);
-		iTexHgt = Min(iTexHgt, iMaxTexSize);
+		iTexWdt = std::min(iTexWdt, iMaxTexSize);
+		iTexHgt = std::min(iTexHgt, iMaxTexSize);
 		LogF("   gl: Material textures too large, GPU only supports %dx%d! Cropping might occur!", iMaxTexSize, iMaxTexSize);
 	}
 	if(iMaterialTextureDepth >= iMaxTexLayers)
@@ -262,7 +262,15 @@ bool C4LandscapeRenderGL::InitMaterialTexture(C4TextureMap *pTexs)
 		}
 		// If we didn't "continue" yet, we haven't written the texture yet.
 		// Make color texture transparent, and normal texture flat.
-		memset(p, fNormal ? 127 : 0, iTexSize);
+		if (fNormal)
+		{
+			DWORD *texdata = reinterpret_cast<DWORD *>(p);
+			for (int y = 0; y < iTexHgt; ++y)
+				for (int x = 0; x < iTexWdt; ++x)
+					*texdata++ = RGBA(127, 127, 255, 255);
+		}
+		else
+			memset(p, 0, iTexSize);
 	}
 
 	// Clear error error(s?)
@@ -336,20 +344,22 @@ void C4LandscapeRenderGL::Update(C4Rect To, C4Landscape *pSource)
 		Surfaces[i]->ClearBoxDw(To.x, To.y, To.Wdt, To.Hgt);
 	}
 
-	// Initialize up & down placement arrays:
-	// Calculate the placement sums for the first line in the rectangle only. For the consecutive lines, it is updated 
-	// for each line in the below for-loop.
+	// Initialize up & down placement arrays. These arrays are always updated
+	// so that they contain the placement sums of C4LR_BiasDistanceY pixels
+	// above and below the current row.
 	int x, y;
-	int *placementSumsUp = new int [To.Wdt * 2];
-	int *placementSumsDown = placementSumsUp + To.Wdt;
-	for(x = 0; x < To.Wdt; x++)
+	int placementSumsWidth = C4LR_BiasDistanceX * 2 + To.Wdt;
+	int *placementSumsUp = new int [placementSumsWidth * 2];
+	int *placementSumsDown = placementSumsUp + placementSumsWidth;
+	for(x = 0; x < placementSumsWidth; x++)
 	{
 		placementSumsUp[x] = 0;
 		placementSumsDown[x] = 0;
-		for(y = 1; y <= Min(C4LR_BiasDistanceY, To.y); y++)
-			placementSumsUp[x] += pSource->_GetPlacement(To.x+x, To.y-y);
-		for(y = 1; y <= Min(C4LR_BiasDistanceY, iHeight - 1 - To.y); y++)
-			placementSumsDown[x] += pSource->_GetPlacement(To.x+x, To.y+y);
+		if (To.x + x - C4LR_BiasDistanceX < 0 || To.x + x - C4LR_BiasDistanceX >= iWidth) continue;
+		for(y = 1; y <= std::min(C4LR_BiasDistanceY, To.y); y++)
+			placementSumsUp[x] += pSource->_GetPlacement(To.x+x-C4LR_BiasDistanceX, To.y-y);
+		for(y = 1; y <= std::min(C4LR_BiasDistanceY, iHeight - 1 - To.y); y++)
+			placementSumsDown[x] += pSource->_GetPlacement(To.x+x-C4LR_BiasDistanceX, To.y+y);
 	}
 
 	// Get tex refs (shortcut, we will use them quite heavily)
@@ -361,30 +371,50 @@ void C4LandscapeRenderGL::Update(C4Rect To, C4Landscape *pSource)
 	// Go through it from top to bottom
 	for(y = 0; y < To.Hgt; y++)
 	{
-		// Initialize left & right placement for the left-most pixel. Will be updated in the below loop for every pixel
-		// in the line
-		int placementSumLeft = 0;
-		int placementSumRight = 0;
-		for(x = 1; x <= Min(C4LR_BiasDistanceX, To.x); x++)
-			placementSumLeft += pSource->_GetPlacement(To.x-x,To.y+y);
-		for(x = 1; x <= Min(C4LR_BiasDistanceX, iWidth - 1 - To.x ); x++)
-			placementSumRight += pSource->_GetPlacement(To.x+x,To.y+y);
+		// Initialize left & right placement sums. These are meant to contain
+		// the placement sum of a (C4LR_BiasDistanceX, 2*C4LR_BiasDistanceY+1)
+		// rectangle left/right of the current pixel. So we initialise it to
+		// be correct at x=0. Note that the placementSum arrays don't contain
+		// information about the current row, therefore we need a special case
+		// for those pixels.
+		int sumLeft = 0, sumRight = 0;
+		for(x = 1; x <= std::min(C4LR_BiasDistanceX, To.x); x++)
+			sumLeft += pSource->_GetPlacement(To.x-x,To.y+y);
+		for(x = 1; x <= std::min(C4LR_BiasDistanceX, iWidth - 1 - To.x ); x++)
+			sumRight += pSource->_GetPlacement(To.x+x,To.y+y);
+		for (int i = 1; i <= C4LR_BiasDistanceX; i++) {
+			sumLeft += placementSumsUp[C4LR_BiasDistanceX - i];
+			sumLeft += placementSumsDown[C4LR_BiasDistanceX - i];
+			sumRight += placementSumsUp[C4LR_BiasDistanceX + i];
+			sumRight += placementSumsDown[C4LR_BiasDistanceX + i];
+		}
+
+		// Initialise up & down sums. Same principle as above, but slightly
+		// easier as we do not miss pixels if we just use the placement sums.
+		int sumUp = 0, sumDown = 0;
+		for (int i = -C4LR_BiasDistanceX; i <= C4LR_BiasDistanceX; i++) {
+			sumUp += placementSumsUp[C4LR_BiasDistanceX + i];
+			sumDown += placementSumsDown[C4LR_BiasDistanceX + i];
+		}
 
 		for(x = 0; x < To.Wdt; x++)
 		{
 			int pixel = pSource->_GetPix(To.x+x, To.y+y);
 			int placement = pSource->_GetPlacement(To.x+x, To.y+y);
 
-			int horizontalBias = Max(0, placement * C4LR_BiasDistanceX - placementSumRight) -
-			                     Max(0, placement * C4LR_BiasDistanceX - placementSumLeft);
-			int verticalBias = Max(0, placement * C4LR_BiasDistanceY - placementSumsDown[x]) -
-			                   Max(0, placement * C4LR_BiasDistanceY - placementSumsUp[x]);
+			// Calculate bias. The scale here is the size of the rectangle (see above)
+			const int horizontalFactor = C4LR_BiasDistanceX * (2 * C4LR_BiasDistanceY + 1);
+			int horizontalBias = std::max(0, placement * horizontalFactor - sumRight) -
+			                     std::max(0, placement * horizontalFactor - sumLeft);
+			const int verticalFactor = C4LR_BiasDistanceY * (2 * C4LR_BiasDistanceX + 1);
+			int verticalBias = std::max(0, placement * verticalFactor - sumDown) -
+			                   std::max(0, placement * verticalFactor - sumUp);
 
 			// Maximum placement differences that make a difference in the result,  after which we are at the limits of
 			// what can be packed into a byte
 			const int maximumPlacementDifference = 40;
-			int horizontalBiasScaled = Clamp(horizontalBias * 127 / maximumPlacementDifference / C4LR_BiasDistanceX + 128, 0, 255);
-			int verticalBiasScaled = Clamp(verticalBias * 127 / maximumPlacementDifference / C4LR_BiasDistanceY + 128, 0, 255);
+			int horizontalBiasScaled = Clamp(horizontalBias * 127 / maximumPlacementDifference / horizontalFactor + 128, 0, 255);
+			int verticalBiasScaled = Clamp(verticalBias * 127 / maximumPlacementDifference / verticalFactor + 128, 0, 255);
 
 			// Collect data to save per pixel
 			unsigned char data[C4LR_SurfaceCount * 4];
@@ -400,23 +430,51 @@ void C4LandscapeRenderGL::Update(C4Rect To, C4Landscape *pSource)
 				texture[i]->SetPix4(To.x+x, To.y+y, 
 					RGBA(data[i*4+0], data[i*4+1], data[i*4+2], data[i*4+3]));
 
+			// Update sums (last column would be out-of-bounds, and not
+			// necessary as we will re-initialise it for the next row)
+			if (x < To.Wdt - 1) {
+				sumLeft -= placementSumsUp[x] + placementSumsDown[x];
+				sumLeft += placementSumsUp[x + C4LR_BiasDistanceX] + placementSumsDown[x + C4LR_BiasDistanceX];
+				sumRight -= placementSumsUp[x + C4LR_BiasDistanceX + 1] + placementSumsDown[x + C4LR_BiasDistanceX + 1];
+				sumUp -= placementSumsUp[x];
+				sumDown -= placementSumsDown[x];
+				sumRight += placementSumsUp[x + 2 * C4LR_BiasDistanceX + 1] + placementSumsDown[x + 2 * C4LR_BiasDistanceX + 1];
+				sumUp += placementSumsUp[x + 2 * C4LR_BiasDistanceX + 1];
+				sumDown += placementSumsDown[x + 2 * C4LR_BiasDistanceX + 1];
+			}
+
 			// Update left & right for next pixel in line
 			if(x + To.x + 1 < iWidth)
-				placementSumRight -= pSource->_GetPlacement(To.x+x + 1, To.y+y);
+				sumRight -= pSource->_GetPlacement(To.x+x + 1, To.y+y);
 			if(To.x+x + C4LR_BiasDistanceX + 1 < iWidth)
-				placementSumRight += pSource->_GetPlacement(To.x+x + C4LR_BiasDistanceX + 1, To.y+y);
-			placementSumLeft += placement;
+				sumRight += pSource->_GetPlacement(To.x+x + C4LR_BiasDistanceX + 1, To.y+y);
+			sumLeft += placement;
 			if(To.x+x - C4LR_BiasDistanceX >= 0)
-				placementSumLeft -= pSource->_GetPlacement(To.x+x - C4LR_BiasDistanceX, To.y+y);
+				sumLeft -= pSource->_GetPlacement(To.x+x - C4LR_BiasDistanceX, To.y+y);
 
 			// Update up & down arrays (for next line already)
-			if(To.y+y + 1 < iHeight)
-				placementSumsDown[x] -= pSource->_GetPlacement(To.x+x, To.y+y + 1);
-			if(To.y+y + C4LR_BiasDistanceY + 1 < iHeight)
-				placementSumsDown[x] += pSource->_GetPlacement(To.x+x, To.y+y + C4LR_BiasDistanceY + 1);
-			placementSumsUp[x] += placement;
-			if(To.y+y - C4LR_BiasDistanceY >= 0) {
-				placementSumsUp[x] -= pSource->_GetPlacement(To.x+x, To.y+y - C4LR_BiasDistanceY);
+			if (To.x + x >= C4LR_BiasDistanceX) {
+				if (To.y + y + 1 < iHeight)
+					placementSumsDown[x] -= pSource->_GetPlacement(To.x + x - C4LR_BiasDistanceX, To.y + y + 1);
+				if (To.y + y + C4LR_BiasDistanceY + 1 < iHeight)
+					placementSumsDown[x] += pSource->_GetPlacement(To.x + x - C4LR_BiasDistanceX, To.y + y + C4LR_BiasDistanceY + 1);
+				if (To.y + y - C4LR_BiasDistanceY >= 0)
+					placementSumsUp[x] -= pSource->_GetPlacement(To.x + x - C4LR_BiasDistanceX, To.y + y - C4LR_BiasDistanceY);
+				placementSumsUp[x] += pSource->_GetPlacement(To.x + x - C4LR_BiasDistanceX, To.y + y);
+			}
+		}
+
+		// Finish updating up & down arrays for the next line
+		if (To.x + x >= C4LR_BiasDistanceX)
+		{
+			for (; x < std::min(placementSumsWidth, iWidth - To.x + C4LR_BiasDistanceX); x++) {
+				if (To.y + y + 1 < iHeight)
+					placementSumsDown[x] -= pSource->_GetPlacement(To.x + x - C4LR_BiasDistanceX, To.y + y + 1);
+				if (To.y + y + C4LR_BiasDistanceY + 1 < iHeight)
+					placementSumsDown[x] += pSource->_GetPlacement(To.x + x - C4LR_BiasDistanceX, To.y + y + C4LR_BiasDistanceY + 1);
+				if (To.y + y - C4LR_BiasDistanceY >= 0)
+					placementSumsUp[x] -= pSource->_GetPlacement(To.x + x - C4LR_BiasDistanceX, To.y + y - C4LR_BiasDistanceY);
+				placementSumsUp[x] += pSource->_GetPlacement(To.x + x - C4LR_BiasDistanceX, To.y + y);
 			}
 		}
 	}
@@ -506,12 +564,8 @@ bool C4LandscapeRenderGL::LoadShader(C4GroupSet *pGroups, C4Shader& shader, cons
 	shader.AddFragmentSlice(-1, "#define OC_LANDSCAPE");
 	if(ssc & C4SSC_LIGHT) shader.AddFragmentSlice(-1, "#define OC_DYNAMIC_LIGHT"); // sample light from light texture
 
-	shader.LoadSlices(pGroups, "UtilShader.glsl");
+	shader.LoadSlices(pGroups, "CommonShader.glsl");
 	shader.LoadSlices(pGroups, "LandscapeShader.glsl");
-	shader.LoadSlices(pGroups, "LightShader.glsl");
-	shader.LoadSlices(pGroups, "AmbientShader.glsl");
-	shader.LoadSlices(pGroups, "ScalerShader.glsl");
-	shader.LoadSlices(pGroups, "GammaShader.glsl");
 
 	// Initialise!
 	if (!shader.Init(name, UniformNames)) {
@@ -544,7 +598,6 @@ bool C4LandscapeRenderGL::LoadShaders(C4GroupSet *pGroups)
 	UniformNames[C4LRU_Gamma]             = "gamma";
 	UniformNames[C4LRU_Resolution]        = "resolution";
 	UniformNames[C4LRU_Center]            = "center";
-	UniformNames[C4LRU_MatMap]            = "matMap";
 	UniformNames[C4LRU_MatMapTex]         = "matMapTex";
 	UniformNames[C4LRU_MaterialDepth]     = "materialDepth";
 	UniformNames[C4LRU_MaterialSize]      = "materialSize";
@@ -572,12 +625,6 @@ void C4LandscapeRenderGL::ClearShaders()
 		ShaderLight.Clear();
 		ShaderLight.ClearSlices();
 	}
-}
-
-void C4LandscapeRenderGL::RefreshShaders()
-{
-	Shader.Refresh("landscape", UniformNames);
-	ShaderLight.Refresh("landscapeLight", UniformNames);
 }
 
 bool C4LandscapeRenderGL::LoadScaler(C4GroupSet *pGroups)
@@ -766,7 +813,7 @@ void C4LandscapeRenderGL::AddTexturesFromMap(C4TextureMap *pMap)
 
 }
 
-void C4LandscapeRenderGL::BuildMatMap(GLfloat *pFMap, GLubyte *pIMap)
+void C4LandscapeRenderGL::BuildMatMap(uint32_t *pTex)
 {
 	// TODO: Still merely an inefficient placeholder for things to come...
 
@@ -778,8 +825,8 @@ void C4LandscapeRenderGL::BuildMatMap(GLfloat *pFMap, GLubyte *pIMap)
 		if(!pEntry->GetTextureName())
 		{
 			// Undefined textures transparent
-			if(pFMap) pFMap[pix] = 0.5 / iMaterialTextureDepth;
-			if(pIMap) pIMap[pix] = 0;
+			pTex[2*pix] = 0;
+			pTex[2*pix+1] = RGBA(0,0,0,255);
 			continue;
 		}
 
@@ -787,8 +834,13 @@ void C4LandscapeRenderGL::BuildMatMap(GLfloat *pFMap, GLubyte *pIMap)
 		int iPhases = 1; const char *p = pEntry->GetTextureName();
 		while((p = strchr(p, '-'))) { p++; iPhases++; }
 		// Hard-coded hack. Fix me!
-		const int iPhaseLength = 300;
-		float phase = (iPhases == 1 ? 0 : float(C4TimeMilliseconds::Now().AsInt() % (iPhases * iPhaseLength)) / iPhaseLength);
+		C4Material *pMaterial = pEntry->GetMaterial();
+		const int iPhaseLength = pMaterial->AnimationSpeed;
+		float phase = 0;
+		if (iPhases > 1) {
+			phase = C4TimeMilliseconds::Now().AsInt() % (iPhases * iPhaseLength);
+			phase /= iPhaseLength;
+		}
 
 		// Find our transition
 		const char *pFrom = pEntry->GetTextureName();
@@ -817,8 +869,17 @@ void C4LandscapeRenderGL::BuildMatMap(GLfloat *pFMap, GLubyte *pIMap)
 		}
 
 		// Assign texture
-		if(pFMap) pFMap[pix] = gTexCoo / iMaterialTextureDepth;
-		if(pIMap) pIMap[pix] = int((gTexCoo * 256.0 / iMaterialTextureDepth) + 0.5);
+		int iTexCoo = int((gTexCoo * 256.0 / iMaterialTextureDepth) + 0.5);
+		pTex[2*pix] = RGBA(
+			Clamp(pMaterial->LightEmit[0], 0, 255),
+			Clamp(pMaterial->LightEmit[1], 0, 255),
+			Clamp(pMaterial->LightEmit[2], 0, 255),
+			iTexCoo);
+		pTex[2*pix+1] = RGBA(
+			Clamp(pMaterial->LightSpot[0], 0, 255),
+			Clamp(pMaterial->LightSpot[1], 0, 255),
+			Clamp(pMaterial->LightSpot[2], 0, 255),
+			Clamp(pMaterial->LightAngle, 0, 255));
 	}
 }
 
@@ -830,10 +891,6 @@ void C4LandscapeRenderGL::Draw(const C4TargetFacet &cgo, const C4FoWRegion *Ligh
 	// prepare rendering to surface
 	C4Surface *sfcTarget = cgo.Surface;
 	if (!pGL->PrepareRendering(sfcTarget)) return;
-
-#ifdef AUTO_RELOAD_SHADERS
-	RefreshShaders();
-#endif // AUTO_RELOAD_SHADERS
 
 	// Clear error(s?)
 	while(glGetError()) {}
@@ -855,15 +912,7 @@ void C4LandscapeRenderGL::Draw(const C4TargetFacet &cgo, const C4FoWRegion *Ligh
 	ShaderCall.SetUniform2f(C4LRU_Center,
 	                        centerX / float(Surfaces[0]->Wdt),
 	                        centerY / float(Surfaces[0]->Hgt));
-	if (shader->HaveUniform(C4LRU_MatMap))
-	{
-		GLfloat MatMap[256];
-		BuildMatMap(MatMap, NULL);
-		ShaderCall.SetUniform1fv(C4LRU_MatMap, 256, MatMap);
-	}
-
-	float fMaterialTextureDepth = iMaterialTextureDepth;
-	ShaderCall.SetUniform1f(C4LRU_MaterialDepth, fMaterialTextureDepth);
+	ShaderCall.SetUniform1f(C4LRU_MaterialDepth, float(iMaterialTextureDepth));
 	ShaderCall.SetUniform2f(C4LRU_MaterialSize,
 	                        float(iMaterialWidth) / ::Game.C4S.Landscape.MaterialZoom,
 	                        float(iMaterialHeight) / ::Game.C4S.Landscape.MaterialZoom);
@@ -922,9 +971,9 @@ void C4LandscapeRenderGL::Draw(const C4TargetFacet &cgo, const C4FoWRegion *Ligh
 	}
 	if(ShaderCall.AllocTexUnit(C4LRU_MatMapTex))
 	{
-		GLubyte MatMap[256];
-		BuildMatMap(NULL, MatMap);
-		glTexImage1D(GL_TEXTURE_1D, 0, 1, 256, 0, GL_RED, GL_UNSIGNED_BYTE, MatMap);
+		uint32_t MatMap[2*256];
+		BuildMatMap(MatMap);
+		glTexImage1D(GL_TEXTURE_1D, 0, GL_RGBA8, 2*256, 0, GL_RGBA, GL_UNSIGNED_BYTE, MatMap);
 		glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	}
 

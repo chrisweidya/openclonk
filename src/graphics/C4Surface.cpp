@@ -234,9 +234,9 @@ bool C4Surface::CreateTextures(int MaxTextureSize, int Flags)
 {
 	// free previous
 	FreeTextures();
-	iTexSize=Min(GetNeedTexSize(Max(Wdt, Hgt)), pDraw->MaxTexSize);
+	iTexSize=std::min(GetNeedTexSize(std::max(Wdt, Hgt)), pDraw->MaxTexSize);
 	if (MaxTextureSize)
-		iTexSize=Min(iTexSize, MaxTextureSize);
+		iTexSize=std::min(iTexSize, MaxTextureSize);
 	// get the number of textures needed for this size
 	iTexX=(Wdt-1)/iTexSize +1;
 	iTexY=(Hgt-1)/iTexSize +1;
@@ -290,8 +290,8 @@ bool ClrByOwner(DWORD &dwClr) // new style, based on Microsoft Knowledge Base Ar
 	G = GetGreenValue(dwClr);
 	B = GetBlueValue(dwClr);
 	// calculate lightness
-	cMax = Max<int>(Max<int>(R,G),B);
-	cMin = Min<int>(Min<int>(R,G),B);
+	cMax = std::max<int>(std::max<int>(R,G),B);
+	cMin = std::min<int>(std::min<int>(R,G),B);
 	L = ( ((cMax+cMin)*HLSMAX) + RGBMAX )/(2*RGBMAX);
 	// achromatic case
 	if (cMax == cMin)
@@ -409,7 +409,7 @@ bool C4Surface::ReadBMP(CStdStream &hGroup, int iFlags)
 	if (BitmapInfo.Info.biBitCount == 8)
 	{
 		if (!hGroup.Read(((BYTE *) &BitmapInfo)+sizeof(C4BMPInfo),
-		                 Min(sizeof(BitmapInfo)-sizeof(C4BMPInfo),sizeof(BitmapInfo)-sizeof(C4BMPInfo)+BitmapInfo.FileBitsOffset())))
+		                 std::min(sizeof(BitmapInfo)-sizeof(C4BMPInfo),sizeof(BitmapInfo)-sizeof(C4BMPInfo)+BitmapInfo.FileBitsOffset())))
 			return false;
 		if (!hGroup.Advance(BitmapInfo.FileBitsOffset())) return false;
 	}
@@ -457,14 +457,14 @@ bool C4Surface::ReadBMP(CStdStream &hGroup, int iFlags)
 	return true;
 }
 
-bool C4Surface::SavePNG(const char *szFilename, bool fSaveAlpha, bool fApplyGamma, bool fSaveOverlayOnly)
+bool C4Surface::SavePNG(const char *szFilename, bool fSaveAlpha, bool fSaveOverlayOnly, bool use_background_thread)
 {
 	// Lock - WARNING - maybe locking primary surface here...
 	if (!Lock()) return false;
 
 	// create png file
-	CPNGFile png;
-	if (!png.Create(Wdt, Hgt, fSaveAlpha)) { Unlock(); return false; }
+	std::unique_ptr<CPNGFile> png(new CPNGFile());
+	if (!png->Create(Wdt, Hgt, fSaveAlpha)) { Unlock(); return false; }
 
 	// reset overlay if desired
 	C4Surface *pMainSfcBackup = NULL;
@@ -475,7 +475,7 @@ bool C4Surface::SavePNG(const char *szFilename, bool fSaveAlpha, bool fApplyGamm
 	{
 		// Take shortcut. FIXME: Check Endian
 		for (int y = 0; y < Hgt; ++y)
-			glReadPixels(0, Hgt - y, Wdt, 1, fSaveAlpha ? GL_BGRA : GL_BGR, GL_UNSIGNED_BYTE, png.GetImageData() + y * Wdt * (3 + fSaveAlpha));
+			glReadPixels(0, Hgt - y - 1, Wdt, 1, fSaveAlpha ? GL_BGRA : GL_BGR, GL_UNSIGNED_BYTE, png->GetRow(y));
 	}
 	else
 #endif
@@ -485,19 +485,25 @@ bool C4Surface::SavePNG(const char *szFilename, bool fSaveAlpha, bool fApplyGamm
 			for (int x=0; x<Wdt; ++x)
 			{
 				DWORD dwClr = GetPixDw(x, y, false);
-				if (fApplyGamma) dwClr = pDraw->ApplyGammaTo(dwClr);
-				png.SetPix(x, y, dwClr);
+				png->SetPix(x, y, dwClr);
 			}
 	}
 
 	// reset overlay
 	if (fSaveOverlayOnly) pMainSfc=pMainSfcBackup;
 
-	// save png
-	if (!png.Save(szFilename)) { Unlock(); return false; }
-
 	// Unlock
 	Unlock();
+
+	// save png - either directly or delayed in a background thread if desired
+	if (use_background_thread)
+	{
+		CPNGFile::ScheduleSaving(png.release(), szFilename);
+	}
+	else
+	{
+		if (!png->Save(szFilename)) return false;
+	}
 
 	// Success
 	return true;
@@ -841,8 +847,8 @@ void C4Surface::ClearBoxDw(int iX, int iY, int iWdt, int iHgt)
 	// get textures involved
 	int iTexX1=iX/iTexSize;
 	int iTexY1=iY/iTexSize;
-	int iTexX2=Min((iX+iWdt-1)/iTexSize +1, iTexX);
-	int iTexY2=Min((iY+iHgt-1)/iTexSize +1, iTexY);
+	int iTexX2=std::min((iX+iWdt-1)/iTexSize +1, iTexX);
+	int iTexY2=std::min((iY+iHgt-1)/iTexSize +1, iTexY);
 	// clear basesfc?
 	bool fBaseSfc=false;
 	if (pMainSfc) if (!pMainSfc->textures.empty()) fBaseSfc = true;
@@ -887,8 +893,8 @@ bool C4Surface::CopyBytes(BYTE *pImageData)
 			++pTex;
 			if (!pTex->Lock()) return false;
 			BYTE *pTarget = (BYTE*)pTex->texLock.pBits;
-			int iCpyNum = Min(pTex->iSizeX, Wdt-iXImgPos)*byBytesPP;
-			int iYMax = Min(pTex->iSizeY, Hgt-iLineTotal);
+			int iCpyNum = std::min(pTex->iSizeX, Wdt-iXImgPos)*byBytesPP;
+			int iYMax = std::min(pTex->iSizeY, Hgt-iLineTotal);
 			for (int iLine = 0; iLine < iYMax; ++iLine)
 			{
 				memcpy(pTarget, pSource, iCpyNum);

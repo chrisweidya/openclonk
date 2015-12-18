@@ -57,7 +57,7 @@ private func StartUsage(object clonk)
 		hand = "ShieldArms.L";
 	}
 
-	aim_anim = clonk->PlayAnimation(hand, 10, Anim_Const(clonk->GetAnimationLength(hand)/2), Anim_Const(1000));
+	aim_anim = clonk->PlayAnimation(hand, CLONK_ANIM_SLOT_Arms, Anim_Const(clonk->GetAnimationLength(hand)/2), Anim_Const(1000));
 
 	var handLR;
 	if(clonk->GetHandPosByItemPos(clonk->GetItemPos(this)) == 0)
@@ -163,7 +163,7 @@ private func AdjustSolidMaskHelper()
 
 func Hit()
 {
-	Sound("DullMetalHit?");
+	Sound("Hits::Materials::Metal::DullMetalHit?");
 }
 
 func OnWeaponHitCheckStop()
@@ -179,7 +179,7 @@ func HitByWeapon(by, iDamage)
 	var angle_diff = Abs(Normalize(shield_angle-object_angle,-180));
 	if (angle_diff > 45) return 0;
 
-	Sound("ShieldMetalHit?");
+	Sound("Objects::Weapons::Shield::MetalHit?");
 	
 	// bash him hard!
 	ApplyWeaponBash(by, 100, iAngle);
@@ -247,7 +247,7 @@ func FxShieldStopControlQueryCatchBlow(object target, effect, object obj)
 	// dont collect blocked objects
 	AddEffect("NoCollection", obj, 1, 30);
 	
-	Sound("ShieldMetalHit?");
+	Sound("Objects::Weapons::Shield::MetalHit?");
 	
 	return true;
 }

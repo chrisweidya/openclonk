@@ -4,7 +4,9 @@ static g_chemical, g_cabin, g_sawmill, g_workshop, g_windmill, g_flagpole, npc_n
 
 func InitializeObjects()
 {
-	CreateObject(Ambience);
+	var Time001 = CreateObject(Time);
+	Time001->SetTime(600);
+	Time001->SetCycleSpeed(20);
 	
 	var Rule_BaseRespawn001 = CreateObject(Rule_BaseRespawn);
 	Rule_BaseRespawn001->SetInventoryTransfer(true);
@@ -13,6 +15,8 @@ func InitializeObjects()
 	CreateObject(Rule_NoPowerNeed);
 
 	CreateObject(Rule_TeamAccount);
+
+	CreateObject(Rule_Restart);
 
 	CreateObjectAbove(EnvPack_Scarecrow, 1218, 440);
 
@@ -238,6 +242,8 @@ func InitializeObjects()
 
 	CreateObjectAbove(Fish, 1889, 728);
 	CreateObjectAbove(Fish, 1879, 726);
+	
+	CreateObjectAbove(Squid, 2100, 800);
 
 	var Mosquito001 = CreateObjectAbove(Mosquito, 2292, 514);
 	Mosquito001->SetXDir(-6);
