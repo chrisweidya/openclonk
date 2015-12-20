@@ -8,7 +8,7 @@ public func Dlg_Aunt_Init(object clonk)
 
 public func Dlg_Aunt_1(object clonk)
 {
-	MessageBox(Format("$DlgAuntHello$", dlg_target->GetName()), clonk, dlg_target, nil, false, ["hihi", "hihihi", "fuuu", "fuuuuuuu"]);
+	MessageBox(Format("$DlgAuntHello$", dlg_target->GetName()), clonk, dlg_target, nil, false, ["hihi", "hihihi", "fuuu", "fuuuuuuu"], true);
 	return true;
 }
 
@@ -20,7 +20,7 @@ public func Dlg_Aunt_2(object clonk)
 
 public func Dlg_Aunt_3(object clonk)
 {
-	MessageBox("$DlgAuntSawmill$", clonk, dlg_target, nil, false, ["hihi", "hihihi", "fuuu", "fuuuuuuu"], true);
+	MessageBox("$DlgAuntSawmill$", clonk, dlg_target);
 	return true;
 }
 

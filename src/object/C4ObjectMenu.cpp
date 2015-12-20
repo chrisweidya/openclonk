@@ -258,8 +258,13 @@ void C4ObjectMenu::OnUserSelectItem(int32_t Player, int32_t iIndex)
 void C4ObjectMenu::OnUserEnter(int32_t Player, int32_t iIndex, bool fRight)
 {
 	// object menu: Through queue 2do
-	if (sendProfileData)
-		std::cout << iIndex << " here\n";
+	if (sendProfileData) {
+		C4Player *pPlr = ::Players.Get(Player);
+		std::cout << pPlr->Profile.achievementScore << " before\n";
+		pPlr->Profile.achievementScore += 5;
+		std::cout << pPlr->Profile.achievementScore << " after\n";
+		::PlayerProfile::saveSingleProfile(pPlr->Profile);
+	}
 	Game.Input.Add(CID_PlrControl, new C4ControlPlayerControl(Player, fRight ? Game.PlayerControlDefs.InternalCons.CON_ObjectMenuOKAll : Game.PlayerControlDefs.InternalCons.CON_ObjectMenuOK, iIndex));
 }
 
