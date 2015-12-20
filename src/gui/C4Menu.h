@@ -89,7 +89,6 @@ protected:
 	bool IsSelectable;
 	int32_t TextDisplayProgress; // dialog menus only: Amount of text which is to be displayed already (-1 for everything)
 	C4IDList Components; // components to be displayed in info line if item is selected
-
 private:
 	bool IsDragElement();
 	int32_t GetSymbolWidth(int32_t iForHeight);
@@ -130,6 +129,8 @@ public:
 
 	void Clear();
 	virtual void Default();
+
+	bool sendProfileData = false;
 
 protected:
 	bool LocationSet;

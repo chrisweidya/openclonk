@@ -96,6 +96,18 @@ static long FnGetPlayerColor(C4PropList * _this, long iPlayer)
 	return plr ? plr->ColorDw : 0;
 }
 
+static bool FnSendProfileData(C4PropList * _this, long iPlayer)
+{
+	Game.Input;
+	return true;
+}
+
+static int FnGetPlayerAchScore(C4PropList * _this, long iPlayer)
+{
+	C4Player *plr = ::Players.Get(iPlayer);
+	return plr ? plr->Profile.achievementScore : 0;
+}
+
 // undocumented!
 static Nillable<long> FnGetPlrClonkSkin(C4PropList * _this, long iPlayer)
 {

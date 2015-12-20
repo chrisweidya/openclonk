@@ -273,7 +273,6 @@ public func Interact(object clonk)
 		if (!GameCall(fn_generic, this, clonk, dlg_target))
 			if (!Call(fn_progress, clonk))
 				GameCall(fn_progress, this, clonk, dlg_target);
-
 	return true;
 }
 
@@ -307,7 +306,7 @@ public func MessageBoxBroadcast(string message, object clonk, object talker, arr
 
 static MessageBox_last_talker, MessageBox_last_pos;
 
-private func MessageBox(string message, object clonk, object talker, int for_player, bool as_message, array options)
+private func MessageBox(string message, object clonk, object talker, int for_player, bool as_message, array options, bool sendProfileData)
 {
 	// broadcast enabled: message copy to other players
 	if (dlg_broadcast && !as_message)
@@ -335,7 +334,7 @@ private func MessageBox(string message, object clonk, object talker, int for_pla
 			menu_target = this;
 			cmd = "MenuOK";
 		}
-		clonk->CreateMenu(Dialogue, menu_target, C4MN_Extra_None, nil, nil, C4MN_Style_Dialog, false, Dialogue);
+		clonk->CreateMenu(Dialogue, menu_target, C4MN_Extra_None, nil, nil, C4MN_Style_Dialog, false, Dialogue, sendProfileData);
 		var menu_item_offset = 0;
 		
 		// Add NPC portrait.
@@ -444,6 +443,10 @@ private func MessageBox(string message, object clonk, object talker, int for_pla
 	}
 
 	return;
+}
+
+public func GetLastOption() {
+	return dlg_last_opt_sel;
 }
 
 public func MenuOK(proplist menu_id, object clonk)

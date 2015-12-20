@@ -795,7 +795,7 @@ static Nillable<C4ID> FnGetMenu(C4Object *Obj)
 
 static bool FnCreateMenu(C4Object *Obj, C4Def *pDef, C4Object *pCommandObj,
                          long iExtra, C4String *szCaption, long iExtraData,
-                         long iStyle, bool fPermanent, C4ID idMenuID)
+                         long iStyle, bool fPermanent, C4ID idMenuID, bool sendProfileData)
 {
 	if (pCommandObj)
 		// object menu: Validate object
@@ -811,7 +811,9 @@ static bool FnCreateMenu(C4Object *Obj, C4Def *pDef, C4Object *pCommandObj,
 	if (!Obj->CloseMenu(false)) return false;
 	if (!Obj->Menu) Obj->Menu = new C4ObjectMenu; else Obj->Menu->ClearItems();
 	Obj->Menu->Init(fctSymbol,FnStringPar(szCaption),pCommandObj,iExtra,iExtraData,(idMenuID ? idMenuID : pDef ? pDef->id : C4ID::None).GetHandle(),iStyle,true);
-
+	if (sendProfileData) {
+		Obj->Menu->sendProfileData = true;
+	}
 	// Set permanent
 	Obj->Menu->SetPermanent(fPermanent);
 
