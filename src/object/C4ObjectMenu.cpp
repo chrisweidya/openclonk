@@ -261,7 +261,7 @@ void C4ObjectMenu::OnUserEnter(int32_t Player, int32_t iIndex, bool fRight)
 	if (sendProfileData) {
 		C4Player *pPlr = ::Players.Get(Player);
 		std::cout << pPlr->Profile.achievementScore << " before\n";
-		pPlr->Profile.achievementScore += 5;
+		pPlr->Profile.achievementScore += 1;
 		std::cout << pPlr->Profile.achievementScore << " after\n";
 		::PlayerProfile::saveSingleProfile(pPlr->Profile);
 	}

@@ -23,6 +23,7 @@
 #include <C4Landscape.h>
 #include <C4Texture.h>
 #include <C4Random.h>
+#include <PlayerProfile.h>
 
 C4MapScriptAlgo *FnParAlgo(C4PropList *algo_par);
 
@@ -574,6 +575,15 @@ bool C4MapScriptLayer::Blit(const C4MapScriptLayer *src, const C4Rect &src_rect,
 		}
 	return true;
 }
+static int32_t FnGetMapDataFromPlayer(C4PropList * _this) {
+	PlayerProfile *profile = PlayerProfile::getSingleProfile();
+	if (profile) {
+		return profile->getScoreDiff();
+	}
+	else
+		Log("failed to load player profile");
+	return 0;
+}
 
 int32_t C4MapScriptLayer::GetPixCount(const C4Rect &rcBounds, const C4MapScriptMatTexMask &col_mask)
 {
@@ -690,6 +700,7 @@ void C4MapScriptHost::AddEngineFunctions()
 	::AddFunc(this, "Resize", FnLayerResize);
 	::AddFunc(this, "FindPosition", FnLayerFindPosition);
 	::AddFunc(this, "CreateMatTexMask", FnLayerCreateMatTexMask);
+	::AddFunc(this, "GetMapDataFromPlayer", FnGetMapDataFromPlayer);
 }
 
 bool C4MapScriptHost::Load(C4Group & g, const char * f, const char * l, C4LangStringTable * t)

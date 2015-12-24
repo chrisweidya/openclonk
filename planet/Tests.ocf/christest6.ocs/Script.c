@@ -2,25 +2,30 @@
 
 func Initialize()
 {	
-	InitAI();
-	Log("Destruction of %v!", LandscapeHeight());
+	var groundOffset = GetMapDataFromPlayer();
+	InitAI(groundOffset);
+	
 	return true;
 }
 protected func InitializePlayer(int plr)
 {
 	// Position player's clonk.
+	
+	var groundOffset = GetMapDataFromPlayer();
 	var clonk = GetCrew(plr, 0);
 	clonk->CreateContents(Sword);
 	var effect = AddEffect("ClonkRestore", clonk, 100, 10);
 	effect.to_x = 48;
 	effect.to_y = 374;
 
-	clonk->SetPosition(20, LandscapeHeight() / 3 - 10);
+	clonk->SetPosition(20, (LandscapeHeight() / 2 + groundOffset * LandscapeHeight() / 8 ) - 10);
 }
 
-private func InitAI()
+private func InitAI(int groundOffset)
 {
-	var npc_aunt = CreateObjectAbove(Clonk, 80, LandscapeHeight() / 3 - 10);
+	
+	Log("Destruction of %v!", groundOffset);
+	var npc_aunt = CreateObjectAbove(Clonk, 80, (LandscapeHeight() / 2 + groundOffset * LandscapeHeight() / 8) - 10);
 	npc_aunt->SetColor(0xeaa444);
 	npc_aunt->SetName("Aunt Julie");
 	npc_aunt->SetObjectLayer(npc_aunt);

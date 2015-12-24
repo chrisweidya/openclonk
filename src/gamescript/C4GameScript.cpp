@@ -108,6 +108,18 @@ static int FnGetPlayerAchScore(C4PropList * _this, long iPlayer)
 	return plr ? plr->Profile.achievementScore : 0;
 }
 
+
+static int FnGetMapDataFromPlayer(C4PropList * _this)
+{
+	PlayerProfile *profile = PlayerProfile::getSingleProfile();
+	if (profile) {
+		return profile->getScoreDiff();
+	}
+	else
+		Log("failed to load player profile");
+	return 0;
+}
+
 // undocumented!
 static Nillable<long> FnGetPlrClonkSkin(C4PropList * _this, long iPlayer)
 {
@@ -2955,6 +2967,7 @@ void InitGameFunctionMap(C4AulScriptEngine *pEngine)
 	AddFunc(pEngine, "EditCursor", FnEditCursor);
 	AddFunc(pEngine, "GainScenarioAchievement", FnGainScenarioAchievement);
 	AddFunc(pEngine, "GetPXSCount", FnGetPXSCount);
+	AddFunc(pEngine, "GetMapDataFromPlayer", FnGetMapDataFromPlayer);
 
 	F(GetPlrKnowledge);
 	F(GetComponent);

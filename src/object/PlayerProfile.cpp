@@ -15,6 +15,16 @@ void PlayerProfile::updatePlayerType(float achievementScore, float socialScore, 
 	Config.General.Participants[0];
 }
 
+int32_t PlayerProfile::getScoreDiff() {
+	int32_t scoreDiff = immersionPoints - achievementPoints;
+	return 2;
+	if (scoreDiff > 2)
+		return 2;
+	if (scoreDiff < -2)
+		return -2;
+	return scoreDiff;
+}
+
 PlayerProfile* PlayerProfile::getSingleProfile() {
 	assert(SModuleCount(Config.General.Participants) == 1);
 	C4Group PlayerGrp;
@@ -25,13 +35,13 @@ PlayerProfile* PlayerProfile::getSingleProfile() {
 	if (!FileExists(szPlayerFilename) || !PlayerGrp.Open(szPlayerFilename) || !nfo.Load(PlayerGrp) || !PlayerGrp.Close())
 		return nullptr;
 //	profile = nfo.Profile;
-	std::cout << "before: " << nfo.Profile.achievementScore << "\n";
+//	std::cout << "before: " << nfo.Profile.achievementScore << "\n";
 	
 	return &nfo.Profile;
 }
 
 
-int PlayerProfile::saveSingleProfile(PlayerProfile profile) {	
+int32_t PlayerProfile::saveSingleProfile(PlayerProfile profile) {	
 	assert(SModuleCount(Config.General.Participants) == 1);
 	C4Group PlayerGrp;
 	C4PlayerInfoCore core;
@@ -50,4 +60,6 @@ void PlayerProfile::CompileFunc(StdCompiler *pComp)
 	pComp->Value(mkNamingAdapt(achievementScore, "achievementScore", 0));
 	pComp->Value(mkNamingAdapt(socialScore, "socialScore", 0));
 	pComp->Value(mkNamingAdapt(immersionScore, "immersiontScore", 0));
+	pComp->Value(mkNamingAdapt(achievementPoints, "achievementPoints", 0));
+	pComp->Value(mkNamingAdapt(immersionPoints, "immersionPoints", 0));
 }
