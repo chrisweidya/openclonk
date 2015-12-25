@@ -18,14 +18,14 @@ protected func InitializePlayer(int plr)
 	effect.to_x = 48;
 	effect.to_y = 374;
 
-	clonk->SetPosition(20, (LandscapeHeight() / 2 + groundOffset * LandscapeHeight() / 8 ) - 10);
+	clonk->SetPosition(320, (LandscapeHeight() / 2 + groundOffset * LandscapeHeight() / 8 ) - 20);
 }
 
 private func InitAI(int groundOffset)
 {
 	
 	Log("Destruction of %v!", groundOffset);
-	var npc_aunt = CreateObjectAbove(Clonk, 80, (LandscapeHeight() / 2 + groundOffset * LandscapeHeight() / 8) - 10);
+	var npc_aunt = CreateObjectAbove(Clonk, 380, (LandscapeHeight() / 2 + groundOffset * LandscapeHeight() / 8) - 20);
 	npc_aunt->SetColor(0xeaa444);
 	npc_aunt->SetName("Aunt Julie");
 	npc_aunt->SetObjectLayer(npc_aunt);
