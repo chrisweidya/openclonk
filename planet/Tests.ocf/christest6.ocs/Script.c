@@ -4,16 +4,19 @@ func Initialize()
 {	
 	var groundOffset = GetMapDataFromPlayer();
 	InitAI(groundOffset);
-	
+	CreateObjectAbove(Tree_Coniferous, 188, 384);
+
 	return true;
 }
 protected func InitializePlayer(int plr)
 {
 	// Position player's clonk.
-	
+	SetPlayerZoomByViewRange(plr, 400, 0, PLRZOOM_LimitMin);
 	var groundOffset = GetMapDataFromPlayer();
 	var clonk = GetCrew(plr, 0);
-	clonk->CreateContents(Sword);
+	clonk->CreateContents(Shovel);
+	clonk->CreateContents(GrappleBow);
+	clonk->CreateContents(Axe);
 	var effect = AddEffect("ClonkRestore", clonk, 100, 10);
 	effect.to_x = 48;
 	effect.to_y = 374;

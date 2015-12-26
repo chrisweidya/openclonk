@@ -10,8 +10,10 @@ public:
 	int32_t immersionScore = 0;
 	int32_t achievementPoints = 0;
 	int32_t immersionPoints = 0;
+	int32_t seed = 0;
 	void updatePlayerType(float achievementScore, float socialScore, float immersionScore);
 	int32_t getScoreDiff();
+	int32_t getSeed(bool init);
 	static PlayerProfile *getSingleProfile();
 	static int32_t saveSingleProfile(PlayerProfile profile);
 

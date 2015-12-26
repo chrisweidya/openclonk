@@ -585,6 +585,17 @@ static int32_t FnGetMapDataFromPlayer(C4PropList * _this) {
 	return 0;
 }
 
+static int32_t FnGetRandomSeed(C4PropList * _this) {
+	PlayerProfile *profile = PlayerProfile::getSingleProfile();
+	if (profile) {
+		profile->getSeed(true);
+		return profile->seed;
+	}
+	else
+		Log("failed to load seed");
+	return 0;
+}
+
 int32_t C4MapScriptLayer::GetPixCount(const C4Rect &rcBounds, const C4MapScriptMatTexMask &col_mask)
 {
 	// safety
@@ -701,6 +712,7 @@ void C4MapScriptHost::AddEngineFunctions()
 	::AddFunc(this, "FindPosition", FnLayerFindPosition);
 	::AddFunc(this, "CreateMatTexMask", FnLayerCreateMatTexMask);
 	::AddFunc(this, "GetMapDataFromPlayer", FnGetMapDataFromPlayer);
+	::AddFunc(this, "GetRandomSeed", FnGetRandomSeed);
 }
 
 bool C4MapScriptHost::Load(C4Group & g, const char * f, const char * l, C4LangStringTable * t)

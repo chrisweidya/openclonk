@@ -1,6 +1,7 @@
 
 #include <C4Include.h>
 #include <C4StartupNetDlg.h>
+#include <time.h>
 
 PlayerProfile::PlayerProfile()
 {	
@@ -17,12 +18,19 @@ void PlayerProfile::updatePlayerType(float achievementScore, float socialScore, 
 
 int32_t PlayerProfile::getScoreDiff() {
 	int32_t scoreDiff = immersionPoints - achievementPoints;
-	return 2;
+	return -2;
 	if (scoreDiff > 2)
 		return 2;
 	if (scoreDiff < -2)
 		return -2;
 	return scoreDiff;
+}
+
+int32_t PlayerProfile::getSeed(bool init) {
+	if (init) {
+		seed = time(NULL);
+	}
+	return seed;
 }
 
 PlayerProfile* PlayerProfile::getSingleProfile() {
