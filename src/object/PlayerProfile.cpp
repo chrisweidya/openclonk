@@ -70,4 +70,5 @@ void PlayerProfile::CompileFunc(StdCompiler *pComp)
 	pComp->Value(mkNamingAdapt(immersionScore, "immersiontScore", 0));
 	pComp->Value(mkNamingAdapt(achievementPoints, "achievementPoints", 0));
 	pComp->Value(mkNamingAdapt(immersionPoints, "immersionPoints", 0));
+	pComp->Value(mkNamingAdapt(seed, "seed", 0));
 }

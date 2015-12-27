@@ -11,7 +11,7 @@ func Initialize()
 protected func InitializePlayer(int plr)
 {
 	// Position player's clonk.
-	SetPlayerZoomByViewRange(plr, 400, 0, PLRZOOM_LimitMin);
+//	SetPlayerZoomByViewRange(plr, 400, 0, PLRZOOM_LimitMin);
 	var groundOffset = GetMapDataFromPlayer();
 	var clonk = GetCrew(plr, 0);
 	clonk->CreateContents(Shovel);
@@ -26,12 +26,16 @@ protected func InitializePlayer(int plr)
 
 private func InitAI(int groundOffset)
 {
-	
-	Log("Destruction of %v!", groundOffset);
+	var immersion_npc_size = Format("$ImmersionNPCSize$");
+	var immersion_npc_names = Format("$ImmersionNPCNames$");
+	var seed = GetSeed();
+	var immersion_npc_index = SelectNPC(immersion_npc_size, seed);
+	var colour = GetRandomColour(seed);
+	Log("Destruction of %v! ", colour);
 	var npc_aunt = CreateObjectAbove(Clonk, 380, (LandscapeHeight() / 2 + groundOffset * LandscapeHeight() / 8) - 20);
-	npc_aunt->SetColor(0xeaa444);
+	npc_aunt->SetColor(colour);
 	npc_aunt->SetName("Aunt Julie");
-	npc_aunt->SetObjectLayer(npc_aunt);
+//	npc_aunt->SetObjectLayer(npc_aunt);
 	npc_aunt->SetSkin(3);
 	npc_aunt->SetDir(DIR_Left);
 	npc_aunt->SetDialogue("Aunt", true);

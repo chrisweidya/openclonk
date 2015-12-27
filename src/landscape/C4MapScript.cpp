@@ -589,6 +589,7 @@ static int32_t FnGetRandomSeed(C4PropList * _this) {
 	PlayerProfile *profile = PlayerProfile::getSingleProfile();
 	if (profile) {
 		profile->getSeed(true);
+		PlayerProfile::saveSingleProfile(*profile);
 		return profile->seed;
 	}
 	else

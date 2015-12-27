@@ -42,6 +42,8 @@
 #include <C4Weather.h>
 #include <C4Viewport.h>
 #include <C4FoW.h>
+#include <string.h>
+#include <stdlib.h>
 
 // undocumented!
 static bool FnIncinerateLandscape(C4PropList * _this, long iX, long iY, long caused_by_plr)
@@ -118,6 +120,39 @@ static int FnGetMapDataFromPlayer(C4PropList * _this)
 	else
 		Log("failed to load player profile");
 	return 0;
+}
+
+static int FnGetSeed(C4PropList * _this)
+{
+	PlayerProfile *profile = PlayerProfile::getSingleProfile();
+	if (profile) {
+		return profile->seed;
+	}
+	else
+		Log("failed to load seed");
+	return 0;
+}
+
+static int FnSelectNPC(C4PropList * _this, C4String* npcCount, int32_t seed)
+{
+	int size = (int)(*FnStringPar(npcCount) - '0');
+	int npc_index = seed%size;	
+
+	return npc_index;
+}
+
+static int FnGetRandomColour(C4PropList * _this, int32_t seed)
+{
+	char colour[10];
+	char inputColour[5];
+	srand(seed);
+	strcpy(colour, "0x");
+	for (int i = 0; i < 3; i++) {
+		itoa(rand() % 256, inputColour, 16);
+		strcat(colour, inputColour);
+	}
+
+	return std::stoul(colour, nullptr, 16);
 }
 
 // undocumented!
@@ -2968,6 +3003,9 @@ void InitGameFunctionMap(C4AulScriptEngine *pEngine)
 	AddFunc(pEngine, "GainScenarioAchievement", FnGainScenarioAchievement);
 	AddFunc(pEngine, "GetPXSCount", FnGetPXSCount);
 	AddFunc(pEngine, "GetMapDataFromPlayer", FnGetMapDataFromPlayer);
+	AddFunc(pEngine, "GetSeed", FnGetSeed);
+	AddFunc(pEngine, "SelectNPC", FnSelectNPC);
+	AddFunc(pEngine, "GetRandomColour", FnGetRandomColour);
 
 	F(GetPlrKnowledge);
 	F(GetComponent);
