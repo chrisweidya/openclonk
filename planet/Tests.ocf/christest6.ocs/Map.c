@@ -20,9 +20,9 @@ func InitializeMap(proplist map)
 func draw_platform(proplist map, int groundHeightOffset) {
 	var platform = { Algo = MAPALGO_Rect, X = map.Wdt/4, Y = map.Hgt / 2 + (groundHeightOffset * map.Hgt / 8), Wdt = map.Wdt/2, Hgt = 5 };
 	var clearArea = { Algo = MAPALGO_Rect, X = map.Wdt / 4 - 10, Y = map.Hgt / 2 + (groundHeightOffset * map.Hgt / 8) - 15, Wdt = map.Wdt / 2 + 20, Hgt = 15 };
-	var jumbled_clearing = { Algo = MAPALGO_Turbulence, Amplitude = 10, Scale = 10, Op = clearArea };
+//	var jumbled_clearing = { Algo = MAPALGO_Turbulence, Amplitude = 10, Scale = 10, Op = clearArea };
 	
-	Draw("Sky", jumbled_clearing);
+//	Draw("Sky", jumbled_clearing);
 	Draw("Sky", clearArea);
 	Draw("Brick", platform);
 }

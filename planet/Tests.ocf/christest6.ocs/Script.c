@@ -26,51 +26,20 @@ protected func InitializePlayer(int plr)
 
 private func InitAI(int groundOffset)
 {
-	var immersion_npc_size = Format("$ImmersionNPCSize$");
-	var immersion_npc_names = Format("$ImmersionNPCNames$");
 	var seed = GetSeed();
-	var immersion_npc_index = SelectNPC(immersion_npc_size, seed);
+	var immersion_npc_size = $ImmersionNPCSize$;
+	var immersion_npc_index = GetRandomNum(immersion_npc_size, seed);
+	var immersion_npc_skin = GetRandomNum(4, seed);
 	var colour = GetRandomColour(seed);
-	Log("Destruction of %v! ", colour);
-	var npc_aunt = CreateObjectAbove(Clonk, 380, (LandscapeHeight() / 2 + groundOffset * LandscapeHeight() / 8) - 20);
-	npc_aunt->SetColor(colour);
-	npc_aunt->SetName("Aunt Julie");
-//	npc_aunt->SetObjectLayer(npc_aunt);
-	npc_aunt->SetSkin(3);
-	npc_aunt->SetDir(DIR_Left);
-	npc_aunt->SetDialogue("Aunt", true);
-	/*
-	// A fireman NPC who extinguishes a burning cabin.	
-	var npc_fireman = CreateObjectAbove(Clonk, 200, 384);
-	npc_fireman->SetColor(0xff0000);
-	npc_fireman->SetName("Hubert");
-	var barrel = npc_fireman->CreateContents(Barrel);
-	barrel->SetFilled("Water", 300);
-	npc_fireman->SetObjectLayer(npc_fireman);
-	npc_fireman->SetSkin(2);
-	npc_fireman->SetDir(DIR_Left);
-	npc_fireman->SetDialogue("Fireman", true);
 
-	// A builder which tells you where to place the flagpole.
-	var npc_builder = CreateObjectAbove(Clonk, 504, 376);
-	npc_builder->SetColor(0x440088);
-	npc_builder->SetName("Kummerog");
-	npc_builder->CreateContents(Hammer);
-	npc_builder->SetObjectLayer(npc_builder);
-	npc_builder->SetDir(DIR_Left);
-	npc_builder->SetDialogue("Builder", true);
-
-	// A farmer near the grain field.
-	var npc_farmer = CreateObjectAbove(Clonk, 720, 392);
-	npc_farmer->SetColor(0x00ffff);
-	npc_farmer->SetName("Genhered");
-	npc_farmer->SetObjectLayer(npc_farmer);
-	npc_farmer->SetSkin(1);
-	npc_farmer->SetDir(DIR_Left);
-	npc_farmer->SetDialogue("Farmer", true);
-
-	// Lookout.
-	*/
-	// Village head.
+	var immersion_npc = CreateObjectAbove(Clonk, 380, (LandscapeHeight() / 2 + groundOffset * LandscapeHeight() / 8) - 20);
+	immersion_npc->SetColor(colour);
+	immersion_npc->SetName(Translate(Format("ImmersionNPC%d", immersion_npc_index)));
+	immersion_npc->SetObjectLayer(immersion_npc);
+	immersion_npc->SetSkin(immersion_npc_skin);
+	immersion_npc->SetDir(DIR_Left);
+	immersion_npc->SetDialogue(immersion_npc->GetName(), true);
+	
 	return;
 }
+

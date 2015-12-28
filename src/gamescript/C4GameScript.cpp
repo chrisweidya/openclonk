@@ -133,10 +133,10 @@ static int FnGetSeed(C4PropList * _this)
 	return 0;
 }
 
-static int FnSelectNPC(C4PropList * _this, C4String* npcCount, int32_t seed)
+static int FnGetRandomNum(C4PropList * _this, int32_t range, int32_t seed)
 {
-	int size = (int)(*FnStringPar(npcCount) - '0');
-	int npc_index = seed%size;	
+	srand(seed);
+	int npc_index =rand()%range;	
 
 	return npc_index;
 }
@@ -3004,7 +3004,7 @@ void InitGameFunctionMap(C4AulScriptEngine *pEngine)
 	AddFunc(pEngine, "GetPXSCount", FnGetPXSCount);
 	AddFunc(pEngine, "GetMapDataFromPlayer", FnGetMapDataFromPlayer);
 	AddFunc(pEngine, "GetSeed", FnGetSeed);
-	AddFunc(pEngine, "SelectNPC", FnSelectNPC);
+	AddFunc(pEngine, "GetRandomNum", FnGetRandomNum);
 	AddFunc(pEngine, "GetRandomColour", FnGetRandomColour);
 
 	F(GetPlrKnowledge);

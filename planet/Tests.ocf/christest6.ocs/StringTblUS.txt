@@ -26,7 +26,7 @@ MsgTutorialCompleted=Well done! You have mastered the basics of construction, us
 
 # Immersion NPCs
 ImmersionNPCSize=3
-ImmersionNPC1=Julie
-ImmersionNPC2=Margaret
-ImmersionNPC3=Annie
+ImmersionNPC0=Jules
+ImmersionNPC1=Ebba
+ImmersionNPC2=Aerin
 # Achievement NPCs
