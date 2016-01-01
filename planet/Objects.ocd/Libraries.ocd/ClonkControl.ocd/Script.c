@@ -63,7 +63,7 @@ static const ELEVATOR_CALL_DISTANCE = 30;
 
 
 /* Item limit */
-public func MaxContentsCount() { return 5; }		// Size of the clonks inventory
+public func MaxContentsCount() { return 10; }		// Size of the clonks inventory
 public func HandObjects() { return 1; } // Amount of hands to select items
 public func NoStackedContentMenu() { return true; }	// Contents-Menu shall display each object in a seperate slot
 
