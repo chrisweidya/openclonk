@@ -1,13 +1,15 @@
-
+local seed;
 local baseHeight;
 local immersion_npc;
 local lost_npc;
 local player;
 local guide;
+local goal;
 
 func Initialize()
 {	
-	var groundOffset = GetMapDataFromPlayer();
+//	resetProfile();
+	var groundOffset = GetMapDataFromPlayer(player);
 	baseHeight = (LandscapeHeight() / 2 + groundOffset * LandscapeHeight() / 8);
 
 	InitGoal();
@@ -18,7 +20,7 @@ func Initialize()
 }
 protected func InitGoal()
 {
-	var goal = CreateObject(Goal_PCG);
+	goal = CreateObject(Goal_PCG);
 	goal.Name = "$MsgGoalName$";
 	goal.Description = "$MsgGoalDescription$";
 }
@@ -54,20 +56,22 @@ protected func InitializePlayer(int plr)
 // Gamecall from goals, set next mission.
 protected func OnGoalsFulfilled()
 {
+	UpdateFoundNPC(seed, player);
 	SetNextMission("PCG.ocf\\christest6.ocs", "$MsgNext$", "$MsgNextDesc$");
 	return false;
 }
 
 private func InitAI()
 {
-	var seed = GetSeed();
-	initImmersionNPC(seed);
-	initLostNPC(seed);
+	seed = GetSeed(player);
+	InitImmersionNPC(seed);
+	InitFoundNPC();
+	InitLostNPC(seed);
 	return;
 }
 
 
-private func initImmersionNPC(int seed) {
+private func InitImmersionNPC(int seed) {
 	
 	immersion_npc = CreateObjectAbove(Clonk, LandscapeWidth() / 2 - 100, baseHeight - 20);
 	immersion_npc->SetColor(0x00997a);
@@ -80,12 +84,12 @@ private func initImmersionNPC(int seed) {
 
 }
 
-private func initLostNPC(int seed) {
+private func InitLostNPC(int seed) {
 	var name_size = $ImmersionNPCNameSize$;
 	var name_index = GetRandomNum(name_size, seed);
 	var skin = GetRandomNum(4, seed);
 	var colour = GetRandomColour(seed);
-	var y = GetRandomNum(baseHeight - 50, seed);
+	var y = GetRandomNum(baseHeight - 100, seed);
 	var x = GetRandomNum(LandscapeWidth(), seed);
 
 	var outer = 25;
@@ -101,6 +105,34 @@ private func initLostNPC(int seed) {
 	lost_npc->SetSkin(skin);
 	lost_npc->SetDir(DIR_Right);
 	lost_npc->SetDialogue(Format("$LostNPC$"), true);
+}
+
+private func InitFoundNPC() {
+	var name_size = $ImmersionNPCNameSize$;
+	var name_index;
+	var skin;
+	var colour;
+	var max = 10;
+	var npc_seed = -1;
+	var found_npc;
+	npc_seed = GetFoundNPC(0);
+	Log("%vseed", npc_seed);
+	if (npc_seed != 0) {		
+		name_index = GetRandomNum(name_size, npc_seed);
+		skin = GetRandomNum(4, npc_seed);
+		colour = GetRandomColour(npc_seed);
+
+		found_npc = CreateObjectAbove(Clonk, 700, baseHeight - 5);
+		//	lost_npc = CreateObjectAbove(Clonk, x, y);
+		found_npc->SetColor(colour);
+		found_npc->SetName(Translate(Format("ImmersionNPCName%d", name_index)));
+		found_npc->SetObjectLayer(found_npc);
+		found_npc->SetSkin(skin);
+		found_npc->SetDir(DIR_Right);
+	//	found_npc->SetDialogue(Format("$LostNPC$"), true);
+	}
+	else
+		Log("not init");
 }
 
 /*
@@ -125,10 +157,16 @@ public func OnHasTalkedToLostNPC()
 //	guide->AddGuideMessage("$GameCompleted$");
 //	guide->ShowGuideMessage(0);
 //	guide->ShowGuide();
-	var goal = FindObject(Find_ID(Goal_PCG));
+	
 	goal->Fulfill();
 	return;
 }
+
+private func resetProfile() {
+	ResetProfile();
+	return;
+}
+
 /*
 global func FxCheckConstructionTimer(object target, proplist effect) {
 	if (FindObject(Find_ID(target.objective)))

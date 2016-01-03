@@ -1498,7 +1498,6 @@ void C4Game::Evaluate()
 	// saving local players only, because remote players will probably not rejoin after evaluation anyway)
 	Players.Evaluate();
 	Players.Save(true);
-	std::cout << "saved";
 	// Round results
 	RoundResults.EvaluateGame();
 

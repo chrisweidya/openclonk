@@ -33,6 +33,20 @@ int32_t PlayerProfile::getSeed(bool init) {
 	return seed;
 }
 
+void PlayerProfile::updateFoundNPC(int seed) {
+	for (int i = 0; i < foundNPCSize; i++) {
+		if (foundNPC[i] == 0) {
+			foundNPC[i] = seed;
+	//		std::cout << i<<"savedfee"<<seed << "\n";
+			break;
+		}
+	}	
+}
+
+int32_t PlayerProfile::getFoundNPC(int index) {
+	return foundNPC[index];
+}
+
 PlayerProfile* PlayerProfile::getSingleProfile() {
 	assert(SModuleCount(Config.General.Participants) == 1);
 	C4Group PlayerGrp;
@@ -59,7 +73,7 @@ int32_t PlayerProfile::saveSingleProfile(PlayerProfile profile) {
 	core.Profile = profile;
 	if (!core.Save(PlayerGrp) || !PlayerGrp.Close())
 		return -1;
-//	std::cout << "-->" << profile.achievementScore << "\n";
+//	std::cout << *szPlayerFilename<<"-->" << profile.foundNPC[0]<< "\n";
 	return 1;
 } 
 
@@ -71,4 +85,5 @@ void PlayerProfile::CompileFunc(StdCompiler *pComp)
 	pComp->Value(mkNamingAdapt(achievementPoints, "achievementPoints", 0));
 	pComp->Value(mkNamingAdapt(immersionPoints, "immersionPoints", 0));
 	pComp->Value(mkNamingAdapt(seed, "seed", 0));
+	pComp->Value(mkNamingAdapt(toC4CArr(foundNPC), "foundNPC"));
 }

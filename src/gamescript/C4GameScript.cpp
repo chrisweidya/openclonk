@@ -104,36 +104,36 @@ static bool FnSendProfileData(C4PropList * _this, long iPlayer)
 	return true;
 }
 
-static int FnGetPlayerAchScore(C4PropList * _this, long iPlayer)
+static int32_t FnGetPlayerAchScore(C4PropList * _this, long iPlayer)
 {
 	C4Player *plr = ::Players.Get(iPlayer);
 	return plr ? plr->Profile.achievementScore : 0;
 }
 
 
-static int FnGetMapDataFromPlayer(C4PropList * _this)
+static int32_t FnGetMapDataFromPlayer(C4PropList * _this,int32_t player)
 {
-	PlayerProfile *profile = PlayerProfile::getSingleProfile();
-	if (profile) {
-		return profile->getScoreDiff();
+	C4Player *plr = ::Players.Get(player);
+	if (plr) {
+		return plr->Profile.getScoreDiff();
 	}
 	else
 		Log("failed to load player profile");
 	return 0;
 }
 
-static int FnGetSeed(C4PropList * _this)
+static int32_t FnGetSeed(C4PropList * _this, int32_t player)
 {
-	PlayerProfile *profile = PlayerProfile::getSingleProfile();
-	if (profile) {
-		return profile->seed;
+	C4Player *plr = ::Players.Get(player);
+	if (plr) {
+		return plr->Profile.getSeed(false);
 	}
 	else
 		Log("failed to load seed");
 	return 0;
 }
 
-static int FnGetRandomNum(C4PropList * _this, int32_t range, int32_t seed)
+static int32_t FnGetRandomNum(C4PropList * _this, int32_t range, int32_t seed)
 {
 	srand(seed);
 	int npc_index =rand()%range;	
@@ -141,7 +141,7 @@ static int FnGetRandomNum(C4PropList * _this, int32_t range, int32_t seed)
 	return npc_index;
 }
 
-static int FnGetRandomColour(C4PropList * _this, int32_t seed)
+static int32_t FnGetRandomColour(C4PropList * _this, int32_t seed)
 {
 	char colour[10];
 	char inputColour[5];
@@ -153,6 +153,48 @@ static int FnGetRandomColour(C4PropList * _this, int32_t seed)
 	}
 
 	return std::stoul(colour, nullptr, 16);
+}
+
+static C4Void FnUpdateFoundNPC(C4PropList *_this, int32_t seed, int player) 
+{
+	C4Player *plr = ::Players.Get(player);
+	if (plr) {
+		plr->Profile.updateFoundNPC(seed);
+		return C4Void();
+	}
+	else
+		Log("failed to update found npc");
+	return C4Void();
+}
+
+static int32_t FnGetFoundNPC(C4PropList *_this, int32_t index)
+{
+	PlayerProfile *profile = PlayerProfile::getSingleProfile();
+	if (profile) {
+		return profile->getFoundNPC(index);		
+	}
+	else
+		Log("failed to get found npc");
+	return 0;
+}
+
+static C4Void FnResetProfile(C4PropList *_this)
+{
+	PlayerProfile *profile = PlayerProfile::getSingleProfile();
+	if (profile) {
+		profile->foundNPC[0] = 0;
+		profile->foundNPC[1] = 0;
+		profile->foundNPC[2] = 0;
+		profile->foundNPC[3] = 0;
+		profile->foundNPC[4] = 0;
+		profile->achievementPoints = 0;
+		profile->immersionPoints = 0;
+		PlayerProfile::saveSingleProfile(*profile);
+		return C4Void();
+	}
+	else
+		Log("failed to save profile");
+	return C4Void();
 }
 
 // undocumented!
@@ -3006,6 +3048,9 @@ void InitGameFunctionMap(C4AulScriptEngine *pEngine)
 	AddFunc(pEngine, "GetSeed", FnGetSeed);
 	AddFunc(pEngine, "GetRandomNum", FnGetRandomNum);
 	AddFunc(pEngine, "GetRandomColour", FnGetRandomColour);
+	AddFunc(pEngine, "UpdateFoundNPC", FnUpdateFoundNPC);
+	AddFunc(pEngine, "GetFoundNPC", FnGetFoundNPC);
+	AddFunc(pEngine, "ResetProfile", FnResetProfile);
 
 	F(GetPlrKnowledge);
 	F(GetComponent);
