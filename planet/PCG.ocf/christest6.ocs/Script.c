@@ -10,20 +10,20 @@ func Initialize()
 	var groundOffset = GetMapDataFromPlayer();
 	baseHeight = (LandscapeHeight() / 2 + groundOffset * LandscapeHeight() / 8);
 
+	InitGoal();
 	CreateObjectAbove(WoodenCabin, LandscapeWidth() / 2 - 120, baseHeight );
-	InitAI();
-	
+	InitAI();	
 
 	return true;
 }
-
-protected func InitializePlayer(int plr)
+protected func InitGoal()
 {
-
-	var goal = CreateObject(Goal);
+	var goal = CreateObject(Goal_PCG);
 	goal.Name = "$MsgGoalName$";
 	goal.Description = "$MsgGoalDescription$";
-
+}
+protected func InitializePlayer(int plr)
+{
 	// Position player's clonk.
 //	SetPlayerZoomByViewRange(plr, 400, 0, PLRZOOM_LimitMin);
 	player = plr;
@@ -47,18 +47,14 @@ protected func InitializePlayer(int plr)
 	
 	*/
 
-	guide = CreateObject(TutorialGuide, 0, 0, plr);
-	guide->HideGuide();
+//	guide = CreateObject(PCGGuide, 0, 0, plr);
+//	guide->HideGuide();
 }
 
 // Gamecall from goals, set next mission.
 protected func OnGoalsFulfilled()
 {
-	// Achievement: Tutorial completed.
-//	GainScenarioAchievement("TutorialCompleted", 3);
-	// Dialogue options -> next round.
-	SetNextMission("Tests.ocf\\christest6.ocs", "$MsgNext$", "$MsgNextDesc$");
-	// Normal scenario ending by goal library.
+	SetNextMission("PCG.ocf\\christest6.ocs", "$MsgNext$", "$MsgNextDesc$");
 	return false;
 }
 
@@ -73,7 +69,6 @@ private func InitAI()
 
 private func initImmersionNPC(int seed) {
 	
-
 	immersion_npc = CreateObjectAbove(Clonk, LandscapeWidth() / 2 - 100, baseHeight - 20);
 	immersion_npc->SetColor(0x00997a);
 	immersion_npc->SetName(Format("Aerin"));
@@ -87,7 +82,6 @@ private func initImmersionNPC(int seed) {
 
 private func initLostNPC(int seed) {
 	var name_size = $ImmersionNPCNameSize$;
-
 	var name_index = GetRandomNum(name_size, seed);
 	var skin = GetRandomNum(4, seed);
 	var colour = GetRandomColour(seed);
@@ -109,7 +103,6 @@ private func initLostNPC(int seed) {
 	lost_npc->SetDialogue(Format("$LostNPC$"), true);
 }
 
-
 /*
 private func initQuest() {
 	var site = CreateObjectAbove(ConstructionSite, 364, baseHeight +5);
@@ -119,24 +112,24 @@ private func initQuest() {
 	site->CreateContents(Rock, 1);
 	addImmersionObjective(1);
 }
-*/
+
 private func addImmersionObjective(int index) {
 	var effect;
 	if(index == 1)
 		effect = AddEffect("CheckConstruction", immersion_npc, 100, 5);
 	effect.player = player;
 }
-
+*/
 public func OnHasTalkedToLostNPC()
 {	
 //	guide->AddGuideMessage("$GameCompleted$");
 //	guide->ShowGuideMessage(0);
 //	guide->ShowGuide();
-	var goal = FindObject(Find_ID(Goal));
+	var goal = FindObject(Find_ID(Goal_PCG));
 	goal->Fulfill();
 	return;
 }
-
+/*
 global func FxCheckConstructionTimer(object target, proplist effect) {
 	if (FindObject(Find_ID(target.objective)))
 	{
@@ -147,3 +140,4 @@ global func FxCheckConstructionTimer(object target, proplist effect) {
 		return FX_Execute_Kill;
 	}
 }
+*/
