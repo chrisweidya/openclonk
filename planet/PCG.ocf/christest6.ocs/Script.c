@@ -8,8 +8,8 @@ local goal;
 
 func Initialize()
 {	
-//	resetProfile();
-	var groundOffset = GetMapDataFromPlayer(player);
+	resetProfile();
+	var groundOffset = GetMapDataFromPlayer();
 	baseHeight = (LandscapeHeight() / 2 + groundOffset * LandscapeHeight() / 8);
 
 	InitGoal();
@@ -63,7 +63,7 @@ protected func OnGoalsFulfilled()
 
 private func InitAI()
 {
-	seed = GetSeed(player);
+	seed = GetSeed();
 	InitImmersionNPC(seed);
 	InitFoundNPC();
 	InitLostNPC(seed);
@@ -94,11 +94,11 @@ private func InitLostNPC(int seed) {
 
 	var outer = 25;
 	var inner = 15;
-	DrawMaterialQuad("Sand", x - outer, y - outer, x + outer, y - outer, x + outer, y + outer, x - outer, y + outer);
-	ClearFreeRect(x - inner, y - inner, inner*2, inner*2);
+	DrawMaterialQuad("Sand", x -inner, y + inner, x + inner, y + inner, x + outer, y + outer, x - outer, y + outer);
+	DigFree(x, y, 15);
 
-	lost_npc = CreateObjectAbove(Clonk, 600, baseHeight-5);
-//	lost_npc = CreateObjectAbove(Clonk, x, y);
+//	lost_npc = CreateObjectAbove(Clonk, 600, baseHeight-5);
+	lost_npc = CreateObjectAbove(Clonk, x, y);
 	lost_npc->SetColor(colour);
 	lost_npc->SetName(Translate(Format("ImmersionNPCName%d", name_index)));
 	lost_npc->SetObjectLayer(lost_npc);

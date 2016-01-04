@@ -111,22 +111,22 @@ static int32_t FnGetPlayerAchScore(C4PropList * _this, long iPlayer)
 }
 
 
-static int32_t FnGetMapDataFromPlayer(C4PropList * _this,int32_t player)
+static int32_t FnGetMapDataFromPlayer(C4PropList * _this)
 {
-	C4Player *plr = ::Players.Get(player);
-	if (plr) {
-		return plr->Profile.getScoreDiff();
+	PlayerProfile *profile = PlayerProfile::getSingleProfile();
+	if (profile) {
+		return profile->getScoreDiff();
 	}
 	else
 		Log("failed to load player profile");
 	return 0;
 }
 
-static int32_t FnGetSeed(C4PropList * _this, int32_t player)
+static int32_t FnGetSeed(C4PropList * _this)
 {
-	C4Player *plr = ::Players.Get(player);
-	if (plr) {
-		return plr->Profile.getSeed(false);
+	PlayerProfile *profile = PlayerProfile::getSingleProfile();
+	if (profile) {
+		return profile->getSeed(false);
 	}
 	else
 		Log("failed to load seed");
