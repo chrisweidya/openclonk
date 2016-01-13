@@ -41,4 +41,18 @@ ImmersionNPCName7=Kaz
 ImmersionNPCName8=Bry
 ImmersionNPCName9=Orion
 LostNPC=LostNPC
+
 # Achievement NPCs
+AchievementNPCNameSize=10
+AchievementNPCName0=Horx
+AchievementNPCName1=Gurguta
+AchievementNPCName2=Tabi
+AchievementNPCName3=Burbur
+AchievementNPCName4=Jazeeta
+AchievementNPCName5=Vargshu
+AchievementNPCName6=Gimpo
+AchievementNPCName7=Shee
+AchievementNPCName8=Lazarus
+AchievementNPCName9=Borg
+
+MsgEncounterOutpost=Stop, in the name of the king!

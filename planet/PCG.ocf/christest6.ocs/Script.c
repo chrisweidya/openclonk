@@ -2,13 +2,14 @@ local seed;
 local baseHeight;
 local immersion_npc;
 local lost_npc;
+local target_npc;
 local player;
 local guide;
 local goal;
 
 func Initialize()
 {	
-	resetProfile();
+//	resetProfile();
 	var groundOffset = GetMapDataFromPlayer();
 	baseHeight = (LandscapeHeight() / 2 + groundOffset * LandscapeHeight() / 8);
 
@@ -16,24 +17,26 @@ func Initialize()
 	CreateObjectAbove(WoodenCabin, LandscapeWidth() / 2 - 120, baseHeight );
 	InitAI();	
 
+	
 	return true;
 }
+
 protected func InitGoal()
 {
 	goal = CreateObject(Goal_PCG);
 	goal.Name = "$MsgGoalName$";
 	goal.Description = "$MsgGoalDescription$";
 }
+
 protected func InitializePlayer(int plr)
 {
 	// Position player's clonk.
 //	SetPlayerZoomByViewRange(plr, 400, 0, PLRZOOM_LimitMin);
 	player = plr;
-	var clonk = GetCrew(plr, 0);
+	var clonk = GetCrew(plr);
 	clonk->CreateContents(Shovel);
 	clonk->CreateContents(GrappleBow);
-	clonk->CreateContents(Hammer);
-	clonk->CreateContents(Rock, 3);
+	clonk->CreateContents(Sword);
 
 	var effect = AddEffect("ClonkRestore", clonk, 100, 10);
 	effect.to_x = 48;
@@ -67,9 +70,10 @@ private func InitAI()
 	InitImmersionNPC(seed);
 	InitFoundNPC();
 	InitLostNPC(seed);
+	InitTargetNPC(seed);
+	InitEnemyHealth();
 	return;
 }
-
 
 private func InitImmersionNPC(int seed) {
 	
@@ -135,6 +139,46 @@ private func InitFoundNPC() {
 		Log("not init");
 }
 
+private func InitTargetNPC(int seed) {
+	var name_size = $AchievementNPCNameSize$;
+	var name_index = GetRandomNum(name_size, seed);
+	var skin = GetRandomNum(4, seed);
+	var colour = GetRandomColour(seed);
+	var y = GetRandomNum(LandscapeHeight() - baseHeight, seed);
+	var x = GetRandomNum(LandscapeWidth(), seed);
+
+	y = baseHeight - 20;
+	x = 800;
+
+//	var outer = 25;
+//	var inner = 15;
+//	DrawMaterialQuad("Sand", x - inner, y + inner, x + inner, y + inner, x + outer, y + outer, x - outer, y + outer);
+//	DigFree(x, y, 15);
+
+	target_npc = CreateObjectAbove(Clonk, x, y);
+	target_npc->SetColor(colour);
+	target_npc->SetName(Translate(Format("AchievementNPCName%d", name_index)));
+	target_npc->SetSkin(skin);
+	target_npc->SetDir(DIR_Right);
+	target_npc->CreateContents(Sword);
+	AI->AddAI(target_npc);
+	AI->SetGuardRange(target_npc, x, y, 400, 16);
+//	AI->SetEncounterCB(target_npc, "EncounterKing");
+//	target_npc->SetDialogue(Format("$LostNPC$"), true);
+}
+
+private func InitEnemyHealth() {
+	var fx;
+	for (var enemy in FindObjects(Find_ID(Clonk), Find_Owner(NO_OWNER)))
+		if (fx = AI->GetAI(enemy))
+		{
+			fx.weapon = fx.target = nil;
+			AI->BindInventory(enemy);
+			enemy->DoEnergy(10000);
+			enemy->AddEnergyBar();
+		}
+}
+
 /*
 private func initQuest() {
 	var site = CreateObjectAbove(ConstructionSite, 364, baseHeight +5);
@@ -165,6 +209,12 @@ public func OnHasTalkedToLostNPC()
 private func resetProfile() {
 	ResetProfile();
 	return;
+}
+
+public func EncounterOutpost(object enemy, object player)
+{
+	Dialogue->MessageBoxAll("$MsgEncounterOutpost$", enemy, true);
+	return true;
 }
 
 /*

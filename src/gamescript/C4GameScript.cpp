@@ -104,12 +104,27 @@ static bool FnSendProfileData(C4PropList * _this, long iPlayer)
 	return true;
 }
 
-static int32_t FnGetPlayerAchScore(C4PropList * _this, long iPlayer)
+static int32_t FnGetPlayerAchLevel(C4PropList * _this)
 {
-	C4Player *plr = ::Players.Get(iPlayer);
-	return plr ? plr->Profile.achievementScore : 0;
+	PlayerProfile *profile = PlayerProfile::getSingleProfile();
+	if (profile) {
+		return profile->achievementLevel;
+	}
+	else
+		Log("failed to load player profile");
+	return -1;
 }
 
+static int32_t FnGetPlayerImmLevel(C4PropList * _this)
+{
+	PlayerProfile *profile = PlayerProfile::getSingleProfile();
+	if (profile) {
+		return profile->immersionLevel;
+	}
+	else
+		Log("failed to load player profile");
+	return -1;
+}
 
 static int32_t FnGetMapDataFromPlayer(C4PropList * _this)
 {
@@ -187,8 +202,8 @@ static C4Void FnResetProfile(C4PropList *_this)
 		profile->foundNPC[2] = 0;
 		profile->foundNPC[3] = 0;
 		profile->foundNPC[4] = 0;
-		profile->achievementPoints = 0;
-		profile->immersionPoints = 0;
+		profile->achievementLevel = 0;
+		profile->immersionLevel = 0;
 		PlayerProfile::saveSingleProfile(*profile);
 		return C4Void();
 	}
@@ -3051,6 +3066,8 @@ void InitGameFunctionMap(C4AulScriptEngine *pEngine)
 	AddFunc(pEngine, "UpdateFoundNPC", FnUpdateFoundNPC);
 	AddFunc(pEngine, "GetFoundNPC", FnGetFoundNPC);
 	AddFunc(pEngine, "ResetProfile", FnResetProfile);
+	AddFunc(pEngine, "GetPlayerImmLevel", FnGetPlayerImmLevel);
+	AddFunc(pEngine, "GetPlayerAchLevel", FnGetPlayerAchLevel);
 
 	F(GetPlrKnowledge);
 	F(GetComponent);

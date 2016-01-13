@@ -597,6 +597,26 @@ static int32_t FnGetRandomSeed(C4PropList * _this) {
 	return 0;
 }
 
+static int32_t FnGetPlayerImmLevel(C4PropList * _this) {
+	PlayerProfile *profile = PlayerProfile::getSingleProfile();
+	if (profile) {
+		return profile->immersionLevel;
+	}
+	else
+		Log("failed to load ach/imm level");
+	return -1;
+}
+
+static int32_t FnGetPlayerAchLevel(C4PropList * _this) {
+	PlayerProfile *profile = PlayerProfile::getSingleProfile();
+	if (profile) {
+		return profile->achievementLevel;
+	}
+	else
+		Log("failed to load ach/imm level");
+	return -1;
+}
+
 int32_t C4MapScriptLayer::GetPixCount(const C4Rect &rcBounds, const C4MapScriptMatTexMask &col_mask)
 {
 	// safety
@@ -714,6 +734,8 @@ void C4MapScriptHost::AddEngineFunctions()
 	::AddFunc(this, "CreateMatTexMask", FnLayerCreateMatTexMask);
 	::AddFunc(this, "GetMapDataFromPlayer", FnGetMapDataFromPlayer);
 	::AddFunc(this, "GetRandomSeed", FnGetRandomSeed);
+	::AddFunc(this, "GetPlayerImmLevel", FnGetPlayerImmLevel);
+	::AddFunc(this, "GetPlayerAchLevel", FnGetPlayerAchLevel);
 }
 
 bool C4MapScriptHost::Load(C4Group & g, const char * f, const char * l, C4LangStringTable * t)

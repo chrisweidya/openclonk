@@ -17,7 +17,7 @@ void PlayerProfile::updatePlayerType(float achievementScore, float socialScore, 
 }
 
 int32_t PlayerProfile::getScoreDiff() {
-	int32_t scoreDiff = immersionPoints - achievementPoints;
+	int32_t scoreDiff = immersionLevel - achievementLevel;
 	return -2;
 	if (scoreDiff > 2)
 		return 2;
@@ -81,9 +81,9 @@ void PlayerProfile::CompileFunc(StdCompiler *pComp)
 {
 	pComp->Value(mkNamingAdapt(achievementScore, "achievementScore", 0));
 	pComp->Value(mkNamingAdapt(socialScore, "socialScore", 0));
-	pComp->Value(mkNamingAdapt(immersionScore, "immersiontScore", 0));
-	pComp->Value(mkNamingAdapt(achievementPoints, "achievementPoints", 0));
-	pComp->Value(mkNamingAdapt(immersionPoints, "immersionPoints", 0));
+	pComp->Value(mkNamingAdapt(immersionScore, "immersionScore", 0));
+	pComp->Value(mkNamingAdapt(achievementLevel, "achievementLevel", 0));
+	pComp->Value(mkNamingAdapt(immersionLevel, "immersionLevel", 0));
 	pComp->Value(mkNamingAdapt(seed, "seed", 0));
 	pComp->Value(mkNamingAdapt(toC4CArr(foundNPC), "foundNPC"));
 }

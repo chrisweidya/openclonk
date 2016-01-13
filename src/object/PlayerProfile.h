@@ -8,8 +8,8 @@ public:
 	int32_t achievementScore = 0;
 	int32_t socialScore = 0;
 	int32_t immersionScore = 0;
-	int32_t achievementPoints = 0;
-	int32_t immersionPoints = 0;
+	int32_t achievementLevel = 0;
+	int32_t immersionLevel = 0;
 	int32_t seed = 0;
 
 	int32_t foundNPCSize = 5;
