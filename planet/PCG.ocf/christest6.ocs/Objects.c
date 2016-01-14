@@ -13,7 +13,7 @@ func InitializeObjects()
 	var flagpole = CreateObjectAbove(Flagpole, LandscapeWidth() / 2, baseHeight);
 	flagpole->SetNeutral(true);
 
-	CreateObjectAbove(WoodenCabin, LandscapeWidth() / 2 - 120, baseHeight);
+	var cabin = CreateObjectAbove(WoodenCabin, LandscapeWidth() / 2 - 120, baseHeight);
 
 	return true;
 	

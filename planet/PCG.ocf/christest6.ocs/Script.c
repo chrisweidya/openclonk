@@ -14,7 +14,7 @@ func Initialize()
 	baseHeight = (LandscapeHeight() / 2 + groundOffset * LandscapeHeight() / 8);
 
 	InitGoal();
-	CreateObjectAbove(WoodenCabin, LandscapeWidth() / 2 - 120, baseHeight );
+	
 	InitAI();	
 
 	
@@ -37,13 +37,9 @@ protected func InitializePlayer(int plr)
 	clonk->CreateContents(Shovel);
 	clonk->CreateContents(GrappleBow);
 	clonk->CreateContents(Sword);
-
-	var effect = AddEffect("ClonkRestore", clonk, 100, 10);
-	effect.to_x = 48;
-	effect.to_y = 374;
-
+	clonk->CreateContents(TeleportScroll);
 	clonk->SetPosition(LandscapeWidth()/2, baseHeight - 20);
-	
+	clonk->Switch2Items(3, 9);
 	/*
 	for (var structure in FindObjects(Find_Or(Find_Category(C4D_Structure), Find_Func("IsFlagpole"))))
 		structure->SetOwner(plr);
