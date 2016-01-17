@@ -54,7 +54,8 @@ const char *const SEPERATOR_TEXTURE = "--SEP--";
 C4LandscapeRenderGL::C4LandscapeRenderGL()
 {
 	ZeroMem(Surfaces, sizeof(Surfaces));
-	hMaterialTexture = 0;
+	ZeroMem(hMaterialTexture, sizeof(hMaterialTexture));
+	hVBO = 0;
 }
 
 C4LandscapeRenderGL::~C4LandscapeRenderGL()
@@ -99,6 +100,12 @@ bool C4LandscapeRenderGL::Init(int32_t iWidth, int32_t iHeight, C4TextureMap *pT
 		return false;
 	}
 
+	if (!InitVBO())
+	{
+		LogFatal("[!] Could not initialize landscape VBO!");
+		return false;
+	}
+
 	return true;
 }
 
@@ -135,8 +142,12 @@ void C4LandscapeRenderGL::Clear()
 		delete Surfaces[i];
 		Surfaces[i] = NULL;
 	}
-	if (hMaterialTexture) glDeleteTextures(1, &hMaterialTexture);
-	hMaterialTexture = 0;
+
+	glDeleteTextures(C4LR_MipMapCount, hMaterialTexture);
+	std::fill_n(hMaterialTexture, C4LR_MipMapCount, 0);
+
+	glDeleteBuffers(1, &hVBO);
+	hVBO = 0;
 }
 
 bool C4LandscapeRenderGL::InitLandscapeTexture()
@@ -170,7 +181,9 @@ bool C4LandscapeRenderGL::InitMaterialTexture(C4TextureMap *pTexs)
 	AddTexturesFromMap(pTexs);
 
 	// Determine depth to use
-	iMaterialTextureDepth = 2*MaterialTextureMap.size();
+	iMaterialTextureDepth = 1;
+	while(iMaterialTextureDepth < 2*int32_t(MaterialTextureMap.size()))
+		iMaterialTextureDepth <<= 1;
 	int32_t iNormalDepth = iMaterialTextureDepth / 2;
 
 	// Find the largest texture
@@ -184,16 +197,15 @@ bool C4LandscapeRenderGL::InitMaterialTexture(C4TextureMap *pTexs)
 
 	// Get size for our textures. We might be limited by hardware
 	int iTexWdt = pRefSfc->Wdt, iTexHgt = pRefSfc->Hgt;
-	GLint iMaxTexSize, iMaxTexLayers;
-	glGetIntegerv(GL_MAX_TEXTURE_SIZE, &iMaxTexSize);
-	glGetIntegerv(GL_MAX_ARRAY_TEXTURE_LAYERS, &iMaxTexLayers);
+	GLint iMaxTexSize;
+	glGetIntegerv(GL_MAX_3D_TEXTURE_SIZE, &iMaxTexSize);
 	if (iTexWdt > iMaxTexSize || iTexHgt > iMaxTexSize)
 	{
 		iTexWdt = std::min(iTexWdt, iMaxTexSize);
 		iTexHgt = std::min(iTexHgt, iMaxTexSize);
 		LogF("   gl: Material textures too large, GPU only supports %dx%d! Cropping might occur!", iMaxTexSize, iMaxTexSize);
 	}
-	if(iMaterialTextureDepth >= iMaxTexLayers)
+	if(iMaterialTextureDepth >= iMaxTexSize)
 	{
 		LogF("   gl: Too many material textures! GPU only supports 3D texture depth of %d!", iMaxTexSize);
 		return false;
@@ -276,33 +288,70 @@ bool C4LandscapeRenderGL::InitMaterialTexture(C4TextureMap *pTexs)
 	// Clear error error(s?)
 	while(glGetError()) {}
 	
-	// Alloc 2D texture array
-	glGenTextures(1, &hMaterialTexture);
-
-	// Generate textures
+	// Alloc 3D textures
+	glEnable(GL_TEXTURE_3D);
+	glGenTextures(C4LR_MipMapCount, hMaterialTexture);
+	
+	// Generate textures (mipmaps too!)
 	int iSizeSum = 0;
+	BYTE *pLastData = new BYTE [iSize / 4];
+	for(int iMMLevel = 0; iMMLevel < C4LR_MipMapCount; iMMLevel++)
+	{
+		
+		// Scale the texture down for mip-mapping
+		if(iMMLevel) {
+			BYTE *pOut = pData;
+			BYTE *pIn[4] = { 
+				pLastData, pLastData + iBytesPP, 
+				pLastData + iBytesPP * iTexWdt, pLastData + iBytesPP * iTexWdt + iBytesPP
+			};
+			for (int i = 0; i < iMaterialTextureDepth; ++i)
+				for (int y = 0; y < iTexHgt / 2; ++y)
+				{
+					for (int x = 0; x < iTexWdt / 2; ++x)
+					{
+						for (int j = 0; j < iBytesPP; j++)
+						{
+							unsigned int s = 0;
+							s += *pIn[0]++; s += 3 * *pIn[1]++; s += 3 * *pIn[2]++; s += *pIn[3]++; 
+							*pOut++ = BYTE(s / 8);
+						}
+						pIn[0] += iBytesPP; pIn[1] += iBytesPP; pIn[2] += iBytesPP; pIn[3] += iBytesPP;
+					}
+					pIn[0] += iBytesPP * iTexWdt; pIn[1] += iBytesPP * iTexWdt;
+					pIn[2] += iBytesPP * iTexWdt; pIn[3] += iBytesPP * iTexWdt;
+				}
+			iTexWdt /= 2; iTexHgt /= 2;
+		}
 
-	// Select texture
-	glBindTexture(GL_TEXTURE_2D_ARRAY, hMaterialTexture);
-	glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+		// Select texture
+		glBindTexture(GL_TEXTURE_3D, hMaterialTexture[iMMLevel]);
+		glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 
-	// We fully expect to tile these
-	glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_S, GL_REPEAT);
-	glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_T, GL_REPEAT);
-	glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_NEAREST);
-	glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_GENERATE_MIPMAP, GL_TRUE);
+		// We fully expect to tile these
+		glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+		glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+		glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 
-	// Make it happen!
-	glTexImage3D(GL_TEXTURE_2D_ARRAY, 0, 4, iTexWdt, iTexHgt, iMaterialTextureDepth, 0, GL_BGRA,
-				iBytesPP == 2 ? GL_UNSIGNED_SHORT_4_4_4_4_REV : GL_UNSIGNED_INT_8_8_8_8_REV,
-				pData);
+		// Make it happen!
+		glTexImage3D(GL_TEXTURE_3D, 0, 4, iTexWdt, iTexHgt, iMaterialTextureDepth, 0, GL_BGRA,
+					iBytesPP == 2 ? GL_UNSIGNED_SHORT_4_4_4_4_REV : GL_UNSIGNED_INT_8_8_8_8_REV,
+					pData);
 	   
-	// Statistics
-	iSizeSum += iTexWdt * iTexHgt * iMaterialTextureDepth * iBytesPP;
+		// Exchange buffers
+		BYTE *tmp = pLastData;
+		pLastData = pData;
+		pData = tmp;
+
+		// Statistics
+		iSizeSum += iTexWdt * iTexHgt * iMaterialTextureDepth * iBytesPP;
+	}
 	
 	// Dispose of data
 	delete [] pData;
+	delete [] pLastData;
+	glDisable(GL_TEXTURE_3D);
 	
 	// Check whether we were successful
 	if(int err = glGetError())
@@ -312,9 +361,10 @@ bool C4LandscapeRenderGL::InitMaterialTexture(C4TextureMap *pTexs)
 	}
 
 	// Announce the good news
-	LogF("  gl: Texturing uses %d slots at %dx%d (%d MB total)",
+	LogF("  gl: Texturing uses %d slots at %dx%d, %d levels (%d MB total)",
 		static_cast<int>(MaterialTextureMap.size()),
 		iMaterialWidth, iMaterialHeight,
+		C4LR_MipMapCount,
 		iSizeSum / 1000000);
 
 	return true;
@@ -554,21 +604,27 @@ const char *C4LandscapeRenderGL::UniformNames[C4LRU_Count+1];
 
 bool C4LandscapeRenderGL::LoadShader(C4GroupSet *pGroups, C4Shader& shader, const char* name, int ssc)
 {
-	// Create vertex shader (hard-coded)
-	shader.AddVertexDefaults();
-	hLandscapeTexCoord = shader.AddTexCoord("landscapeCoord");
-	if(ssc & C4SSC_LIGHT) hLightTexCoord = shader.AddTexCoord("lightCoord");
+	// Setup #defines
+	shader.AddDefine("OPENCLONK");
+	shader.AddDefine("OC_LANDSCAPE");
+	if(ssc & C4SSC_LIGHT) shader.AddDefine("OC_DYNAMIC_LIGHT"); // sample light from light texture
+
+	// Create vertex shader
+	shader.LoadVertexSlices(pGroups, "LandscapeVertexShader.glsl");
 
 	// Then load slices for fragment shader
-	shader.AddFragmentSlice(-1, "#define OPENCLONK");
-	shader.AddFragmentSlice(-1, "#define OC_LANDSCAPE");
-	if(ssc & C4SSC_LIGHT) shader.AddFragmentSlice(-1, "#define OC_DYNAMIC_LIGHT"); // sample light from light texture
+	shader.LoadFragmentSlices(pGroups, "CommonShader.glsl");
+	shader.LoadFragmentSlices(pGroups, "LandscapeShader.glsl");
 
-	shader.LoadSlices(pGroups, "CommonShader.glsl");
-	shader.LoadSlices(pGroups, "LandscapeShader.glsl");
+	// Make attribute name map
+	const char* AttributeNames[C4LRA_Count + 1];
+	AttributeNames[C4LRA_Position] = "oc_Position";
+	AttributeNames[C4LRA_LandscapeTexCoord] = "oc_LandscapeTexCoord";
+	AttributeNames[C4LRA_LightTexCoord] = "oc_LightTexCoord"; // unused if no dynamic light
+	AttributeNames[C4LRA_Count] = NULL;
 
 	// Initialise!
-	if (!shader.Init(name, UniformNames)) {
+	if (!shader.Init(name, UniformNames, AttributeNames)) {
 		shader.ClearSlices();
 		return false;
 	}
@@ -590,6 +646,7 @@ bool C4LandscapeRenderGL::LoadShaders(C4GroupSet *pGroups)
 
 	// Make uniform name map
 	ZeroMem(UniformNames, sizeof(UniformNames));
+	UniformNames[C4LRU_ProjectionMatrix]  = "projectionMatrix";
 	UniformNames[C4LRU_LandscapeTex]      = "landscapeTex";
 	UniformNames[C4LRU_ScalerTex]         = "scalerTex";
 	UniformNames[C4LRU_MaterialTex]       = "materialTex";
@@ -609,6 +666,17 @@ bool C4LandscapeRenderGL::LoadShaders(C4GroupSet *pGroups)
 	if(!LoadShader(pGroups, ShaderLight, "landscapeLight", C4SSC_LIGHT))
 		return false;
 
+	return true;
+}
+
+bool C4LandscapeRenderGL::InitVBO()
+{
+	// Our VBO needs to hold 4 vertices with 6 floats each.
+	assert(hVBO == 0);
+	glGenBuffers(1, &hVBO);
+	glBindBuffer(GL_ARRAY_BUFFER, hVBO);
+	glBufferData(GL_ARRAY_BUFFER, 24 * sizeof(float), NULL, GL_STREAM_DRAW);
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	return true;
 }
 
@@ -892,9 +960,6 @@ void C4LandscapeRenderGL::Draw(const C4TargetFacet &cgo, const C4FoWRegion *Ligh
 	C4Surface *sfcTarget = cgo.Surface;
 	if (!pGL->PrepareRendering(sfcTarget)) return;
 
-	// Clear error(s?)
-	while(glGetError()) {}
-
 	// Choose the right shader depending on whether we have dynamic lighting or not
 	const C4Shader* shader = &Shader;
 	if (Light) shader = &ShaderLight;
@@ -905,6 +970,7 @@ void C4LandscapeRenderGL::Draw(const C4TargetFacet &cgo, const C4FoWRegion *Ligh
 	ShaderCall.Start();
 
 	// Bind data
+	ShaderCall.SetUniformMatrix4x4(C4LRU_ProjectionMatrix, pGL->GetProjectionMatrix());
 	ShaderCall.SetUniform3fv(C4LRU_Gamma, 1, pGL->gammaOut);
 	ShaderCall.SetUniform2f(C4LRU_Resolution, Surfaces[0]->Wdt, Surfaces[0]->Hgt);
 	float centerX = float(cgo.TargetX)+float(cgo.Wdt)/2,
@@ -951,7 +1017,7 @@ void C4LandscapeRenderGL::Draw(const C4TargetFacet &cgo, const C4FoWRegion *Ligh
 	}
 	if(Light && ShaderCall.AllocTexUnit(C4LRU_LightTex))
 	{
-		glBindTexture(GL_TEXTURE_2D, Light->getSurface()->textures[0].texName);
+		glBindTexture(GL_TEXTURE_2D, Light->getSurfaceName());
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	}
@@ -967,7 +1033,13 @@ void C4LandscapeRenderGL::Draw(const C4TargetFacet &cgo, const C4FoWRegion *Ligh
 	}
 	if(ShaderCall.AllocTexUnit(C4LRU_MaterialTex))
 	{
-		glBindTexture(GL_TEXTURE_2D_ARRAY, hMaterialTexture);
+        // Decide which mip-map level to use
+		double z = 0.5; int iMM = 0;
+		while(pGL->Zoom < z * ::Game.C4S.Landscape.MaterialZoom && iMM + 1 <C4LR_MipMapCount)
+			{ z /= 2; iMM++; }
+		glBindTexture(GL_TEXTURE_3D, hMaterialTexture[iMM]);
+		glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	}
 	if(ShaderCall.AllocTexUnit(C4LRU_MatMapTex))
 	{
@@ -997,58 +1069,81 @@ void C4LandscapeRenderGL::Draw(const C4TargetFacet &cgo, const C4FoWRegion *Ligh
 	// Blend it
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-	// To the blit
-	glColor3f(1.0, 1.0, 1.0);
-	glBegin(GL_QUADS);
+	// Prepare vertex data
+	float vtxData[24];
+	float* pos = &vtxData[0];
+	float* tex = &vtxData[8];
+	float* lightTex = &vtxData[16];
+
+	pos[0] = tTexBlt.left;
+	pos[1] = tTexBlt.top;
+	pos[2] = tTexBlt.right;
+	pos[3] = tTexBlt.top;
+	pos[4] = tTexBlt.left;
+	pos[5] = tTexBlt.bottom;
+	pos[6] = tTexBlt.right;
+	pos[7] = tTexBlt.bottom;
+
+	tex[0] = fTexBlt.left;
+	tex[1] = fTexBlt.top;
+	tex[2] = fTexBlt.right;
+	tex[3] = fTexBlt.top;
+	tex[4] = fTexBlt.left;
+	tex[5] = fTexBlt.bottom;
+	tex[6] = fTexBlt.right;
+	tex[7] = fTexBlt.bottom;
+
+	unsigned int nFloats = 16;
+	if (Light)
+	{
+		FLOAT_RECT lTexBlt;
+		const C4Rect LightRect = Light->getRegion();
+		int32_t iLightWdt = Light->getSurfaceWidth(),
+			iLightHgt = Light->getSurfaceHeight();
+		lTexBlt.left = (fx - LightRect.x) / iLightWdt;
+		lTexBlt.top = 1.0 - (fy - LightRect.y) / iLightHgt;
+		lTexBlt.right = (fx + cgo.Wdt - LightRect.x) / iLightWdt;
+		lTexBlt.bottom = 1.0 - (fy + cgo.Hgt - LightRect.y) / iLightHgt;
+
+		lightTex[0] = lTexBlt.left;
+		lightTex[1] = lTexBlt.top;
+		lightTex[2] = lTexBlt.right;
+		lightTex[3] = lTexBlt.top;
+		lightTex[4] = lTexBlt.left;
+		lightTex[5] = lTexBlt.bottom;
+		lightTex[6] = lTexBlt.right;
+		lightTex[7] = lTexBlt.bottom;
+		nFloats = 24;
+	}
+
+	// Upload vertex data
+	glBindBuffer(GL_ARRAY_BUFFER, hVBO);
+	glBufferSubData(GL_ARRAY_BUFFER, 0, nFloats * sizeof(float), vtxData);
+
+	// Setup state
+	glEnableVertexAttribArray(shader->GetAttribute(C4LRA_Position));
+	glEnableVertexAttribArray(shader->GetAttribute(C4LRA_LandscapeTexCoord));
+
+	glVertexAttribPointer(shader->GetAttribute(C4LRA_Position), 2, GL_FLOAT, GL_FALSE, 0, 0);
+	glVertexAttribPointer(shader->GetAttribute(C4LRA_LandscapeTexCoord), 2, GL_FLOAT, GL_FALSE, 0, reinterpret_cast<const uint8_t*>(8 * sizeof(float)));
 
 	if (Light)
 	{
-		// Calculate coordinates into light texture
-		FLOAT_RECT lTexBlt;
-		if (Light)
-		{
-			const C4Rect LightRect = Light->getRegion();
-			int32_t iLightWdt = Light->getSurface()->Wdt,
-				iLightHgt = Light->getSurface()->Hgt;
-			lTexBlt.left = (fx - LightRect.x) / iLightWdt;
-			lTexBlt.top = 1.0 - (fy - LightRect.y) / iLightHgt;
-			lTexBlt.right = (fx + cgo.Wdt - LightRect.x) / iLightWdt;
-			lTexBlt.bottom = 1.0 - (fy + cgo.Hgt - LightRect.y) / iLightHgt;
-		}
-
-		#define LVERTEX(x, y) \
-			glMultiTexCoord2f(hLandscapeTexCoord, fTexBlt.x, fTexBlt.y); \
-			glMultiTexCoord2f(hLightTexCoord, lTexBlt.x, lTexBlt.y); \
-			glVertex2f(tTexBlt.x, tTexBlt.y);
-
-		LVERTEX(left, top);
-		LVERTEX(right, top);
-		LVERTEX(right, bottom);
-		LVERTEX(left, bottom);
-
-		#undef LVERTEX
-	}
-	else
-	{
-		#define VERTEX(x, y) \
-			glMultiTexCoord2f(hLandscapeTexCoord, fTexBlt.x, fTexBlt.y); \
-			glVertex2f(tTexBlt.x, tTexBlt.y);
-
-		VERTEX(left, top);
-		VERTEX(right, top);
-		VERTEX(right, bottom);
-		VERTEX(left, bottom);
-
-		#undef VERTEX
+		glEnableVertexAttribArray(shader->GetAttribute(C4LRA_LightTexCoord));
+		glVertexAttribPointer(shader->GetAttribute(C4LRA_LightTexCoord), 2, GL_FLOAT, GL_FALSE, 0, reinterpret_cast<const uint8_t*>(16 * sizeof(float)));
 	}
 
-	
+	// Do the blit
+	glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 
-	glEnd();
+	// Reset state
+	glDisableVertexAttribArray(shader->GetAttribute(C4LRA_Position));
+	glDisableVertexAttribArray(shader->GetAttribute(C4LRA_LandscapeTexCoord));
+	if (Light)
+		glDisableVertexAttribArray(shader->GetAttribute(C4LRA_LightTexCoord));
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
 
-	// Remove shader
 	ShaderCall.Finish();
-
 }
 
 #endif // #ifndef USE_CONSOLE

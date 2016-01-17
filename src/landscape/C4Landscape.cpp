@@ -884,6 +884,14 @@ int32_t C4Landscape::ExtractMaterial(int32_t fx, int32_t fy, bool distant_first)
 	return mat;
 }
 
+bool C4Landscape::InsertMaterialOutsideLandscape(int32_t tx, int32_t ty, int32_t mdens)
+{
+	// Out-of-bounds insertion considered successful if inserted into same or lower density
+	// This ensures pumping out of map works
+	// Do allow insertion into same density because it covers the case of e.g. pumping water into the upper ocean of an underwater scenario
+	return GetDensity(tx, ty) <= mdens;
+}
+
 bool C4Landscape::InsertMaterial(int32_t mat, int32_t *tx, int32_t *ty, int32_t vx, int32_t vy, bool query_only)
 {
 	assert(tx); assert(ty);
@@ -893,7 +901,7 @@ bool C4Landscape::InsertMaterial(int32_t mat, int32_t *tx, int32_t *ty, int32_t 
 	if (!mdens) return true;
 
 	// Bounds
-	if (!Inside<int32_t>(*tx,0,Width-1) || !Inside<int32_t>(*ty,0,Height)) return false;
+	if (!Inside<int32_t>(*tx, 0, Width - 1) || !Inside<int32_t>(*ty, 0, Height)) return InsertMaterialOutsideLandscape(*tx, *ty, mdens);
 
 	if (Game.C4S.Game.Realism.LandscapePushPull)
 	{
@@ -927,7 +935,7 @@ bool C4Landscape::InsertMaterial(int32_t mat, int32_t *tx, int32_t *ty, int32_t 
 	{
 		// since tx and ty changed, we need to re-check the bounds here
 		// if we really inserted it, the check is made again in InsertDeadMaterial
-		if (!Inside<int32_t>(*tx,0,Width-1) || !Inside<int32_t>(*ty,0,Height)) return false;
+		if (!Inside<int32_t>(*tx,0,Width-1) || !Inside<int32_t>(*ty,0,Height)) return InsertMaterialOutsideLandscape(*tx, *ty, mdens);
 		return true;		
 	}
 
@@ -956,7 +964,7 @@ bool C4Landscape::InsertDeadMaterial(int32_t mat, int32_t tx, int32_t ty)
 {
 	// Check bounds
 	if (tx < 0 || ty < 0 || tx >= Width || ty >= Height)
-		return false;
+		return InsertMaterialOutsideLandscape(tx, ty, std::min(MatDensity(mat), C4M_Solid));
 
 	// Save back original material so we can insert it later
 	int omat = 0;
@@ -1276,6 +1284,9 @@ void C4Landscape::Clear(bool fClearMapCreator, bool fClearSky, bool fClearRender
 	delete [] pInitial; pInitial = NULL;
 	delete [] pInitialBkg; pInitialBkg = NULL;
 	delete pFoW; pFoW = NULL;
+	// clear relight array
+	for (int32_t i = 0; i < C4LS_MaxRelights; ++i)
+		Relights[i].Default();
 	// clear scan
 	ScanX=0;
 	Mode=C4LSC_Undefined;
@@ -3278,7 +3289,6 @@ bool C4Landscape::DrawBrush(int32_t iX, int32_t iY, int32_t iGrade, const char *
 	if (!GetMapColorIndex(szMaterial,szTexture,byCol)) return false;
 	if (!GetMapColorIndex(szBackMaterial,szBackTexture,byColBkg)) return false;
 	// Get material shape size
-	int32_t mat = PixCol2Mat(byCol);
 	C4Texture *texture = ::TextureMap.GetTexture(szTexture);
 	int32_t shape_wdt=0, shape_hgt=0;
 	if (texture && texture->GetMaterialShape())

@@ -82,6 +82,7 @@ func ControlUseStart(object clonk, int x, int y)
 	if(!Contents(0))
 	{
 		clonk->CancelUse();
+		Sound("Objects::Weapons::Musket::Click*");
 		return true;
 	}
 
@@ -191,4 +192,3 @@ local Name = "$Name$";
 local Description = "$Description$";
 local UsageHelp = "$UsageHelp$";
 local Collectible = 1;
-local Rebuy = true;

@@ -49,9 +49,9 @@ protected func InitializePlayer(int plr)
 
 //	guide = CreateObject(PCGGuide, 0, 0, plr);
 //	guide->HideGuide();
-	var effect = AddEffect("ClonkRestore", clonk, 100, 10);
-	effect.to_x = 300;
-	effect.to_y = 374;
+//	var effect = AddEffect("ClonkRestore", clonk, 100, 10);
+//	effect.to_x = 300;
+//	effect.to_y = 374;
 }
 
 // Gamecall from goals, set next mission.

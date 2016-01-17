@@ -44,8 +44,9 @@ func Fuse()
 	Launch(GetR());
 }
 
-func Incineration()
+func Incineration(int caused_by)
 {
+	SetController(caused_by);
 	Fuse();
 }
 
@@ -168,7 +169,6 @@ protected func Hit()
 	{
 		JumpOff(rider);
 	}
-	//Message("I have hit something",this);
 	Sound("Hits::GeneralHit?");
 	if(GetEffect("Flight",this)) DoFireworks();
 }
@@ -190,10 +190,7 @@ public func OnMount(clonk)
 	riderattach = AttachMesh(clonk, "main", "pos_tool1", Trans_Mul(Trans_Translate(-1000,2000*iDir,2000), Trans_Rotate(-90*iDir,1,0,0)));
 	
 	//Modify picture transform to fit icon on clonk mount
-	//clean pic transform rotations
-	SetProperty("PictureTransformation", Trans_Mul(Trans_Rotate(0,1,0,0), Trans_Rotate(0,0,0,1), Trans_Rotate(0,0,1,0)));
-	//apply the new one
-	SetProperty("PictureTransformation", Trans_Mul(Trans_Translate(5000 * clonk->GetDir(),0,0), Trans_Rotate(-20,1,0,0), Trans_Rotate(0,0,0,1), Trans_Rotate(0,0,1,0), Trans_Scale(700)));
+	this.PictureTransformation = Trans_Mul(Trans_Translate(5000 * clonk->GetDir(),0,0), Trans_Rotate(-20,1,0,0), Trans_Rotate(0,0,0,1), Trans_Rotate(0,0,1,0), Trans_Scale(700));
 	return true;
 }
 
@@ -214,7 +211,12 @@ func Launch(int angle, object clonk)
 	Sound("Objects::Boompack::Launch");
 	AddEffect("Flight",this,150,1,this);
 	Sound("Objects::Boompack::Fly", false, 60, nil, 1);
-	//AddEffect("HitCheck", this, 1,1, nil,nil, clonk, true);
+	
+	// Add hit check to explode on mid-air contact.
+	// But only if not ridden by a clonk, for riding clonks
+	// this effect is added when the clonk jumps off.
+	if (!clonk)
+		AddEffect("HitCheck", this, 1, 2, nil, nil);
 
 	//Ride the rocket!
 	if(clonk)
@@ -269,28 +271,31 @@ func GetFuel()
 	return fuel;
 }
 
-public func IsProjectileTarget()
+public func IsProjectileTarget(object projectile)
 {
-	return 1;
+	return projectile->GetID() != GetID();
 }
 
-func OnProjectileHit()
+func OnProjectileHit(object projectile)
 {
-	Incinerate();
+	Incinerate(100, projectile->GetController());
 }
 
 func IsInventorProduct() { return true; }
 
-private func DefaultPicTransform() { return SetProperty("PictureTransformation", Trans_Mul(Trans_Rotate(30,0,0,1),Trans_Rotate(-30,1,0,0),Trans_Scale(1300))); }
+private func DefaultPicTransform()
+{
+	this.PictureTransformation = this.Prototype.PictureTransformation;
+}
 
-func Definition(def) {
-	DefaultPicTransform();
+public func Definition(def)
+{
+	def.PictureTransformation = Trans_Mul(Trans_Translate(-3000, -1000, 0), Trans_Rotate(45,0,0,1),Trans_Rotate(-35,1,0,0),Trans_Scale(1200));
 }
 
 local Collectible = true;
 local Name = "$Name$";
 local Description = "$Description$";
 local UsageHelp = "$UsageHelp$";
-local Rebuy = true;
 local BlastIncinerate = 1;
 local ContactIncinerate = 1;

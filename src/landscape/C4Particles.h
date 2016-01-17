@@ -364,7 +364,7 @@ public:
 	// removes all particles
 	void Clear();
 	bool Exec(C4Object *obj, float timeDelta);
-	void Draw(C4TargetFacet cgo, C4Object *obj, int texUnit);
+	void Draw(C4TargetFacet cgo, C4Object *obj, C4ShaderCall& call, int texUnit, const StdProjectionMatrix& modelview);
 	bool IsOfType(C4ParticleDef *def, uint32_t _blitMode, uint32_t attachment) const;
 	bool IsEmpty() const { return !particleCount; }
 
@@ -507,8 +507,8 @@ public:
 	GLsizei *GetMultiDrawElementsCountArray() { return &multiDrawElementsCountArray[0]; } 
 	GLvoid **GetMultiDrawElementsIndexArray() { return reinterpret_cast<GLvoid**> (&multiDrawElementsIndexArray[0]); }
 
-	// if true, OpenGL buffer objects will not be used (instead the slower direct calls will be made)
-	bool useBufferObjectWorkaround;
+	// if true, OpenGL VAOs will not be used (instead the slower direct calls will be made)
+	bool useVAOWorkaround;
 
 	// usually, the following methods are used for drawing
 	void PreparePrimitiveRestartIndices(uint32_t forSize);

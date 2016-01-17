@@ -142,8 +142,9 @@ public func GetInventoryIconOverlay()
 	return overlay;
 }
 
-public func OnFuseFinished()
+public func OnFuseFinished(object fuse)
 {
+	SetController(fuse->GetController());
 	DoExplode();
 }
 
@@ -209,6 +210,5 @@ local Collectible = 1;
 local Name = "$Name$";
 local Description = "$Description$";
 local UsageHelp = "$UsageHelp$";
-local Rebuy = true;
 local BlastIncinerate = 1;
 local ContactIncinerate = 2;

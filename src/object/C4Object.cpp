@@ -2872,13 +2872,16 @@ bool C4Object::SetAction(C4PropList * Act, C4Object *pTarget, C4Object *pTarget2
 	if (Act!=LastAction)
 	{
 		Action.Time=0;
-		// reset action data if procedure is changed
+		// reset action data and targets if procedure is changed
 		if ((Act ? Act->GetPropertyP(P_Procedure) : -1)
-		    != (LastAction ? LastAction->GetPropertyP(P_Procedure) : -1))
+			!= (LastAction ? LastAction->GetPropertyP(P_Procedure) : -1))
+		{
 			Action.Data = 0;
+			Action.Target = NULL;
+			Action.Target2 = NULL;
+		}
 	}
 	// Set new action
-
 	SetProperty(P_Action, C4VPropList(Act));
 	Action.Phase=Action.PhaseDelay=0;
 	// Set target if specified
@@ -3015,12 +3018,10 @@ int32_t C4Object::GetProcedure() const
 	return pActionDef->GetPropertyP(P_Procedure);
 }
 
-void GrabLost(C4Object *cObj)
+void GrabLost(C4Object *cObj, C4Object *prev_target)
 {
 	// Grab lost script call on target (quite hacky stuff...)
-	cObj->Action.Target->Call(PSF_GrabLost);
-	// Also, delete the target from the clonk's action (Newton)
-	cObj->Action.Target = NULL;
+	if (prev_target && prev_target->Status) prev_target->Call(PSF_GrabLost);
 	// Clear commands down to first PushTo (if any) in command stack
 	for (C4Command *pCom=cObj->Command; pCom; pCom=pCom->Next)
 		if (pCom->Next && pCom->Next->Command==C4CMD_PushTo)
@@ -3038,6 +3039,7 @@ void C4Object::NoAttachAction()
 	if (GetAction())
 	{
 		int32_t iProcedure = GetProcedure();
+		C4Object *prev_target = Action.Target;
 		// Scaling upwards: corner scale
 		if (iProcedure == DFA_SCALE && Action.ComDir != COMD_Stop && ComDirLike(Action.ComDir, COMD_Up))
 			if (ObjectActionCornerScale(this)) return;
@@ -3054,7 +3056,7 @@ void C4Object::NoAttachAction()
 				{ if (ObjectActionJump(this,itofix(-1),Fix0,false)) return; }
 		}
 		// Pushing: grab loss
-		if (iProcedure==DFA_PUSH) GrabLost(this);
+		if (iProcedure==DFA_PUSH) GrabLost(this, prev_target);
 		// Else jump
 		ObjectActionJump(this,xdir,ydir,false);
 	}
@@ -3348,7 +3350,7 @@ bool DoBridge(C4Object *clk)
 			clk->Action.Time = 0;
 			if (fWall && clk->Action.ComDir==COMD_Up)
 			{
-				// special for roof above Clonk: The nonmoving roof is started at bridgelength before the Clonkl
+				// special for roof above Clonk: The nonmoving roof is started at bridgelength before the Clonk
 				// so, when interrupted, an action time halfway through the action must be set
 				clk->Action.Time = iBridgeTime;
 				iBridgeTime += iBridgeTime;
@@ -3375,8 +3377,18 @@ static void DoGravity(C4Object *cobj)
 		if (cobj->xdir>+FloatFriction) cobj->xdir-=FloatFriction;
 		if (cobj->rdir<-FloatFriction) cobj->rdir+=FloatFriction;
 		if (cobj->rdir>+FloatFriction) cobj->rdir-=FloatFriction;
-		if (!GBackLiquid(cobj->GetX(),cobj->GetY()-1+ cobj->Def->Float*cobj->GetCon()/FullCon -1 ))
-			if (cobj->ydir<0) cobj->ydir=0;
+		// Reduce upwards speed when about to leave liquid to prevent eternal moving up and down.
+		// Check both for no liquid one and two pixels above the surface, because the object could
+		// skip one pixel as its speed can be more than 100.
+		int32_t y_float = cobj->GetY() - 1 + cobj->Def->Float * cobj->GetCon() / FullCon;
+		if (!GBackLiquid(cobj->GetX(), y_float - 1) || !GBackLiquid(cobj->GetX(), y_float - 2))
+			if (cobj->ydir < 0)
+			{
+				// Reduce the upwards speed and set to zero for small values to prevent fluctuations.
+				cobj->ydir /= 2;
+				if (Abs(cobj->ydir) < C4REAL100(10))
+					cobj->ydir = 0;
+			}
 	}
 	// Free fall gravity
 	else if (~cobj->Category & C4D_StaticBack)
@@ -3759,10 +3771,11 @@ void C4Object::ExecAction()
 		if (!Inside(GetX()-sax,-iPushRange,sawdt-1+iPushRange)
 		    || !Inside(GetY()-say,-iPushRange,sahgt-1+iPushRange))
 		{
+			C4Object *prev_target = Action.Target;
 			// Wait command (why, anyway?)
 			StopActionDelayCommand(this);
 			// Grab lost action
-			GrabLost(this);
+			GrabLost(this, prev_target);
 			// Done
 			return;
 		}
@@ -3833,10 +3846,12 @@ void C4Object::ExecAction()
 		if (!Inside(GetX()-sax,-iPushRange,sawdt-1+iPushRange)
 		    || !Inside(GetY()-say,-iPushRange,sahgt-1+iPushRange))
 		{
+			// Remember target. Will be lost on changing action.
+			C4Object *prev_target = Action.Target;
 			// Wait command (why, anyway?)
 			StopActionDelayCommand(this);
 			// Grab lost action
-			GrabLost(this);
+			GrabLost(this, prev_target);
 			// Lose target
 			Action.Target=NULL;
 			// Done
@@ -4387,7 +4402,7 @@ void C4Object::DirectComContents(C4Object *pTarget, bool fDoCalls)
 	// default action
 	if (!(Contents.ShiftContents(pTarget))) return;
 	// Selection sound
-	if (fDoCalls) if (!Contents.GetObject()->Call("~Selection", &C4AulParSet(C4VObj(this)))) StartSoundEffect("Grab",false,100,this);
+	if (fDoCalls) if (!Contents.GetObject()->Call("~Selection", &C4AulParSet(C4VObj(this)))) StartSoundEffect("Clonk::Action::Grab",false,100,this);
 	// update menu with the new item in "put" entry
 	if (Menu && Menu->IsActive() && Menu->IsContextMenu())
 	{

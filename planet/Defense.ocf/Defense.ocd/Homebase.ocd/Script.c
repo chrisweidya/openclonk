@@ -17,6 +17,7 @@ local is_selling; // temp to prevent recursion from object removal
 
 // Technology fields - queried by objects using them
 local tech_load_speed_multiplier = 100;
+local tech_shooting_strength_multiplier = 0;
 local tech_life = 1;
 
 static g_quickbuy_items;
@@ -120,6 +121,14 @@ public func UpdateIndexedItem(int index)
 	return false;
 }
 
+public func GetEntryByID(def id)
+{
+	for (var i = 0; i < GetLength(base_material); i++)
+		if (base_material[i].item == id)
+			return i;
+	return nil;
+}
+
 public func GetEntryInformation(int entry_idx)
 {
 	// Fill with current information for this entry
@@ -201,12 +210,13 @@ public func OnBuySelection(int callback_idx)
 		else
 		{
 			// Regular item: Buy into inventory
-			// Get rid of current item (unless it's the same we already want)
+			// Get rid of current item
+			if (last_item)
+				SellItem(last_item);
 			var item;
-			if (last_item) SellItem(last_item);
 			// Create item
 			if (!item) item = cursor->CreateContents(entry.item);
-			if (!item) return false;
+			if (!item) return false; // ???
 			// for later sale
 			item.GidlValue = entry.cost;
 			// ammo up!
@@ -219,6 +229,11 @@ public func OnBuySelection(int callback_idx)
 					ammo->~SetInfiniteStackCount();
 				else if (stack_count > 0)
 					ammo->SetStackCount(stack_count);
+			}
+			// stack count
+			if (entry.infinite && item)
+			{
+				item->SetInfiniteStackCount();
 			}
 		}
 	}
@@ -260,6 +275,18 @@ public func SellItem(item)
 	var success = item->RemoveObject();
 	is_selling = false;
 	return success;
+}
+
+// Makes an item available even though the requirements aren't yet met
+public func SetItemAvailable(int entry_idx)
+{
+	// Safety
+	var entry = base_material[entry_idx];
+	if (!entry) return false;
+
+	entry.requirements = nil;
+	entry.cost = nil;
+	return true;
 }
 
 public func OnOwnerChanged(new_owner)
@@ -331,6 +358,17 @@ private func GainLoadSpeed(proplist entry, int tier)
 	// Update all current weapons
 	for (var weapon in FindObjects(Find_Owner(GetOwner()), Find_Func("Gidl_IsRangedWeapon")))
 		weapon->Gidl_UpdateLoadTimes();
+	return true;
+}
+
+private func GainShootingStrength(proplist entry, int tier)
+{
+	// Increase player's shooting strength
+	// Weapon get plus x percent shooting strength
+	tech_shooting_strength_multiplier = [10, 20, 30, 40][tier];
+	// Update all current weapons
+	for (var weapon in FindObjects(Find_Owner(GetOwner()), Find_Func("Gidl_IsRangedWeapon")))
+		weapon->Guardians_UpdateShootingStrength();
 	return true;
 }
 

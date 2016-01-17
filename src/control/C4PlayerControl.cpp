@@ -734,6 +734,21 @@ void C4PlayerControlAssignmentSets::CompileFunc(StdCompiler *pComp)
 	}
 	pComp->Value(mkNamingAdapt(clear_previous, "ClearPrevious", false));
 	pComp->Value(mkSTLContainerAdapt(Sets, StdCompiler::SEP_NONE));
+
+	// Remove all sets that have gamepad controls, since gamepad
+	// support is broken at the moment. Disable this once we have gamepad
+	// support again!
+	if (pComp->isCompiler())
+	{
+		AssignmentSetList::iterator iter = Sets.begin();
+		for (AssignmentSetList::iterator iter = Sets.begin(); iter != Sets.end(); )
+		{
+			if (iter->HasGamepad())
+				iter = Sets.erase(iter);
+			else
+				++iter;
+		}
+	}
 }
 
 bool C4PlayerControlAssignmentSets::operator ==(const C4PlayerControlAssignmentSets &cmp) const
@@ -1267,8 +1282,10 @@ bool C4PlayerControl::ExecuteControlScript(int32_t iControl, C4ID idControlExtra
 	{
 		x = rKeyExtraData.game_x; y = rKeyExtraData.game_y;
 	}
+	C4Value vx = (x == C4KeyEventData::KeyPos_None) ? C4VNull : C4VInt(x);
+	C4Value vy = (y == C4KeyEventData::KeyPos_None) ? C4VNull : C4VInt(y);
 	// exec control function
-	C4AulParSet Pars(C4VInt(iPlr), C4VInt(iControl), C4VPropList(C4Id2Def(idControlExtraData)), C4VInt(x), C4VInt(y), C4VInt(rKeyExtraData.iStrength), C4VBool(fRepeated), C4VBool(fUp));
+	C4AulParSet Pars(C4VInt(iPlr), C4VInt(iControl), C4VPropList(C4Id2Def(idControlExtraData)), vx, vy, C4VInt(rKeyExtraData.iStrength), C4VBool(fRepeated), C4VBool(fUp));
 	return ::ScriptEngine.GetPropList()->Call(PSF_PlayerControl, &Pars).getBool();
 }
 

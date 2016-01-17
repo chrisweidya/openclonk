@@ -9,6 +9,9 @@
 // has extra slot
 #include Library_HasExtraSlot
 
+// Initial velocity of the arrow
+local shooting_strength = 100;
+
 private func Hit()
 {
 	Sound("Hits::Materials::Wood::WoodHit?");
@@ -143,7 +146,7 @@ public func FinishedAiming(object clonk, int angle)
 		if(Contents(0)->~IsArrow())
 		{
 			var arrow = Contents(0)->TakeObject();
-			arrow->Launch(angle,100,clonk);
+			arrow->Launch(angle,shooting_strength,clonk);
 			Sound("Objects::Weapons::Bow::Shoot?");
 		}
 	}
@@ -220,14 +223,14 @@ func Deselection()
 public func IsWeapon() { return true; }
 public func IsArmoryProduct() { return true; }
 
-func Definition(def) {
-	SetProperty("PictureTransformation",Trans_Mul(Trans_Translate(-2000,-3000,-2000),Trans_Rotate(180,0,1,0),Trans_Rotate(-25,1,0,1)),def);
+func Definition(def)
+{
+	def.PictureTransformation = Trans_Mul(Trans_Translate(-4000,-2000,4000),Trans_Rotate(180,0,1,0),Trans_Rotate(-45,0,0,1));
 }
 
 local Name = "$Name$";
 local Description = "$Description$";
 local UsageHelp = "$UsageHelp$";
 local Collectible = 1;
-local Rebuy = true;
 local BlastIncinerate = 30;
 local ContactIncinerate = 5;

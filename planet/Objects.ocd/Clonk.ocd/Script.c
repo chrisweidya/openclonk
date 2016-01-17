@@ -112,17 +112,20 @@ protected func CatchBlow()
 	
 protected func Grab(object pTarget, bool fGrab)
 {
-	Sound("Grab");
+	if (fGrab)
+		Sound("Clonk::Action::Grab");
+	else
+		Sound("Clonk::Action::UnGrab");
 }
 
 protected func Get()
 {
-	Sound("Grab");
+	Sound("Clonk::Action::Grab");
 }
 
 protected func Put()
 {
-	Sound("Grab");
+	Sound("Clonk::Action::Grab");
 }
 
 protected func Death(int killed_by)
@@ -266,6 +269,11 @@ public func RejectInteractionMenu(object to)
 	if (!GetAlive())
 		return Format("$MsgDeadClonk$", GetName());
 	return _inherited(to, ...);
+}
+
+public func GetSurroundingEntryMessage(object for_clonk)
+{
+	if (!GetAlive()) return Format("{{Clonk_Grave}} %s", Clonk_Grave->GetInscriptionForClonk(this));
 }
 
 /* Carry items on the clonk */
@@ -502,8 +510,12 @@ public func OnInteractionMenuOpen(object menu)
 {
 	_inherited(menu, ...);
 	
-	var surrounding = CreateObject(Helper_Surrounding);
-	surrounding->InitFor(this, menu);
+	// Allow picking up stuff from the surrounding only if not in a container itself.
+	if (!Contained())
+	{
+		var surrounding = CreateObject(Helper_Surrounding);
+		surrounding->InitFor(this, menu);
+	}
 }
 
 /* Mesh transformations */
@@ -668,18 +680,18 @@ Helper functions to play some sounds. This are encapsulated here in case sound n
 */
 public func PlaySoundConfirm(...)
 {
-	if (skin_name != "Farmer")
+	if (GetSoundSkinName() != "Farmer")
 		PlaySkinSound("Confirm*", ...);
 }
 public func PlaySoundDecline(...)
 {
-	if (skin_name != "Farmer")
+	if (GetSoundSkinName() != "Farmer")
 		PlaySkinSound("Decline*", ...);
 }
 // Doubtful sound, e.g. when trying a clearly impossible action.
 public func PlaySoundDoubt(...)
 {
-	if (skin_name != "Farmer")
+	if (GetSoundSkinName() != "Farmer")
 		PlaySkinSound("Doubt*", ...);
 }
 
@@ -687,22 +699,22 @@ public func PlaySoundHurt(...) { PlaySkinSound("Hurt*", ...); }
 // Sound that is supposed to be funny in situations where the Clonk maybe did something "evil" like killing a teammate.
 public func PlaySoundTaunt(...)
 {
-	if (skin_name == "Alchemist")
+	if (GetSoundSkinName() == "Alchemist")
 		PlaySkinSound("EvilConfirm*", ...);
-	else if (skin_name == "Steampunk")
+	else if (GetSoundSkinName() == "Steampunk")
 		PlaySkinSound("Laughter*", ...);
 }
 // Surprised sounds, e.g. when catching fire.
 public func PlaySoundShock(...)
 {
-	if (skin_name == "Steampunk" || skin_name == "Adventurer")
+	if (GetSoundSkinName() == "Steampunk" || GetSoundSkinName() == "Adventurer")
 		PlaySkinSound("Shock*", ...);
 }
 public func PlaySoundScream() { PlaySkinSound("Scream*"); }
 // General idle sounds, played when also playing an idle animation.
 public func PlaySoundIdle(...)
 {
-	if (skin_name == "Steampunk")
+	if (GetSoundSkinName() == "Steampunk")
 		PlaySkinSound("Singing*", ...);
 }
 //Portrait definition of this Clonk for messages
@@ -716,6 +728,8 @@ func SetPortrait(proplist custom_portrait)
 	this.portrait = custom_portrait;
 	return true;
 }
+
+public func CommandFailure() { return PlaySoundDoubt(); } // Callback from the engine when a command failed
 
 /* Magic */
 
@@ -996,6 +1010,7 @@ Swim = {
 //	SwimOffset = -5,
 	StartCall = "StartSwim",
 	AbortCall = "StopSwim",
+	Sound = "Clonk::Movement::DivingLoop*",
 },
 Hangle = {
 	Prototype = Action,
@@ -1171,9 +1186,7 @@ local JumpSpeed = 400;
 local ThrowSpeed = 294;
 local NoBurnDecay = 1;
 local ContactIncinerate = 10;
-
-// Clonks are always shown in the interaction menu.
-public func HasInteractionMenu() { return true; }
+local BorderBound = C4D_Border_Sides;
 
 func Definition(def) {
 	// Set perspective

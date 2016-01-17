@@ -10,14 +10,14 @@ func InitializeObjects()
 	var groundOffset = GetMapDataFromPlayer();
 	baseHeight = (LandscapeHeight() / 2 + groundOffset * LandscapeHeight() / 8);
 	seed = GetSeed();
-	/*
+	
 	var respawn = CreateObject(Rule_BaseRespawn);
 	respawn->SetInventoryTransfer(true);
 	respawn->SetFreeCrew(true);
 
 	var flagpole = CreateObjectAbove(Flagpole, LandscapeWidth() / 2, baseHeight);
 	flagpole->SetNeutral(true);
-	*/
+	
 	var cabin = CreateObjectAbove(WoodenCabin, LandscapeWidth() / 2 - 120, baseHeight);
 	cabin->SetObjectLayer(cabin);
 
@@ -53,7 +53,7 @@ private func InitLostNPC(int seed) {
 	var outer = 25;
 	var inner = 15;
 	DrawMaterialQuad("Sand", x - inner, y + inner, x + inner, y + inner, x + outer, y + outer, x - outer, y + outer);
-	DigFree(x, y, 15);
+	DigFree(x, y, 18);
 
 	//	lost_npc = CreateObjectAbove(Clonk, 600, baseHeight-5);
 	lost_npc = CreateObjectAbove(Clonk, x, y);

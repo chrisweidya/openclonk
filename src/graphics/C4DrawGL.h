@@ -49,6 +49,10 @@ private:
 // Uniform data we give the sprite shader (constants from its viewpoint)
 enum C4SS_Uniforms
 {
+	C4SSU_ProjectionMatrix, // 4x4
+	C4SSU_ModelViewMatrix,  // 4x4
+	C4SSU_NormalMatrix,     // 3x3, transpose-inverse of modelview matrix
+
 	C4SSU_ClrMod, // always
 	C4SSU_Gamma, // always
 
@@ -68,6 +72,23 @@ enum C4SS_Uniforms
 	C4SSU_CullMode, // for meshes
 
 	C4SSU_Count
+};
+
+// Attribute data for sprites and meshes
+enum C4SS_Attributes
+{
+	C4SSA_Position, // 2d for sprites, 3d for meshes
+	C4SSA_Normal,  // meshes only
+	C4SSA_TexCoord, // 2d
+	C4SSA_Color,    // sprites only, 4d
+
+	C4SSA_BoneIndices0,
+	C4SSA_BoneIndices1,
+
+	C4SSA_BoneWeights0,
+	C4SSA_BoneWeights1,
+
+	C4SSA_Count
 };
 
 // one OpenGL context
@@ -129,6 +150,10 @@ protected:
 	int iClrDpt;                // color depth
 	// texture for smooth lines
 	GLuint lines_tex;
+
+	// The orthographic projection matrix
+	StdProjectionMatrix ProjectionMatrix;
+
 	// programs for drawing points, lines, quads
 
 	// Sprite shaders -- there is a variety of shaders to avoid
@@ -150,15 +175,28 @@ protected:
 	C4Shader SpriteShaderLightBaseNormalMod2;
 	C4Shader SpriteShaderLightBaseNormalOverlay;
 	C4Shader SpriteShaderLightBaseNormalOverlayMod2;
+
+	// Generic VBOs for rendering arbitrary points, lines and
+	// triangles, used by PerformMultiBlt. Use more than one VBO, so that
+	// two PerformMultiBlt calls in quick succession can use two different
+	// buffers. Otherwise, the second call would need to wait until the
+	// rendering pipeline has actually drained the buffer. Each buffer
+	// starts with a fixed size. If more than this many vertices need to
+	// be rendered (can happen e.g. for PXS), then the buffer is resized.
+	static const unsigned int N_GENERIC_VBOS = 16;
+	static const unsigned int GENERIC_VBO_SIZE = 3 * 64; // vertices
+	GLuint GenericVBOs[N_GENERIC_VBOS];
+	unsigned int GenericVBOSizes[N_GENERIC_VBOS];
+	unsigned int CurrentVBO;
+
 public:
 	// General
 	void Clear();
 	void Default();
-	virtual bool IsOpenGL() { return true; }
-	virtual bool IsShaderific() { return true; }
 	virtual bool OnResolutionChanged(unsigned int iXRes, unsigned int iYRes); // reinit clipper for new resolution
 	// Clipper
 	bool UpdateClipper(); // set current clipper to render target
+	const StdProjectionMatrix& GetProjectionMatrix() const { return ProjectionMatrix; }
 	virtual bool PrepareMaterial(StdMeshMatManager& mat_manager, StdMeshMaterialLoader& loader, StdMeshMaterial& mat);
 	// Surface
 	virtual bool PrepareRendering(C4Surface * sfcToSurface); // check if/make rendering possible to given surface
@@ -169,15 +207,14 @@ public:
 	virtual CStdGLCtx *CreateContext(HWND hWindow, C4AbstractApp *pApp);
 #endif
 	// Blit
-	void SetupMultiBlt(C4ShaderCall& call, const C4BltTransform* pTransform, GLuint baseTex, GLuint overlayTex, GLuint normalTex, DWORD dwOverlayModClr);
-	void ResetMultiBlt();
+	void SetupMultiBlt(C4ShaderCall& call, const C4BltTransform* pTransform, GLuint baseTex, GLuint overlayTex, GLuint normalTex, DWORD dwOverlayModClr, StdProjectionMatrix* out_modelview);
 	virtual void PerformMesh(StdMeshInstance &instance, float tx, float ty, float twdt, float thgt, DWORD dwPlayerColor, C4BltTransform* pTransform);
 	void FillBG(DWORD dwClr=0);
 	// Drawing
 	virtual void PerformMultiPix(C4Surface* sfcTarget, const C4BltVertex* vertices, unsigned int n_vertices, C4ShaderCall* shader_call);
 	virtual void PerformMultiLines(C4Surface* sfcTarget, const C4BltVertex* vertices, unsigned int n_vertices, float width, C4ShaderCall* shader_call);
 	virtual void PerformMultiTris(C4Surface* sfcTarget, const C4BltVertex* vertices, unsigned int n_vertices, const C4BltTransform* pTransform, C4TexRef* pTex, C4TexRef* pOverlay, C4TexRef* pNormal, DWORD dwOverlayClrMod, C4ShaderCall* shader_call);
-	void PerformMultiBlt(C4Surface* sfcTarget, DrawOperation op, const C4BltVertex* vertices, unsigned int n_vertices, bool has_tex);
+	void PerformMultiBlt(C4Surface* sfcTarget, DrawOperation op, const C4BltVertex* vertices, unsigned int n_vertices, bool has_tex, C4ShaderCall* shader_call);
 	// device objects
 	bool RestoreDeviceObjects();    // restore device dependent objects
 	bool InvalidateDeviceObjects(); // free device dependent objects
@@ -195,6 +232,7 @@ protected:
 	bool CreatePrimarySurfaces(unsigned int iXRes, unsigned int iYRes, int iColorDepth, unsigned int iMonitor);
 
 	bool CheckGLError(const char *szAtOp);
+	const char* GLErrorString(GLenum code);
 	virtual bool Error(const char *szMsg);
 
 	friend class C4Surface;
@@ -205,6 +243,7 @@ protected:
 	friend class C4FullScreen;
 	friend class C4Window;
 	friend class C4ShaderCall;
+	friend class C4FoWRegion;
 };
 
 // Global access pointer

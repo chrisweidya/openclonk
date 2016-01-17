@@ -152,18 +152,20 @@ public func IsProjectileTarget()
 	return true;
 }
 
-public func OnProjectileHit()
+public func OnProjectileHit(object projectile)
 {
 	// Pop the balloon and tumble the rider.
 	CreateParticle("Air", 0, -10, PV_Random(-10, 10), PV_Random(-10, 10), 10, Particles_Air(), 30);
 	Sound("Objects::Balloon::Pop");
-	if (rider)
-	{
-		rider->SetAction("Tumble");
-		rider->SetSpeed(GetXDir(), GetYDir());
-	}
 	if (parent)
 		parent->RemoveObject();
+	// Drop the rider and set its killer in case it tumbles out of the map.
+	if (rider)
+	{
+		rider->SetSpeed(GetXDir(), GetYDir());
+		rider->SetKiller(projectile->GetController());
+		rider->SetAction("Tumble");
+	}
 	RemoveObject();
 }
 
@@ -211,3 +213,4 @@ local ActMap = {
 	},
 };
 local Name = "$Name$";
+local BorderBound = C4D_Border_Sides;

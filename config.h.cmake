@@ -1,3 +1,4 @@
+
 /* Generate minidumps on crash */
 #cmakedefine HAVE_DBGHELP 1
 
@@ -30,18 +31,6 @@
 
 /* Define if you have POSIX threads libraries and header files. */
 #cmakedefine HAVE_PTHREAD 1
-
-/* Define to 1 if you have the <readline.h> header file. */
-#cmakedefine HAVE_READLINE_H 1
-
-/* Define if your readline library has \`add_history' */
-#cmakedefine HAVE_READLINE_HISTORY 1
-
-/* Define to 1 if you have the <readline/history.h> header file. */
-#cmakedefine HAVE_READLINE_HISTORY_H 1
-
-/* Define to 1 if you have the <readline/readline.h> header file. */
-#cmakedefine HAVE_READLINE_READLINE_H 1
 
 /* Define to 1 if you have SDL. */
 #cmakedefine HAVE_SDL 1
@@ -87,8 +76,6 @@
 
 /* Define to 1 if you have the `__mingw_vasprintf' function. */
 #cmakedefine HAVE___MINGW_VASPRINTF 1
-
-#cmakedefine HAVE_VFW32
 
 /* Define to 1 if you have the <X11/extensions/Xrandr.h> header file. */
 #cmakedefine HAVE_X11_EXTENSIONS_XRANDR_H 1
@@ -146,4 +133,8 @@
 #undef USE_X11
 #undef WITH_AUTOMATIC_UPDATE
 #undef WITH_DEVELOPER_MODE
+
+#undef AUDIO_TK
+#define AUDIO_TK AUDIO_TK_NONE
+
 #endif

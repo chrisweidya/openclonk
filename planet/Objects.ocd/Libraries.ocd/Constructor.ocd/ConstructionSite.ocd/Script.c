@@ -220,21 +220,20 @@ public func Ejection(object obj) { return Collection2(nil); }
 
 private func ShowMissingComponents()
 {
-	if(definition == nil)
+	if (definition == nil)
 	{
 		Message("");
 		return;
 	}
 		
 	var stuff = GetMissingComponents();
-	//var msg = "Construction Needs:";
 	var msg = "@";
-	for(var s in stuff)
-		if(s.count > 0)
+	for (var s in stuff)
+		if (s.count > 0)
 			msg = Format("%s %dx{{%i}}", msg, s.count, s.id);
-	
-	//Message("@%s",msg);
-	CustomMessage(msg, this, NO_OWNER, 0, 23);
+	// Ensure that the message is not below the bottom of the map.
+	var dy = 23 - Max(23 + GetY() - LandscapeHeight(), 0) / 2;
+	CustomMessage(msg, this, NO_OWNER, 0, dy);
 }
 
 private func GetMissingComponents()
@@ -282,7 +281,7 @@ private func StartConstructing()
 	// find all objects on the bottom of the area that are not stuck
 	var wdt = GetObjWidth();
 	var hgt = GetObjHeight();
-	var lying_around = FindObjects(Find_Or(Find_Category(C4D_Vehicle), Find_Category(C4D_Object), Find_Category(C4D_Living)),Find_InRect(-wdt/2 - 2, -hgt, wdt + 2, hgt + 12), Find_Not(Find_OCF(OCF_InFree)),Find_NoContainer());
+	var lying_around = FindObjects(Find_Category(C4D_Vehicle | C4D_Object | C4D_Living), Find_AtRect(-wdt/2 - 2, -hgt, wdt + 2, hgt + 12), Find_OCF(OCF_InFree), Find_NoContainer());
 	
 	// create the construction, below surface constructions don't perform any checks.
 	// uncancellable sites (for special game goals) are forced and don't do checks either

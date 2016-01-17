@@ -9,6 +9,9 @@
 //Uses the extra slot library
 #include Library_HasExtraSlot
 
+// Initial velocity of the bomb
+local shooting_strength = 75;
+
 func Hit()
 {
 	Sound("Hits::GeneralHit?");
@@ -103,7 +106,8 @@ func ControlUseStart(object clonk, int x, int y)
 // Callback from the clonk when loading is finished
 public func FinishedLoading(object clonk)
 {
-	SetProperty("PictureTransformation",Trans_Mul(Trans_Translate(500,1000,-000),Trans_Rotate(130,0,1,0),Trans_Rotate(20,0,0,1)));
+	// Change picture to indicate being loaded.
+	this.PictureTransformation = Trans_Mul(Trans_Translate(-3000, 3000, 4000),Trans_Rotate(-45,0,0,1),Trans_Rotate(130,0,1,0));
 	loaded = true;
 	if(holding) clonk->StartAim(this);
 	return holding; // false means stop here and reset the clonk
@@ -156,12 +160,13 @@ private func FireWeapon(object clonk, int angle)
 	var IX=Sin(180-angle,MuzzleFront);
 	var IY=Cos(180-angle,MuzzleUp)+MuzzleOffset;
 
-	shot->LaunchProjectile(angle, 0, 75, IX, IY);
+	shot->LaunchProjectile(angle, 0, shooting_strength, IX, IY);
 	shot->~Fuse(true);
 	shot->SetController(clonk->GetController());
 
 	loaded = false;
-	SetProperty("PictureTransformation",Trans_Mul(Trans_Translate(1500,0,-1500),Trans_Rotate(170,0,1,0),Trans_Rotate(30,0,0,1)));
+	// Reset transformation to indicate empty grenade launcher.
+	this.PictureTransformation = this.Prototype.PictureTransformation;
 
 	Sound("Objects::Weapons::Musket::GunShoot?");
 
@@ -188,12 +193,12 @@ public func IsArmoryProduct() { return true; }
 
 
 
-func Definition(def) {
-	SetProperty("PictureTransformation",Trans_Mul(Trans_Translate(1500,0,-1500),Trans_Rotate(170,0,1,0),Trans_Rotate(30,0,0,1)),def);
+func Definition(def)
+{
+	def.PictureTransformation = Trans_Mul(Trans_Translate(-3000, 1000, 1500),Trans_Rotate(170,0,1,0),Trans_Rotate(30,0,0,1));
 }
 
 local Name = "$Name$";
 local Description = "$Description$";
 local UsageHelp = "$UsageHelp$";
 local Collectible = 1;
-local Rebuy = true;

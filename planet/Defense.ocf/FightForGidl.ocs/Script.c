@@ -25,10 +25,10 @@ static shared_wealth_remainder;
 func Initialize()
 {
 	// dev stuff (we will forget to turn this off for release)
-	AddMsgBoardCmd("waveinfo", "GameCall(\"ShowWaveInfo\")");
-	AddMsgBoardCmd("next", "GameCall(\"SetNextWave\", \"%s\")");
-	AddMsgBoardCmd("nextwait", "GameCall(\"SetNextWave\", \"%s\", true)");
-	AddMsgBoardCmd("scrooge", "GameCall(\"DoWealthForAll\", 1000000000)");
+	//AddMsgBoardCmd("waveinfo", "GameCall(\"ShowWaveInfo\")");
+	//AddMsgBoardCmd("next", "GameCall(\"SetNextWave\", \"%s\")");
+	//AddMsgBoardCmd("nextwait", "GameCall(\"SetNextWave\", \"%s\", true)");
+	//AddMsgBoardCmd("scrooge", "GameCall(\"DoWealthForAll\", 1000000000)");
 	// Init door dummies
 	g_doorleft.dummy_target = g_doorleft->CreateObject(DoorDummy, -6, 6);
 	g_doorright.dummy_target = g_doorright->CreateObject(DoorDummy, +6, 6);
@@ -103,8 +103,7 @@ func JoinPlayer(plr, prev_clonk)
 	clonk->DoEnergy(1000);
 	clonk->MakeInvincibleToFriendlyFire();
 	// contents
-	clonk.MaxContentsCount = CustomAI.Clonk_MaxContentsCount;
-	clonk.MaxContentsCountVal = 1;
+	clonk.MaxContentsCount = 1;
 	if (prev_clonk) TransferInventory(prev_clonk, clonk);
 	if (!clonk->ContentsCount())
 	{
@@ -123,7 +122,7 @@ func JoinPlayer(plr, prev_clonk)
 func FillHomebase(object homebase)
 {
 	// Quick buy items on hotkeys
-	homebase->SetQuickbuyItems([Hammer, Bow, Sword, Musket, GrenadeLauncher, nil, Firestone, IronBomb, nil, nil]);
+	homebase->SetQuickbuyItems([/*Hammer*/ nil, Bow, Sword, Musket, GrenadeLauncher, nil, Firestone, IronBomb, nil, nil]);
 
 	// Buy menu entries
 	homebase->AddCaption("$HomebaseWeapons$");
@@ -137,7 +136,7 @@ func FillHomebase(object homebase)
 
 	homebase->AddCaption("$HomebaseItems$");
 	homebase->AddHomebaseItem(new Homebase.ITEMTYPE_Consumable { item = Bread,     cost = 5  });
-	homebase->AddHomebaseItem(new Homebase.ITEMTYPE_Weapon { item = Hammer,    cost = 1000, desc = "$HomebaseDescHammer$", extra_width = 1 });
+	//homebase->AddHomebaseItem(new Homebase.ITEMTYPE_Weapon { item = Hammer,    cost = 1000, desc = "$HomebaseDescHammer$", extra_width = 1 });
 
 	homebase->AddCaption("$HomebaseTechnology$");
 	homebase->AddHomebaseItem(new Homebase.ITEMTYPE_Technology { name="$HomebaseAdvancedWeapons$", item = Icon_World,cost = 100, desc="$HomebaseDescAdvancedWeapons$", tech = "AdvancedWeapons" });

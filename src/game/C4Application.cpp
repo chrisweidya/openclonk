@@ -104,7 +104,7 @@ bool C4Application::DoInit(int argc, char * argv[])
 	Revision.Ref(C4REVISION);
 
 	// Engine header message
-	Log(C4ENGINEINFOLONG);
+	Log(C4ENGINECAPTION);
 	LogF("Version: %s %s (%s)", C4VERSION, C4_OS, Revision.getData());
 	LogF("ExePath: \"%s\"", Config.General.ExePath.getData());
 	LogF("SystemDataPath: \"%s\"", Config.General.SystemDataPath);
@@ -533,7 +533,7 @@ bool C4Application::PreInit()
 		if (Config.Graphics.ShowStartupMessages || Game.NetworkActive)
 		{
 			C4Facet cgo; cgo.Set(FullScreen.pSurface,0,0,C4GUI::GetScreenWdt(), C4GUI::GetScreenHgt());
-			GraphicsSystem.MessageBoard.Init(cgo,true);
+			GraphicsSystem.MessageBoard->Init(cgo,true);
 		}
 
 	// init loader: Black screen for first start if a video is to be shown; otherwise default spec
@@ -820,24 +820,8 @@ void C4Application::OnCommand(const char *szCmd)
 void C4Application::Activate()
 {
 #ifdef USE_WIN32_WINDOWS
-	// Activate the application to regain focus if it has been lost during loading.
-	// As this is officially not possible any more in new versions of Windows
-	// (BringWindowTopTop alone won't have any effect if the calling process is
-	// not in the foreground itself), we are using an ugly OS hack.
-	DWORD nForeThread = GetWindowThreadProcessId(GetForegroundWindow(), 0);
-	DWORD nAppThread = GetCurrentThreadId();
-	if (nForeThread != nAppThread)
-	{
-		AttachThreadInput(nForeThread, nAppThread, true);
-		BringWindowToTop(FullScreen.hWindow);
-		ShowWindow(FullScreen.hWindow, SW_SHOW);
-		AttachThreadInput(nForeThread, nAppThread, false);
-	}
-	else
-	{
-		BringWindowToTop(FullScreen.hWindow);
-		ShowWindow(FullScreen.hWindow, SW_SHOW);
-	}
+	BringWindowToTop(FullScreen.hWindow);
+	ShowWindow(FullScreen.hWindow, SW_SHOW);
 #endif
 }
 

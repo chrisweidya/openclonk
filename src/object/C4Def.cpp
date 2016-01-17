@@ -61,18 +61,18 @@ public:
 	{
 #ifndef USE_CONSOLE
 		// Add mesh-independent slices
-		shader.AddFragmentSlice(-1, "#define OPENCLONK\n#define OC_MESH");
-		shader.AddVertexSlice(-1, "#define OPENCLONK\n#define OC_MESH");
+		shader.AddDefine("OPENCLONK");
+		shader.AddDefine("OC_MESH");
 
-		if (ssc & C4SSC_MOD2) shader.AddFragmentSlice(-1, "#define OC_CLRMOD_MOD2");
-		if (ssc & C4SSC_LIGHT) shader.AddFragmentSlice(-1, "#define OC_DYNAMIC_LIGHT");
+		if (ssc & C4SSC_MOD2) shader.AddDefine("OC_CLRMOD_MOD2");
+		if (ssc & C4SSC_LIGHT) shader.AddDefine("OC_DYNAMIC_LIGHT");
 
 		// Note these are never set for meshes at the moment:
-		if (ssc & C4SSC_BASE) shader.AddFragmentSlice(-1, "#define OC_HAVE_BASE");
-		if (ssc & C4SSC_OVERLAY) shader.AddFragmentSlice(-1, "#define OC_HAVE_OVERLAY");
+		if (ssc & C4SSC_BASE) shader.AddDefine("OC_HAVE_BASE");
+		if (ssc & C4SSC_OVERLAY) shader.AddDefine("OC_HAVE_OVERLAY");
 
-		shader.LoadSlices(&::GraphicsResource.Files, "CommonShader.glsl");
-		shader.LoadSlices(&::GraphicsResource.Files, "ObjectShader.glsl");
+		shader.LoadFragmentSlices(&::GraphicsResource.Files, "CommonShader.glsl");
+		shader.LoadFragmentSlices(&::GraphicsResource.Files, "ObjectShader.glsl");
 #endif
 	}
 
@@ -107,7 +107,6 @@ void C4Def::DefaultDefCore()
 	Float=0;
 	ColorByOwner=0;
 	NoHorizontalMove=0;
-	BorderBound=0;
 	LiftTop=0;
 	GrabPutGet=0;
 	UprightAttach=0;
@@ -244,7 +243,6 @@ void C4Def::CompileFunc(StdCompiler *pComp)
 	pComp->Value(mkNamingAdapt(Float,                         "Float",              0                 ));
 	pComp->Value(mkNamingAdapt(ColorByOwner,                  "ColorByOwner",       0                 ));
 	pComp->Value(mkNamingAdapt(NoHorizontalMove,              "HorizontalFix",      0                 ));
-	pComp->Value(mkNamingAdapt(BorderBound,                   "BorderBound",        0                 ));
 	pComp->Value(mkNamingAdapt(LiftTop,                       "LiftTop",            0                 ));
 	pComp->Value(mkNamingAdapt(UprightAttach,                 "UprightAttach",      0                 ));
 	pComp->Value(mkNamingAdapt(GrowthType,                    "StretchGrowth",      0                 ));

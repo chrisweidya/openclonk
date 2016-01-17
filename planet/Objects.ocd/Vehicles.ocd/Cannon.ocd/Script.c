@@ -249,6 +249,7 @@ protected func DoFire(object iammo, object clonk, int angle)
 	iammo->SetR(r / angPrec);
 	iammo->SetRDir(-4 + Random(9));
 	iammo->LaunchProjectile(r, 17, Fire_Velocity, 0,0, angPrec);
+	iammo->SetController(clonk->GetController());
 	iammo->~Fuse();
 
 	//Particles
@@ -285,4 +286,4 @@ Roll = {
 local Name = "$Name$";
 local Description = "$Description$";
 local Touchable = 1;
-local Rebuy = true;
+local BorderBound = C4D_Border_Sides;

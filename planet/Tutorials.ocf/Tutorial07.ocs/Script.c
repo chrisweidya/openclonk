@@ -56,8 +56,9 @@ protected func OnGoalsFulfilled()
 private func InitMountain()
 {
 	// Shipyard with lantern and flagpole.
-	CreateObjectAbove(Flagpole, 55, 504);
+	CreateObjectAbove(Flagpole, 55, 504)->MakeInvincible();
 	var shipyard = CreateObjectAbove(Shipyard, 90, 504);
+	shipyard->MakeInvincible();
 	var lamp = shipyard->CreateContents(Lantern);
 	lamp->TurnOn();
 	// Indestructible airship.
@@ -72,6 +73,7 @@ private func InitMountain()
 	}
 	lorry->CreateContents(Pickaxe);
 	lorry->CreateContents(TeleGlove);
+	lorry->MakeInvincible();
 	return;
 }
 
@@ -86,10 +88,11 @@ private func InitRubyIsland()
 private func InitIslands()
 {
 	// Armory on the lower island with weaponry to kill bats.
-	CreateObjectAbove(WindGenerator, 700, 648);
+	CreateObjectAbove(WindGenerator, 700, 648)->MakeInvincible();
 	var armory = CreateObjectAbove(Armory, 654, 648);
 	armory->CreateContents(Wood, 10);
 	armory->CreateContents(Metal, 5);
+	armory->MakeInvincible();
 	// Flowers on two of the islands.
 	Flower->Place(12, Rectangle(200, 100, 300, 200));
 	Flower->Place(8, Rectangle(300, 300, 200, 200));
@@ -118,6 +121,15 @@ private func InitAnimals()
 	{
 		bat.MaxEnergy = 7000;
 		bat->DoEnergy(bat.MaxEnergy - bat->GetEnergy());
+	}
+	// Some fireflies attracted to trees on two islands.
+	var count = 0;
+	for (var tree in FindObjects(Find_ID(Tree_Deciduous), Find_Or(Find_AtRect(200, 100, 300, 200), Find_AtRect(300, 300, 200, 200)), Sort_Random()))
+	{
+		Firefly->SpawnSwarm(tree, RandomX(6, 12));
+		count++;
+		if (count > 4)
+			break;	
 	}
 	return;
 }
@@ -179,7 +191,7 @@ protected func InitializePlayer(int plr)
 	// Create tutorial guide, add messages, show first.
 	guide = CreateObjectAbove(TutorialGuide, 0, 0, plr);
 	guide->AddGuideMessage(Format("$MsgTutorialFindRubies$", interact, control_keys));
-	guide->ShowGuideMessage(0);
+	guide->ShowGuideMessage();
 	AddEffect("TutorialFindStalactite", nil, 100, 2);
 	return;
 }
@@ -204,7 +216,7 @@ global func FxGoalOutroStart(object target, proplist effect, int temp)
 		return FX_OK;	
 	// Show guide message congratulating.
 	guide->AddGuideMessage("$MsgTutorialCompleted$");
-	guide->ShowGuideMessage(5);	
+	guide->ShowGuideMessage();	
 	return FX_OK;
 }
 
@@ -236,7 +248,7 @@ global func FxTutorialFindStalactiteTimer(object target, proplist effect, int ti
 	if (clonk)
 	{
 		guide->AddGuideMessage(Format("$MsgTutorialParkAirship$"));
-		guide->ShowGuideMessage(1);
+		guide->ShowGuideMessage();
 		AddEffect("TutorialAirshipParked", nil, 100, 2);
 		return FX_Execute_Kill;
 	}
@@ -245,15 +257,15 @@ global func FxTutorialFindStalactiteTimer(object target, proplist effect, int ti
 
 global func FxTutorialAirshipParkedTimer(object target, proplist effect, int timer)
 {
-	var clonk = FindObject(Find_ID(Clonk), Find_Distance(30, 700, 230));
-	var airship = FindObject(Find_ID(Airship), Find_Distance(30, 700, 230));
+	var clonk = FindObject(Find_ID(Clonk), Find_Distance(30, 688, 200));
+	var airship = FindObject(Find_ID(Airship), Find_Distance(30, 688, 200));
 	if (clonk && airship)
 	{
 		var plr = clonk->GetOwner();
 		var left = GetPlayerControlAssignment(plr, CON_Left, true, true);
 		var right = GetPlayerControlAssignment(plr, CON_Right, true, true);
 		guide->AddGuideMessage(Format("$MsgTutorialLadderJump$", left, right));
-		guide->ShowGuideMessage(2);
+		guide->ShowGuideMessage();
 		AddEffect("TutorialOnStalactite", nil, 100, 2);
 		return FX_Execute_Kill;
 	}
@@ -265,7 +277,7 @@ global func FxTutorialOnStalactiteTimer(object target, proplist effect, int time
 	if (FindObject(Find_ID(Clonk), Find_InRect(810, 150, 24, 72)))
 	{
 		guide->AddGuideMessage("$MsgTutorialBlastGems$");
-		guide->ShowGuideMessage(3);
+		guide->ShowGuideMessage();
 		AddEffect("TutorialCollectGems", nil, 100, 2);
 		return FX_Execute_Kill;
 	}
@@ -277,7 +289,7 @@ global func FxTutorialCollectGemsTimer(object target, proplist effect, int timer
 	if (FindObject(Find_ID(Ruby)))
 	{
 		guide->AddGuideMessage("$MsgTutorialCollectGems$");
-		guide->ShowGuideMessage(4);
+		guide->ShowGuideMessage();
 		return FX_Execute_Kill;
 	}
 	return FX_OK;
@@ -287,7 +299,7 @@ protected func OnGuideMessageShown(int plr, int index)
 {
 	// Show airship parking space.
 	if (index == 1)
-		TutArrowShowPos(700, 240, 135);
+		TutArrowShowPos(688, 220, 135);
 	// Show dynamite placement location.
 	if (index == 3)
 		TutArrowShowPos(800, 200, 60);	
@@ -314,19 +326,23 @@ global func FxClonkRestoreStop(object target, effect, int reason, bool  temporar
 {
 	if (reason == 3 || reason == 4)
 	{
-		var restorer = CreateObjectAbove(ObjectRestorer, 0, 0, NO_OWNER);
+		var restorer = CreateObject(ObjectRestorer, 0, 0, NO_OWNER);
 		var x = BoundBy(target->GetX(), 0, LandscapeWidth());
 		var y = BoundBy(target->GetY(), 0, LandscapeHeight());
 		restorer->SetPosition(x, y);
 		var to_x = effect.to_x;
 		var to_y = effect.to_y;
 		var airship = FindObject(Find_ID(Airship));
-		to_x = airship->GetX();
-		to_y = airship->GetY();
+		if (airship)
+		{
+			to_x = airship->GetX();
+			to_y = airship->GetY();
+		}
 		// Respawn new clonk.
 		var plr = target->GetOwner();
-		var clonk = CreateObjectAbove(Clonk, 0, 0, plr);
+		var clonk = CreateObject(Clonk, 0, 0, plr);
 		clonk->GrabObjectInfo(target);
+		Rule_BaseRespawn->TransferInventory(target, clonk);
 		SetCursor(plr, clonk);
 		clonk->DoEnergy(100000);
 		restorer->SetRestoreObject(clonk, nil, to_x, to_y, 0, "ClonkRestore");

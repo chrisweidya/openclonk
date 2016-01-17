@@ -497,7 +497,7 @@ func FxIntWalkTimer(pTarget, effect)
 		effect.animation_id = PlayAnimation(anim, CLONK_ANIM_SLOT_Movement, GetWalkAnimationPosition(anim, 0), Anim_Linear(0, 0, 1000, 5, ANIM_Remove));
 	}
 	// The clonk has to stand, not making a pause animation yet and not doing other actions with the hands (e.g. loading the bow)
-	else if(anim == Clonk_WalkStand && !GetHandAction())
+	else if(anim == Clonk_WalkStand && !GetHandAction() && GetMenu() == nil)
 	{
 		if (effect.footstop_time) effect.footstep_time = 0;
 		if(!effect.idle_animation_time)
@@ -510,7 +510,7 @@ func FxIntWalkTimer(pTarget, effect)
 				var rand = Random(GetLength(Clonk_IdleActions));
 				PlayAnimation(Clonk_IdleActions[rand][0], CLONK_ANIM_SLOT_Movement, Anim_Linear(0, 0, GetAnimationLength(Clonk_IdleActions[rand][0]), Clonk_IdleActions[rand][1], ANIM_Remove), Anim_Linear(0, 0, 1000, 5, ANIM_Remove));
 				effect.idle_animation_time = Clonk_IdleActions[rand][1]-5;
-				if (!Random(5))
+				if (!Random(10))
 					this->PlaySoundIdle();
 			}
 		}
@@ -585,7 +585,13 @@ func CheckScaleTop()
 {
 	// Test whether the clonk has reached a top corner
 	// That is, the leg vertices are the only ones attached to the wall
-	if(GBackSolid(-3+6*GetDir(),-3) || GBackSolid(-5+10*GetDir(),2)) return false;
+
+	// Check the head vertex
+	if (GBackSolid(-1+2*GetDir(),-7)) return false;
+	// Check the shoulder vertices
+	if(GBackSolid(-3+6*GetDir(),-3)) return false;
+	// Check the hip vertices
+	if(GBackSolid(-5+10*GetDir(),2)) return false;
 	return true;
 }
 
@@ -608,6 +614,7 @@ func FxIntScaleTimer(target, number, time)
 		dist *= 100;
 		// add the fractional part of the position (dist counts in the opposite direction of y)
 		dist -= GetY(100)-GetY()*100;
+		dist = BoundBy(dist, 0, GetAnimationLength("ScaleTop"));
 		if(number.animation_mode != 1)
 		{
 			number.animation_id = PlayAnimation("ScaleTop", CLONK_ANIM_SLOT_Movement, Anim_Const(GetAnimationLength("ScaleTop")*dist/800), Anim_Linear(0, 0, 1000, 5, ANIM_Remove));
@@ -1015,29 +1022,32 @@ func FxIntSwimTimer(pTarget, effect, iTime)
 	// Swimming
 	else if(!GBackSemiSolid(0, -5))
 	{
-		var percent = GetAnimationPosition(GetRootAnimation(5))*200/GetAnimationLength("Swim");
-		percent = (percent%100);
-		if( percent < 40 )
+		if (GBackLiquid()) // re-check water background before effects to prevent waves in wrong color
 		{
-			if(iTime%5 == 0)
+			var percent = GetAnimationPosition(GetRootAnimation(5)) * 200 / GetAnimationLength("Swim");
+			percent = (percent % 100);
+			if (percent < 40)
 			{
-				var phases = PV_Linear(0, 7);
-				if (GetDir() == 1) phases = PV_Linear(8, 15);
-				var color = GetAverageTextureColor(GetTexture(0, 0));
-				var particles =
+				if (iTime % 5 == 0)
 				{
-					Size = 16,
-					Phase = phases,
-					CollisionVertex = 750,
-					OnCollision = PC_Die(),
-					R = (color >> 16) & 0xff,
-					G = (color >>  8) & 0xff,
-					B = (color >>  0) & 0xff,
-					Attach = ATTACH_Front,
-				};
-				CreateParticle("Wave", 0, -4, (RandomX(-5,5)-(-1+2*GetDir())*4)/4, 0, 16, particles);
+					var phases = PV_Linear(0, 7);
+					if (GetDir() == 1) phases = PV_Linear(8, 15);
+					var color = GetAverageTextureColor(GetTexture(0, 0));
+					var particles =
+					{
+						Size = 16,
+						Phase = phases,
+						CollisionVertex = 750,
+						OnCollision = PC_Die(),
+						R = (color >> 16) & 0xff,
+						G = (color >> 8) & 0xff,
+						B = (color >> 0) & 0xff,
+						Attach = ATTACH_Front,
+					};
+					CreateParticle("Wave", 0, -4, (RandomX(-5, 5) - (-1 + 2 * GetDir()) * 4) / 4, 0, 16, particles);
+				}
+				Sound("Liquids::Swim?");
 			}
-			Sound("Liquids::Splash?");
 		}
 		// Animation speed by X
 		if(effect.animation_name != "Swim")
@@ -1170,7 +1180,7 @@ func OnAbortRoll()
 		RemoveEffect(nil, this, e);
 }
 
-func FxRollingTimer(object target, int num, int timer)
+func FxRollingTimer(object target, effect effect, int timer)
 {
 	if(GetContact(-1)) SetXDir(23 * lAnim.rollDir);
 

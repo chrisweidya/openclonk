@@ -100,20 +100,16 @@ C4Game::C4Game():
 		RoundResults(GameRoundResults),
 		Input(Control.Input),
 		KeyboardInput(C4KeyboardInput_Init()),
-		pFileMonitor(NULL),
 		pSec1Timer(new C4GameSec1Timer()),
 		fPreinited(false), StartupLogPos(0), QuitLogPos(0),
 		fQuitWithError(false),
-		GlobalSoundModifier(GameGlobalSoundModifier),
-		ScriptGuiRoot(0)
+		GlobalSoundModifier(GameGlobalSoundModifier)
 {
 	Default();
 }
 
 C4Game::~C4Game()
 {
-	// remove timer
-	delete pSec1Timer; pSec1Timer = NULL;
 	// make sure no startup gfx remain loaded
 	C4Startup::Unload();
 }
@@ -379,7 +375,7 @@ bool C4Game::Init()
 		{
 			// By reference
 			bool fSuccess = InitNetworkFromReference(*pJoinReference);
-			delete pJoinReference; pJoinReference = NULL;
+			pJoinReference.reset();
 			if (!fSuccess)
 				return false;
 		}
@@ -492,7 +488,7 @@ bool C4Game::Init()
 	FullScreen.CloseMenu();
 
 	// start statistics (always for now. Make this a config?)
-	pNetworkStatistics = new C4Network2Stats();
+	pNetworkStatistics.reset(new C4Network2Stats);
 
 	// clear loader screen
 	if (GraphicsSystem.pLoaderScreen)
@@ -534,7 +530,7 @@ void C4Game::SetScenarioFilename(const char * c4sfile)
 
 void C4Game::Clear()
 {
-	delete pFileMonitor; pFileMonitor = NULL;
+	pFileMonitor.reset();
 	// fade out music
 	Application.MusicSystem.FadeOut(2000);
 	// game no longer running
@@ -551,7 +547,7 @@ void C4Game::Clear()
 	}
 
 	// stop statistics
-	if (pNetworkStatistics) { delete pNetworkStatistics; pNetworkStatistics = NULL; }
+	pNetworkStatistics.reset();
 	C4AulProfiler::Abort();
 
 	// exit gui
@@ -579,7 +575,7 @@ void C4Game::Clear()
 	Landscape.Clear();
 	PXS.Clear();
 	if (pGlobalEffects) { delete pGlobalEffects; pGlobalEffects=NULL; }
-	if (ScriptGuiRoot) { delete ScriptGuiRoot; ScriptGuiRoot = nullptr; }
+	ScriptGuiRoot.reset();
 	Particles.Clear();
 	::MaterialMap.Clear();
 	TextureMap.Clear(); // texture map *MUST* be cleared after the materials, because of the patterns!
@@ -637,7 +633,7 @@ void C4Game::Clear()
 	*DefinitionFilenames = *DirectJoinAddress = *ScenarioFilename = *PlayerFilenames = 0;
 
 	// join reference
-	delete pJoinReference; pJoinReference=NULL;
+	pJoinReference.reset();
 
 	// okay, game cleared now. Remember log section
 	QuitLogPos = GetLogPos();
@@ -774,7 +770,7 @@ void C4Game::InitFullscreenComponents(bool fRunning)
 	// fullscreen message board
 	C4Facet cgo;
 	cgo.Set(FullScreen.pSurface, 0, 0, C4GUI::GetScreenWdt(), C4GUI::GetScreenHgt());
-	GraphicsSystem.MessageBoard.Init(cgo, !fRunning);
+	GraphicsSystem.MessageBoard->Init(cgo, !fRunning);
 	if (fRunning)
 	{
 		// running game: Message board upper board and viewports
@@ -1469,14 +1465,14 @@ void C4Game::Default()
 	*CurrentScenarioSection=0;
 	pGlobalEffects=NULL;
 	fResortAnyObject=false;
-	pNetworkStatistics = NULL;
+	pNetworkStatistics.reset();
 	::Application.MusicSystem.ClearGame();
 	DebugPort = 0;
 	DebugPassword.Clear();
 	DebugHost.Clear();
 	DebugWait = false;
 	assert(!ScriptGuiRoot);
-	ScriptGuiRoot = nullptr;
+	ScriptGuiRoot.reset();
 }
 
 void C4Game::Evaluate()
@@ -1989,7 +1985,7 @@ bool C4Game::QuickSave(const char *strFilename, const char *strTitle, bool fForc
 
 	// Wait message
 	Log(LoadResStr("IDS_HOLD_SAVINGGAME"));
-	GraphicsSystem.MessageBoard.EnsureLastMessage();
+	GraphicsSystem.MessageBoard->EnsureLastMessage();
 
 	// Save to target scenario file
 	C4GameSave *pGameSave;
@@ -2132,7 +2128,7 @@ bool C4Game::InitGame(C4Group &hGroup, bool fLoadSection, bool fLoadSky, C4Value
 
 		// file monitor
 		if (Config.Developer.AutoFileReload && Application.isEditor && !pFileMonitor)
-			pFileMonitor = new C4FileMonitor(FileMonitorCallback);
+			pFileMonitor.reset(new C4FileMonitor(FileMonitorCallback));
 
 		// system scripts
 		if (!InitScriptEngine())
@@ -2206,7 +2202,7 @@ bool C4Game::InitGame(C4Group &hGroup, bool fLoadSection, bool fLoadSky, C4Value
 
 		// prepare script menus
 		assert(!ScriptGuiRoot);
-		ScriptGuiRoot = new C4ScriptGuiWindow();
+		ScriptGuiRoot.reset(new C4ScriptGuiWindow);
 	}
 
 	// Load section sounds
@@ -2939,20 +2935,11 @@ bool C4Game::InitKeyboard()
 	KeyboardInput.RegisterKey(new C4CustomKey(C4KeyCodeEx(K_F5                ), "ZoomIn",                 KEYSCOPE_Generic,    new C4KeyCB  <C4ViewportList>  (::Viewports, &C4ViewportList::ViewportZoomIn)));
 	KeyboardInput.RegisterKey(new C4CustomKey(C4KeyCodeEx(K_F6                ), "ZoomOut",                KEYSCOPE_Generic,    new C4KeyCB  <C4ViewportList>  (::Viewports, &C4ViewportList::ViewportZoomOut)));
 
-	// messageboard
-	KeyboardInput.RegisterKey(new C4CustomKey(C4KeyCodeEx(K_UP,     KEYS_Shift), "MsgBoardScrollUp",       KEYSCOPE_Fullscreen, new C4KeyCB  <C4MessageBoard>  (GraphicsSystem.MessageBoard, &C4MessageBoard::ControlScrollUp)));
-	KeyboardInput.RegisterKey(new C4CustomKey(C4KeyCodeEx(K_DOWN,   KEYS_Shift), "MsgBoardScrollDown",     KEYSCOPE_Fullscreen, new C4KeyCB  <C4MessageBoard>  (GraphicsSystem.MessageBoard, &C4MessageBoard::ControlScrollDown)));
-
 	// debug mode & debug displays
 	KeyboardInput.RegisterKey(new C4CustomKey(C4KeyCodeEx(K_F5,   KEYS_Control), "DbgModeToggle",          KEYSCOPE_Generic,    new C4KeyCB  <C4Game>          (*this, &C4Game::ToggleDebugMode)));
 	KeyboardInput.RegisterKey(new C4CustomKey(C4KeyCodeEx(K_F6,   KEYS_Control), "DbgShowVtxToggle",       KEYSCOPE_Generic,    new C4KeyCB  <C4GraphicsSystem>(GraphicsSystem, &C4GraphicsSystem::ToggleShowVertices)));
 	KeyboardInput.RegisterKey(new C4CustomKey(C4KeyCodeEx(K_F7,   KEYS_Control), "DbgShowActionToggle",    KEYSCOPE_Generic,    new C4KeyCB  <C4GraphicsSystem>(GraphicsSystem, &C4GraphicsSystem::ToggleShowAction)));
 	KeyboardInput.RegisterKey(new C4CustomKey(C4KeyCodeEx(K_F8,   KEYS_Control), "DbgShow8BitSurface", KEYSCOPE_Generic,    new C4KeyCB  <C4GraphicsSystem>(GraphicsSystem, &C4GraphicsSystem::ToggleShow8BitSurface)));
-
-	// video recording - improve...
-	KeyboardInput.RegisterKey(new C4CustomKey(C4KeyCodeEx(K_ADD,      KEYS_Alt), "VideoEnlarge",           KEYSCOPE_Generic,    new C4KeyCB  <C4Video>         (GraphicsSystem.Video, &C4Video::Enlarge)));
-	KeyboardInput.RegisterKey(new C4CustomKey(C4KeyCodeEx(K_SUBTRACT, KEYS_Alt), "VideoReduce",            KEYSCOPE_Generic,    new C4KeyCB  <C4Video>         (GraphicsSystem.Video, &C4Video::Reduce)));
-	KeyboardInput.RegisterKey(new C4CustomKey(C4KeyCodeEx(K_MULTIPLY, KEYS_Alt), "VideoToggle",            KEYSCOPE_Generic,    new C4KeyCB  <C4Video>         (GraphicsSystem.Video, &C4Video::Toggle)));
 
 	// playback speed - improve...
 	KeyboardInput.RegisterKey(new C4CustomKey(C4KeyCodeEx(K_ADD,      KEYS_Shift), "GameSpeedUp",          KEYSCOPE_Generic,    new C4KeyCB  <C4Game>          (*this, &C4Game::SpeedUp)));
@@ -3367,7 +3354,7 @@ void C4Game::SetInitProgress(float fToProgress)
 	if (InitProgress > LastInitProgress)
 	{
 		LastInitProgress=InitProgress;
-		GraphicsSystem.MessageBoard.LogNotify();
+		GraphicsSystem.MessageBoard->LogNotify();
 	}
 	// Cheap hack to get the Console window updated while loading
 	Application.FlushMessages();

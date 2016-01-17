@@ -255,7 +255,7 @@ private func CreateSegment(int index, object previous)
 	return segment;
 }
 
-private func DeleteSegment(object segment, previous)
+private func DeleteSegment(object segment, object previous)
 {
 	if (segment)
 		segment->RemoveObject();
@@ -502,4 +502,3 @@ local Name = "$Name$";
 local UsageHelp = "$UsageHelp$";
 local Description = "$Description$";
 local Collectible = true;
-local Rebuy = true;

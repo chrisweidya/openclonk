@@ -52,8 +52,10 @@ func ControlUseStart(object clonk, int ix, int iy)
 	clonk->SetHandAction(1);
 	clonk->UpdateAttach();
 	clonk->PlayAnimation("StrikePickaxe", CLONK_ANIM_SLOT_Arms, Anim_Linear(0, 0, clonk->GetAnimationLength("StrikePickaxe"), Pickaxe_SwingTime, ANIM_Loop), Anim_Const(1000));
-
-	AddEffect("IntPickaxe", clonk, 1, 1, this);
+	var fx = AddEffect("IntPickaxe", clonk, 1, 1, this);
+	if (!fx) return false;
+	fx.x = ix;
+	fx.y = iy;
 	return true;
 }
 
@@ -67,12 +69,11 @@ func ControlUseHolding(object clonk, int new_x, int new_y)
 		clonk->PauseUse(this);
 		return true;
 	}
-
-	x = new_x; y = new_y;
+	var fx = GetEffect("IntPickaxe", clonk);
+	if (!fx) return clonk->CancelUse();
+	fx.x = new_x; fx.y = new_y;
 	return true;
 }
-
-local x, y;
 
 func ControlUseStop(object clonk, int ix, int iy)
 {
@@ -130,15 +131,17 @@ protected func DoSwing(object clonk, int ix, int iy)
 		{
 			var spark = Particles_Glimmer();
 			var pitch = nil;
+			var sound = "Objects::Pickaxe::Clang?";
 			if (GetMaterialVal("Density","Material",mat) > MaxPickDensity)
 			{
-				pitch = 60;
+				sound = "Objects::Pickaxe::ClangHard?";
+				pitch = RandomX(-20, 20);
 				spark.B = 255;
 				spark.R = PV_Random(0, 128, 2);
 				spark.OnCollision = PC_Bounce();
 			}
 			CreateParticle("StarSpark", x2*9/10,y2*9/10, PV_Random(-30, 30), PV_Random(-30, 30), PV_Random(10, 50), spark, 30);
-			Sound("Objects::Pickaxe::Clang?", nil, nil, nil, nil, nil, pitch);
+			Sound(sound, nil, nil, nil, nil, nil, pitch);
 		}
 		
 		// Do blastfree after landscape checks are made. Otherwise, mat always returns as "tunnel"
@@ -163,26 +166,45 @@ public func DigOutObject(object obj)
 		clonk->~DigOutObject(obj);
 }
 
-func FxIntPickaxeTimer(clonk, effect, time)
+public func FxIntPickaxeStart(object clonk, proplist effect, int temp)
+{
+	if (temp)
+		return FX_OK;
+	// Ensure ActMap is local and writable
+	if (clonk.ActMap == clonk.Prototype.ActMap) clonk.ActMap = new clonk.ActMap {};
+	// Disable scaling during usage.
+	effect.actmap_scale = clonk.ActMap.Scale;
+	clonk.ActMap.Scale = nil;
+	return FX_OK;
+}
+
+public func FxIntPickaxeTimer(object clonk, proplist effect, int time)
 {
 	++swingtime;
 	if(swingtime >= Pickaxe_SwingTime) // Waits three seconds for animation to run (we could have a clonk swing his pick 3 times)
 	{
-		DoSwing(clonk,x,y);
+		DoSwing(clonk,effect.x,effect.y);
 		swingtime = 0;
 	}
 	
-	var angle = Angle(0,0,x,y);
+	var angle = Angle(0,0,effect.x,effect.y);
 	var speed = 50;
 
 	var iPosition = swingtime*180/Pickaxe_SwingTime;
-	//Message("%d", clonk, iPosition);
 	speed = speed*(Cos(iPosition-45, 50)**2)/2500;
-	//Message("%d", clonk, speed);
 	// limit angle
 	angle = BoundBy(angle,65,300);
 	clonk->SetXDir(Sin(angle,+speed),100);
 	clonk->SetYDir(Cos(angle,-speed),100);
+}
+
+public func FxIntPickaxeStop(object clonk, proplist effect, int reason, bool temp)
+{
+	if (temp)
+		return FX_OK;
+	// Reset the clonk scaling entry in its ActMap.
+	clonk.ActMap.Scale = effect.actmap_scale;
+	return FX_OK;
 }
 
 protected func ControlUseCancel(object clonk, int ix, int iy)
@@ -225,5 +247,4 @@ local Collectible = 1;
 local Name = "$Name$";
 local Description = "$Description$";
 local UsageHelp = "$UsageHelp$";
-local Rebuy = true;
 local MaxPickDensity = 70; // can't pick granite

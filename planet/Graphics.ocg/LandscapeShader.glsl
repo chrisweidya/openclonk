@@ -1,8 +1,14 @@
 
+// Interpolated texture coordinates
+varying vec2 landscapeTexCoord;
+#ifdef OC_DYNAMIC_LIGHT
+varying vec2 lightTexCoord;
+#endif
+
 // Input textures
 uniform sampler2D landscapeTex[2];
 uniform sampler2D scalerTex;
-uniform sampler2DArray materialTex;
+uniform sampler3D materialTex;
 
 // Resolution of the landscape texture
 uniform vec2 resolution;
@@ -48,7 +54,7 @@ slice(coordinate)
 	vec2 fullStepX = vec2(fullStep.x, 0.0);
 	vec2 fullStepY = vec2(0.0, fullStep.y);
 
-	vec2 texCoo = gl_TexCoord[0].st;
+	vec2 texCoo = landscapeTexCoord;
 
 	// calculate pixel position in landscape, find center of current pixel
 	vec2 pixelCoo = texCoo * resolution;
@@ -80,33 +86,39 @@ slice(texture)
 
 }
 
+slice(texture+4)
+{
+#ifdef OC_DYNAMIC_LIGHT
+	vec2 lightCoord = lightTexCoord;
+#endif
+}
+
 slice(material)
 {
-
 	// Get material properties from material map
 	int matMapIx = f2i(landscapePx.r);
 	vec4 matMap = queryMatMap(2*matMapIx);
 	vec4 matMapX = queryMatMap(2*matMapIx+1);
-	float materialIx = f2i(matMap.a) / 256.0 * materialDepth;
+	float materialIx = float(f2i(matMap.a)) / 256.0 + 0.5 / materialDepth;
 	vec3 matEmit = matMap.rgb;
 	vec3 matSpot = matMapX.rgb * 255.9f / 16.0f;
 	float matAngle = matMapX.a;
 
 	// Query material texture pixels
-	vec4 materialPx = texture(materialTex, vec3(materialCoo, materialIx));
-	vec4 normalPx = texture(materialTex, vec3(materialCoo, materialIx+0.5 * materialDepth));
+	vec4 materialPx = texture3D(materialTex, vec3(materialCoo, materialIx));
+	vec4 normalPx = texture3D(materialTex, vec3(materialCoo, materialIx+0.5));
 	// Same for second pixel
 	int matMapIx2 = f2i(landscapePx2.r);
 	vec4 matMap2 = queryMatMap(2*matMapIx2);
 	vec4 matMapX2 = queryMatMap(2*matMapIx2+1);
-	float materialIx2 = f2i(matMap2.a) / 256.0 * materialDepth;
+	float materialIx2 = float(f2i(matMap2.a)) / 256.0 + 0.5 / materialDepth;
 	vec3 matEmit2 = matMap2.rgb;
 	vec3 matSpot2 = matMapX2.rgb * 255.9f / 16.0f;
 	float matAngle2 = matMapX2.a;
 
 	// Query material texture pixels
-	vec4 materialPx2 = texture(materialTex, vec3(materialCoo, materialIx2));
-	vec4 normalPx2 = texture(materialTex, vec3(materialCoo, materialIx2+0.5 * materialDepth));
+	vec4 materialPx2 = texture3D(materialTex, vec3(materialCoo, materialIx2));
+	vec4 normalPx2 = texture3D(materialTex, vec3(materialCoo, materialIx2+0.5));
 }
 
 slice(normal)

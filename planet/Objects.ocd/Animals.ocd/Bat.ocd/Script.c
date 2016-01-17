@@ -104,7 +104,7 @@ private func FxCoreBehaviorTimer(object target, proplist effect, int time)
 	
 	// Make flying sounds and sometimes do a sonar wave.
 	if (!Random(250))
-		Sound("Bat::BatFlutter*");
+		Sound("Animals::Bat::Flutter*");
 	if (!Random(225))
 		DoSonarWave(false);	
 		
@@ -226,7 +226,7 @@ public func CatchBlow(int damage, object obj)
 	if (GetAction() == "Dead")
 		return;
 	// Make a sound.
-	Sound("Bat::BatNoise*");
+	Sound("Animals::Bat::Noise*");
 	// Get the most probable crew member causing this blow.
 	var by_crewmember = GetCursor(obj->GetController());
 	// When hurt, startle this bat and nearby bats.
@@ -243,7 +243,7 @@ private func Startle(object by_crewmember)
 	if (GetAction() == "Hang")
 	{
 		Fly();
-		ScheduleCall(this, "Sound", Random(15), 0, "Bat::BatNoise*");
+		ScheduleCall(this, "Sound", Random(15), 0, "Animals::Bat::Noise*");
 		if (behavior_control)
 			behavior_control.time_since_startle = 150;
 	}
@@ -373,9 +373,9 @@ private func DoSonarWave(bool agressive)
 	CreateParticle("Shockwave", 0, 0, 0, 0, 24, sonar_particle, 1);
 	// Make a sound dependent on the agression.		
 	if (agressive)
-		Sound("Bat::BatChirp");
+		Sound("Animals::Bat::Chirp");
 	else
-		Sound("Bat::BatNoise*", false, 50);	
+		Sound("Animals::Bat::Noise*", false, 50);	
 	return;
 }
 
@@ -413,11 +413,10 @@ private func BitePrey(object prey)
 
 private func ContactBottom()
 {
-	ChangeMovementDirection(RandomX(-1, 1), -1);
 	// The dead bat changes it animation once it has touched the ground.
 	if (!GetAlive())
 		PlayAnimation("Dead", 1, Anim_Linear(0, 0, GetAnimationLength("Dead"), 1, ANIM_Hold), Anim_Const(1000));
-	return;
+	return UpdateMovementDirectionOnContact();
 }
 
 private func ContactTop()
@@ -432,19 +431,38 @@ private func ContactTop()
 		Hang();
 		return;
 	}
-	ChangeMovementDirection(RandomX(-1, 1), 1);
-	return;
+	return UpdateMovementDirectionOnContact();
 }
 
 private func ContactLeft()
 {
-	ChangeMovementDirection(1, RandomX(-1, 1));
-	return;
+	return UpdateMovementDirectionOnContact();
 }
 
 private func ContactRight()
 {
-	ChangeMovementDirection(-1, RandomX(-1, 1));
+	return UpdateMovementDirectionOnContact();
+}
+
+private func UpdateMovementDirectionOnContact()
+{
+	var contact = GetContact(-1);
+	var xdir = RandomX(-1, 1);
+	var ydir = RandomX(-1, 1);
+	if (contact & CNAT_Right)
+		xdir = Min(xdir, 0);
+	if (contact & CNAT_Left)
+		xdir = Max(xdir, 0);
+	if (contact & CNAT_Bottom)
+		ydir = Min(ydir, 0);
+	if (contact & CNAT_Top)
+		ydir = Max(ydir, 0);
+	if (xdir == 0 && ydir == 0)
+	{
+		xdir = RandomX(-1, 1);
+		ydir = RandomX(-1, 1);
+	}
+	ChangeMovementDirection(xdir, ydir);
 	return;
 }
 
@@ -460,7 +478,7 @@ private func Death()
 	// Remove behavior effect and play dead animation.
 	RemoveEffect("CoreBehaviour", this);
 	SetAction("Dead");
-	
+	// Set border bound to zero when dead.
 	this.BorderBound = 0;
 	
 	// Decay the dead bat.	
@@ -512,6 +530,7 @@ local MaxEnergy = 20000;
 local MaxBreath = 180;
 local NoBurnDecay = 1;
 local ContactIncinerate = 10;
+local BorderBound = C4D_Border_Sides | C4D_Border_Top | C4D_Border_Bottom;
 
 local ActMap = {
 	Hang = {
@@ -529,7 +548,7 @@ local ActMap = {
 	Flight = {
 		Prototype = Action,
 		Name = "Flight",
-		Procedure = DFA_FLIGHT,
+		Procedure = DFA_FLOAT,
 		Speed = 100,
 		Accel = 16,
 		Decel = 16,

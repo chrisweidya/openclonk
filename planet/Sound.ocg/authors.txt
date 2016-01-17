@@ -4,7 +4,7 @@ CC Attribution 3.0 license (http://creativecommons.org/licenses/by/3.0/)
 Author        Work(s)
 ===============================================================================
 
-ala             - Fire/Spark1&2&3
+ala             - Fire/Spark1&2&3, Objects/Weapons/Musket/Click1&2&3, Clonk/Action/Munch2, Clonk/Movement/DivingLoop1&2&3, Animals/Wipf/Snuff3
                   Structures/Repair, Structures/FinishBuilding made from following resources:
                       - JoelAudio: https://www.freesound.org/people/JoelAudio/sounds/135860/ - CC-By 3.0
                       - cmusounddesign: https://www.freesound.org/people/cmusounddesign/sounds/84696 - CC-By 3.0
@@ -14,6 +14,9 @@ ala             - Fire/Spark1&2&3
                      Confirm1&2&3&5, Decline1&2&3&6, Die1&2&3, Doubt1&2&3, EvilConfirm1&2&3, Hurt1&2&3&4&5&6, Scream1&2
                   Clonk/Skin/Steampunk:
                      Confirm1&2&3&4, Decline1&2&4, Die1&2&3, Doubt1&2&3&4&5, Hurt1&2&3&4&5&6, Laughter1&2&3, Scream1, Shock1&2&4, Singing1&2
+                  Animals/Bat:
+                     Chirp, Flutter1&2&3, Noise1&2&3   
+K-Pone          - Objects/Pickaxe/ClangHard1
 Ringwaul        - Monster/Growl1-3, Monster/Die, Wipf/Snuff1-2, Wipf/Aroof, Wipf/Whine, Chest/Open, Chest/Close
                   Winbag/Charge, Winbag/ChargeStop, Winbag/Gust, Pickaxe/Clang1-3
 
@@ -22,13 +25,13 @@ Checkmaty       - ProjectileHitLiving*, Arrow/HitGround, Arrow/Shoot1/3, Bow/Dra
 				  Shield/WoodHit1-3, Musket/GunShot1-5, Musket/BulletShot1-2, Musket/BulletHitGround1-3
 Clonkonaut      - Clonk/Skin/Farmer/Die1
 dobroide        - BirdsLoop (http://www.freesound.org/people/dobroide/sounds/54746/)
-Benboncan       - Blast*, BlastMetal (http://www.freesound.org/people/Benboncan/sounds/73005/)
+Benboncan       - Blast*, BlastMetal, BlastLiquid3 (http://www.freesound.org/people/Benboncan/sounds/73005/)
 Stickinthemud   - Clonk (http://www.freesound.org/people/Stickinthemud/sounds/27526/)
                   BlastMetal (http://www.freesound.org/people/Stickinthemud/sounds/27531/)
 Toby Knowles    - Fanfare (http://www.freesound.org/people/tobyk/sounds/26198/)
 ERH             - WindLoop (http://www.freesound.org/people/ERH/sounds/34338/)
 TicTacShutUp    - Click (http://www.freesound.org/people/TicTacShutUp/sounds/406/), UI::Confirmed (modified)
-CGEffex         - Splash1-3 (http://www.freesound.org/people/CGEffex/sounds/98335/)
+CGEffex         - Splash1-3 (http://www.freesound.org/people/CGEffex/sounds/98335/), Swim1-3 (modified by Sven2 from Splash1-3)
 Mirors_         - Pshshsh (http://www.freesound.org/people/Mirors_/sounds/81205/)
 juskiddink		- SoftHit1 (http://www.freesound.org/people/juskiddink/sounds/108617/)
 jenc			- BlastMetal (http://www.freesound.org/people/jenc/sounds/511/)
@@ -70,9 +73,15 @@ Sven2           - Structures/StoneGate/GateMove (adapted from GateHit), IceHit* 
                   DiamondDigOut (adapted from GlassHit), FishMunch1 (adapted from Munch), Wallkit/Klick, Wallkit/Lock, UI::Open, UI::Close
                   CloseViewport (based on WaterBottleBoing by empraetorius (https://freesound.org/people/empraetorius/sounds/201260/)
                   Corrode (based on Pshshsh from Mirors_ http://www.freesound.org/people/Mirors_/sounds/81205/)
-                  UI::Select
+                  UI::Select, Clonk::Action::Grab, Clonk::Action::UnGrab
 Zapper          - Breathing
 zimbot          - Animals/Chippie/EggCrack1-3 (modified) (http://www.freesound.org/people/zimbot/sounds/244480/)
+xerana          - Environemnt/Lightning/Thunder1 (https://www.freesound.org/people/xerana/sounds/199638/ adapted by Maikel)
+infopablo       - Environemnt/Lightning/Thunder2 (https://www.freesound.org/people/infopablo/sounds/21887/ adapted by Maikel)
+nicStage        - Environemnt/Lightning/Thunder3 (https://www.freesound.org/people/nicStage/sounds/64460/ adapted by Maikel)
+jrosin          - Environemnt/Lightning/Thunder4 (https://www.freesound.org/people/jrosin/sounds/329978/ adapted by Maikel)
+shaka9          - Environemnt/Lightning/Thunder5 (https://www.freesound.org/people/shaka9/sounds/160514/ adapted by Maikel)
+Harbour11       - UI::Error, UI::Trumpet (both adapted by Sven2; used sound from http://freesound.org/people/Harbour11/sounds/194624/)
 
 The following sounds use two sources:
 

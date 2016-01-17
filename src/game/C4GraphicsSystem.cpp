@@ -46,9 +46,6 @@ C4GraphicsSystem::~C4GraphicsSystem()
 
 bool C4GraphicsSystem::Init()
 {
-	// Init video module
-	if (Config.Graphics.VideoModule)
-		Video.Init(FullScreen.pSurface);
 	// Success
 	return true;
 }
@@ -56,15 +53,11 @@ bool C4GraphicsSystem::Init()
 void C4GraphicsSystem::Clear()
 {
 	// Clear message board
-	MessageBoard.Clear();
-	// Clear upper board
-	UpperBoard.Clear();
+	MessageBoard.reset();
 	// clear loader
 	if (pLoaderScreen) { delete pLoaderScreen; pLoaderScreen=NULL; }
 	// Close viewports
 	::Viewports.Clear();
-	// Clear video system
-	Video.Clear();
 	// No debug stuff
 	DeactivateDebugOutput();
 }
@@ -101,7 +94,7 @@ void C4GraphicsSystem::Execute()
 			{
 				// Message board
 				if (iRedrawBackground) ClearFullscreenBackground();
-				MessageBoard.Execute();
+				MessageBoard->Execute();
 				if (!C4GUI::IsActive())
 					{ FinishDrawing(); return; }
 				fBGDrawn = true;
@@ -135,7 +128,7 @@ void C4GraphicsSystem::Execute()
 		UpperBoard.Execute();
 
 		// Message board
-		MessageBoard.Execute();
+		MessageBoard->Execute();
 
 		// Help & Messages
 		DrawHelp();
@@ -149,18 +142,13 @@ void C4GraphicsSystem::Execute()
 		::pGUI->Render(false);
 	}
 
-	// Video record & status (fullsrceen)
-	if (!Application.isEditor)
-		Video.Execute();
-
 	// done
 	FinishDrawing();
 }
 
 void C4GraphicsSystem::Default()
 {
-	UpperBoard.Default();
-	MessageBoard.Default();
+	MessageBoard.reset(new C4MessageBoard);
 	InvalidateBg();
 	ShowVertices=false;
 	ShowAction=false;
@@ -174,7 +162,6 @@ void C4GraphicsSystem::Default()
 	ShowHelp=false;
 	FlashMessageText[0]=0;
 	FlashMessageTime=0; FlashMessageX=FlashMessageY=0;
-	Video.Default();
 	pLoaderScreen=NULL;
 }
 
@@ -267,7 +254,7 @@ bool C4GraphicsSystem::DoSaveScreenshot(bool fSaveAll, const char *szFilename, f
 				// update facet
 				bkFct.Set(FullScreen.pSurface, 0, 0, ceil(float(bkWdt2)/zoom), ceil(float(bkHgt2)/zoom), iX/zoom, iY/zoom, zoom, 0, 0);
 				// draw there
-				pVP->Draw(bkFct, false);
+				pVP->Draw(bkFct, true, false);
 				// render
 				FullScreen.pSurface->PageFlip(); FullScreen.pSurface->PageFlip();
 				// get output (locking primary!)
@@ -472,4 +459,3 @@ bool C4GraphicsSystem::ToggleShowHelp()
 	return true;
 }
 
-C4GraphicsSystem GraphicsSystem;

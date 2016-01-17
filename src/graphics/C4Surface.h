@@ -58,6 +58,7 @@ extern CStdGL *pGL;
 
 const int C4SF_Tileable = 1;
 const int C4SF_MipMap   = 2;
+const int C4SF_Unlocked = 4;
 
 class C4Surface
 {
@@ -209,6 +210,9 @@ public:
 	{
 		*((DWORD *) (((BYTE *) texLock.pBits) + (iY - LockSize.y) * texLock.Pitch + (iX - LockSize.x) * 4)) = v;
 	}
+private:
+	void CreateTexture();
+	friend class C4TexMgr;
 };
 
 // texture management
