@@ -154,7 +154,7 @@ public func SaveScenarioObject(props, ...)
 	props->Remove("Name"); // updated by initialization
 	props->Remove("Description"); // updated by initialization
 	if (inventory_transfer) 
-		props->AddCall("InvenctoryTransfer", this, "SetInventoryTransfer", inventory_transfer);
+		props->AddCall("InventoryTransfer", this, "SetInventoryTransfer", inventory_transfer);
 	if (free_crew) 
 		props->AddCall("FreeCrew", this, "SetFreeCrew", free_crew);
 	return true;

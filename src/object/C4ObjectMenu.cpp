@@ -262,7 +262,7 @@ void C4ObjectMenu::OnUserEnter(int32_t Player, int32_t iIndex, bool fRight)
 		C4Player *pPlr = ::Players.Get(Player);
 	//	pPlr->Profile.achievementPoints += 1;
 	//	std::cout << "shouldnt";
-		::PlayerProfile::saveSingleProfile(pPlr->Profile);
+	//	::PlayerProfile::saveSingleProfile(*(pPlr->Profile));
 	}
 	Game.Input.Add(CID_PlrControl, new C4ControlPlayerControl(Player, fRight ? Game.PlayerControlDefs.InternalCons.CON_ObjectMenuOKAll : Game.PlayerControlDefs.InternalCons.CON_ObjectMenuOK, iIndex));
 }

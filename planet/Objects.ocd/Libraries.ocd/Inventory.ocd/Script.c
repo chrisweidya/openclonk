@@ -23,7 +23,7 @@
 
 
 /* Item limit */
-public func MaxContentsCount() { return 10; } // Size of the inventory
+public func MaxContentsCount() { return 5; } // Size of the inventory
 public func HandObjects() { return 1; } // Amount of hands to select items
 
 func Construction()

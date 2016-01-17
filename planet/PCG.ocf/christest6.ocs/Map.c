@@ -3,6 +3,7 @@
 func InitializeMap(proplist map)
 {
 	var seed = GetRandomSeed();
+	Log("ssed%v", seed);
 	var groundHeightOffset = GetMapDataFromPlayer() * map.Hgt / 8;
 	
 	var ground = draw_ground(seed, map, groundHeightOffset);

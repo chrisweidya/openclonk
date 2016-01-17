@@ -123,8 +123,8 @@ private func RelaunchClonk()
 	GameCall("OnClonkLeftRelaunch", clonk);
 	if (menu)
 		menu->Close();
-	PlayerMessage(clonk->GetOwner(), "");
-	RemoveObject();
+	PlayerMessage(clonk->GetOwner(), "");	
+	RemoveObject();	
 	return;
 }
 

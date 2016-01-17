@@ -12,11 +12,9 @@ func Initialize()
 //	resetProfile();
 	var groundOffset = GetMapDataFromPlayer();
 	baseHeight = (LandscapeHeight() / 2 + groundOffset * LandscapeHeight() / 8);
-
+	seed = GetSeed();
+	InitAI();
 	InitGoal();
-	
-	InitAI();	
-
 	
 	return true;
 }
@@ -26,6 +24,8 @@ protected func InitGoal()
 	goal = CreateObject(Goal_PCG);
 	goal.Name = "$MsgGoalName$";
 	goal.Description = "$MsgGoalDescription$";
+	target_npc.goal = goal;
+	var effect = AddEffect("TargetDeath", target_npc, 100, 10);
 }
 
 protected func InitializePlayer(int plr)
@@ -38,8 +38,7 @@ protected func InitializePlayer(int plr)
 	clonk->CreateContents(GrappleBow);
 	clonk->CreateContents(Sword);
 	clonk->CreateContents(TeleportScroll);
-	clonk->SetPosition(LandscapeWidth()/2, baseHeight - 20);
-	clonk->Switch2Items(3, 9);
+	clonk->SetPosition(LandscapeWidth()/2, baseHeight - 20);	
 	/*
 	for (var structure in FindObjects(Find_Or(Find_Category(C4D_Structure), Find_Func("IsFlagpole"))))
 		structure->SetOwner(plr);
@@ -50,6 +49,9 @@ protected func InitializePlayer(int plr)
 
 //	guide = CreateObject(PCGGuide, 0, 0, plr);
 //	guide->HideGuide();
+	var effect = AddEffect("ClonkRestore", clonk, 100, 10);
+	effect.to_x = 300;
+	effect.to_y = 374;
 }
 
 // Gamecall from goals, set next mission.
@@ -62,105 +64,13 @@ protected func OnGoalsFulfilled()
 
 private func InitAI()
 {
-	seed = GetSeed();
-	InitImmersionNPC(seed);
-	InitFoundNPC();
-	InitLostNPC(seed);
-	InitTargetNPC(seed);
+	
+//	InitImmersionNPC(seed);
+//	InitFoundNPC();
+//	InitLostNPC(seed);
+//	InitTargetNPC(seed);
 	InitEnemyHealth();
 	return;
-}
-
-private func InitImmersionNPC(int seed) {
-	
-	immersion_npc = CreateObjectAbove(Clonk, LandscapeWidth() / 2 - 100, baseHeight - 20);
-	immersion_npc->SetColor(0x00997a);
-	immersion_npc->SetName(Format("Aerin"));
-//	immersion_npc->SetName(Translate(Format("ImmersionNPC%d", immersion_npc_index)));
-	immersion_npc->SetObjectLayer(immersion_npc);
-	immersion_npc->SetSkin(3);
-	immersion_npc->SetDir(DIR_Right);
-	immersion_npc->SetDialogue(immersion_npc->GetName(), true);
-
-}
-
-private func InitLostNPC(int seed) {
-	var name_size = $ImmersionNPCNameSize$;
-	var name_index = GetRandomNum(name_size, seed);
-	var skin = GetRandomNum(4, seed);
-	var colour = GetRandomColour(seed);
-	var y = GetRandomNum(baseHeight - 100, seed);
-	var x = GetRandomNum(LandscapeWidth(), seed);
-
-	var outer = 25;
-	var inner = 15;
-	DrawMaterialQuad("Sand", x -inner, y + inner, x + inner, y + inner, x + outer, y + outer, x - outer, y + outer);
-	DigFree(x, y, 15);
-
-//	lost_npc = CreateObjectAbove(Clonk, 600, baseHeight-5);
-	lost_npc = CreateObjectAbove(Clonk, x, y);
-	lost_npc->SetColor(colour);
-	lost_npc->SetName(Translate(Format("ImmersionNPCName%d", name_index)));
-	lost_npc->SetObjectLayer(lost_npc);
-	lost_npc->SetSkin(skin);
-	lost_npc->SetDir(DIR_Right);
-	lost_npc->SetDialogue(Format("$LostNPC$"), true);
-}
-
-private func InitFoundNPC() {
-	var name_size = $ImmersionNPCNameSize$;
-	var name_index;
-	var skin;
-	var colour;
-	var max = 10;
-	var npc_seed = -1;
-	var found_npc;
-	npc_seed = GetFoundNPC(0);
-	Log("%vseed", npc_seed);
-	if (npc_seed != 0) {		
-		name_index = GetRandomNum(name_size, npc_seed);
-		skin = GetRandomNum(4, npc_seed);
-		colour = GetRandomColour(npc_seed);
-
-		found_npc = CreateObjectAbove(Clonk, 700, baseHeight - 5);
-		//	lost_npc = CreateObjectAbove(Clonk, x, y);
-		found_npc->SetColor(colour);
-		found_npc->SetName(Translate(Format("ImmersionNPCName%d", name_index)));
-		found_npc->SetObjectLayer(found_npc);
-		found_npc->SetSkin(skin);
-		found_npc->SetDir(DIR_Right);
-	//	found_npc->SetDialogue(Format("$LostNPC$"), true);
-	}
-	else
-		Log("not init");
-}
-
-private func InitTargetNPC(int seed) {
-	var name_size = $AchievementNPCNameSize$;
-	var name_index = GetRandomNum(name_size, seed);
-	var skin = GetRandomNum(4, seed);
-	var colour = GetRandomColour(seed);
-	var y = GetRandomNum(LandscapeHeight() - baseHeight, seed);
-	var x = GetRandomNum(LandscapeWidth(), seed);
-
-	y = baseHeight - 20;
-	x = 800;
-
-//	var outer = 25;
-//	var inner = 15;
-//	DrawMaterialQuad("Sand", x - inner, y + inner, x + inner, y + inner, x + outer, y + outer, x - outer, y + outer);
-//	DigFree(x, y, 15);
-
-	target_npc = CreateObjectAbove(Clonk, x, y);
-	target_npc->SetColor(colour);
-	target_npc->SetName(Translate(Format("AchievementNPCName%d", name_index)));
-	target_npc->SetSkin(skin);
-	target_npc->SetDir(DIR_Right);
-	target_npc->CreateContents(Sword);
-	AI->AddAI(target_npc);
-	AI->SetGuardRange(target_npc, x, y, 400, 16);
-//	AI->SetEncounterCB(target_npc, "EncounterKing");
-//	target_npc->SetDialogue(Format("$LostNPC$"), true);
 }
 
 private func InitEnemyHealth() {
@@ -168,6 +78,8 @@ private func InitEnemyHealth() {
 	for (var enemy in FindObjects(Find_ID(Clonk), Find_Owner(NO_OWNER)))
 		if (fx = AI->GetAI(enemy))
 		{
+			if (enemy.isTarget)
+				target_npc = enemy;
 			fx.weapon = fx.target = nil;
 			AI->BindInventory(enemy);
 			enemy->DoEnergy(10000);
@@ -225,3 +137,46 @@ global func FxCheckConstructionTimer(object target, proplist effect) {
 	}
 }
 */
+global func FxTargetDeathStop(object target, effect, int reason, bool  temporary)
+{
+	if (reason == 3 || reason == 4)
+	{
+		target.goal->Fulfill();
+	}
+	return FX_OK;
+}
+global func FxTargetDeathTimer(object target)
+{
+	return FX_OK;
+}
+
+/*-- Clonk restoring --*/
+
+global func FxClonkRestoreTimer(object target, proplist effect, int time)
+{
+	// Respawn clonk to new location if reached certain position.
+	return FX_OK;
+}
+
+// Relaunches the clonk, from death or removal.
+global func FxClonkRestoreStop(object target, effect, int reason, bool  temporary)
+{
+	if (reason == 3 || reason == 4)
+	{
+		var restorer = CreateObjectAbove(ObjectRestorer, 0, 0, NO_OWNER);
+		var x = BoundBy(target->GetX(), 0, LandscapeWidth());
+		var y = BoundBy(target->GetY(), 0, LandscapeHeight());
+		restorer->SetPosition(x, y);
+		var to_x = effect.to_x;
+		var to_y = effect.to_y;
+		// Respawn new clonk.
+		var plr = target->GetOwner();
+		var clonk = CreateObjectAbove(Clonk, 0, 0, plr);
+		clonk->GrabObjectInfo(target);
+		Rule_BaseRespawn->TransferInventory(target, clonk);
+		SetCursor(plr, clonk);
+		clonk->DoEnergy(100000);
+		restorer->SetRestoreObject(clonk, nil, to_x, to_y, 0, "ClonkRestore");
+	}
+	return FX_OK;
+}

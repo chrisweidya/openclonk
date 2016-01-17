@@ -506,8 +506,9 @@ const char* C4Config::AtExePath(const char *szFilename)
 
 const char* C4Config::AtUserDataPath(const char *szFilename)
 {
-	SCopy(General.UserDataPath, AtPathFilename, _MAX_PATH);
+	SCopy(General.UserDataPath, AtPathFilename, _MAX_PATH);	
 	SAppend(szFilename, AtPathFilename, _MAX_PATH);
+	std::cout << AtPathFilename << "\n";
 	return AtPathFilename;
 }
 

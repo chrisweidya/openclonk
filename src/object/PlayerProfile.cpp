@@ -26,10 +26,15 @@ int32_t PlayerProfile::getScoreDiff() {
 	return scoreDiff;
 }
 
-int32_t PlayerProfile::getSeed(bool init) {
+int32_t PlayerProfile::getSeed(bool init) {	
 	if (init) {
-		seed = time(NULL);
+		int32_t tempSeed;
+		tempSeed = seed = time(NULL);
+		std::cout << tempSeed << "\n";
+		saveSingleProfile(*this);
+		return tempSeed;
 	}
+	std::cout <<"getting"<< seed << "\n";
 	return seed;
 }
 
@@ -64,16 +69,16 @@ PlayerProfile* PlayerProfile::getSingleProfile() {
 
 
 int32_t PlayerProfile::saveSingleProfile(PlayerProfile profile) {	
-	assert(SModuleCount(Config.General.Participants) == 1);
+	
+	assert(SModuleCount(Config.General.Participants) == 1);	
 	C4Group PlayerGrp;
-	C4PlayerInfoCore core;
-	const char *szPlayerFilename = Config.AtUserDataPath(Config.General.Participants);	
+	C4PlayerInfoCore core;	
+	const char *szPlayerFilename = Config.AtUserDataPath(Config.General.Participants);
 	if (!FileExists(szPlayerFilename) || !PlayerGrp.Open(szPlayerFilename) || !core.Load(PlayerGrp))
 		return -1;
 	core.Profile = profile;
 	if (!core.Save(PlayerGrp) || !PlayerGrp.Close())
 		return -1;
-//	std::cout << *szPlayerFilename<<"-->" << profile.foundNPC[0]<< "\n";
 	return 1;
 } 
 
