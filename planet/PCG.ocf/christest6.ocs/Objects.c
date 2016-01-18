@@ -18,7 +18,7 @@ func InitializeObjects()
 	var flagpole = CreateObjectAbove(Flagpole, LandscapeWidth() / 2, baseHeight);
 	flagpole->SetNeutral(true);
 	
-	var cabin = CreateObjectAbove(WoodenCabin, LandscapeWidth() / 2 - 120, baseHeight);
+	var cabin = CreateObjectAbove(WoodenCabin, LandscapeWidth() / 2 - 120, baseHeight-1);
 	cabin->SetObjectLayer(cabin);
 
 	InitImmersionNPC();
@@ -108,7 +108,7 @@ private func InitTargetNPC(int seed) {
 		x + width / 2, y + height / 2, x - width / 2, y + height / 2);
 	
 
-	target_npc = CreateObjectAbove(Clonk, 800, baseHeight - 20);
+	target_npc = CreateObjectAbove(Clonk, x, y);
 	target_npc->SetColor(colour);
 	target_npc->SetName(Translate(Format("AchievementNPCName%d", name_index)));
 	target_npc->SetSkin(skin);
@@ -116,7 +116,7 @@ private func InitTargetNPC(int seed) {
 	target_npc->CreateContents(Sword);
 	target_npc.isTarget = true;
 	AI->AddAI(target_npc);
-	AI->SetGuardRange(target_npc, x, y, 400, 16);
+	AI->SetGuardRange(target_npc, x, y, width/2, height/2);
 	//	AI->SetEncounterCB(target_npc, "EncounterKing");
 	//	target_npc->SetDialogue(Format("$LostNPC$"), true);
 }
