@@ -6,8 +6,8 @@ func InitializeMap(proplist map)
 	var seed = GetRandomSeed();
 	Log("ssed%v", seed);
 	var groundHeightOffset = GetMapDataFromPlayer() * map.Hgt / 8;
-
-	Log("base height at map: %v %v", GetMapDataFromPlayer(), map.Wdt);
+	var immersionLevel = GetPlayerImmLevel();
+	Log("base height at map: %v %v", immersionLevel, map.Wdt);
 
 	var ground = draw_ground(seed, map, groundHeightOffset);
 	var coal = draw_mat(seed, "Coal", ground, 30, 5, 3, 1);
@@ -15,6 +15,9 @@ func InitializeMap(proplist map)
 	var largeTunnels = draw_mat(seed, "Tunnel", ground, 40, 8, 3, 1);
 
 	var skyLand = draw_sky(seed, map, groundHeightOffset);
+	if (immersionLevel > 0) {
+		draw_mat(seed, "^Rock", skyLand, 30, 8, 2, 1);
+	}
 	var sky = draw_mat(seed, "Sky", skyLand, 50, 7, 3, 2);
 
 	var platform = draw_platform(map, groundHeightOffset);

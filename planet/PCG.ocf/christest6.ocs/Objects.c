@@ -13,16 +13,21 @@ func InitializeObjects()
 	baseHeight = (LandscapeHeight() / 2 + groundOffset * LandscapeHeight() / 8);
 	seed = GetSeed();
 	Log("base height: %v %v", LandscapeWidth(), LandscapeHeight());
+
 	var respawn = CreateObject(Rule_BaseRespawn);
 	respawn->SetInventoryTransfer(true);
 	respawn->SetFreeCrew(true);
 
 	var flagpole = CreateObjectAbove(Flagpole, LandscapeWidth() / 2, baseHeight);
 	flagpole->SetNeutral(true);
+	flagpole->SetObjectLayer(flagpole);
 	
 	var cabin = CreateObjectAbove(WoodenCabin, LandscapeWidth() / 2 - 120, baseHeight-1);
 	cabin->SetObjectLayer(cabin);
 
+	var sm = CreateObjectAbove(Sawmill, LandscapeWidth() / 2 - 220, baseHeight - 1);
+
+	InitChest(GetPlayerImmLevel(), GetPlayerAchLevel());
 	InitImmersionNPC();
 	InitAchievementNPC();
 	InitLostNPC(seed);
@@ -30,6 +35,14 @@ func InitializeObjects()
 	InitTargetNPC(seed);
 	return true;
 	
+}
+
+private func InitChest(int immersion_level, int achievement_level) {
+	var chest = CreateObjectAbove(Chest, LandscapeWidth() / 2 + 15, baseHeight);
+	chest->CreateContents(LoamUnlimited);
+	if (immersion_level > 0) {
+		chest->CreateContents(Pickaxe);
+	}
 }
 
 private func InitImmersionNPC() {

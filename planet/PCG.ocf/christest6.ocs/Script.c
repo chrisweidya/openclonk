@@ -40,7 +40,6 @@ protected func InitializePlayer(int plr)
 	clonk->CreateContents(GrappleBow);
 	clonk->CreateContents(Sword);
 	clonk->CreateContents(TeleportScroll);
-	var loam = clonk->CreateContents(LoamUnlimited);
 	clonk->SetPosition(LandscapeWidth()/2, baseHeight - 20);	
 	/*
 	for (var structure in FindObjects(Find_Or(Find_Category(C4D_Structure), Find_Func("IsFlagpole"))))
@@ -102,14 +101,12 @@ private func InitEnemyHealth() {
 private func InitConstructionGoal(int index) {
 	var effect;
 	if (index == 2) {
-		immersion_npc.objective = Sawmill;
-		immersion_npc.goal = goal;
-		site = CreateObjectAbove(ConstructionSite, 364, baseHeight + 5);
-		site.MeshTransformation = Trans_Mul(Trans_Rotate(RandomX(-30, 30), 0, 1, 0), Trans_Rotate(RandomX(-10, 10), 1, 0, 0));
-		site->Set(Sawmill);
-		site->CreateContents(Wood, 1);
-		site->CreateContents(Rock, 1);		
-		if (index == 2) {
+		if (!FindObject(Find_ID(Sawmill))) {
+			immersion_npc.objective = Sawmill;
+			immersion_npc.goal = goal;
+			site = CreateObjectAbove(ConstructionSite, 300, baseHeight);
+			site.MeshTransformation = Trans_Mul(Trans_Rotate(RandomX(-30, 30), 0, 1, 0), Trans_Rotate(RandomX(-10, 10), 1, 0, 0));
+			site->Set(Sawmill);
 			effect = AddEffect("CheckConstruction", immersion_npc, 100, 5);
 			effect.player = player;
 		}
