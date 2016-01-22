@@ -3,15 +3,10 @@ DlgLostNPCPlease=Please! You have to bring me back to my home!
 DlgLostNPCPleaseReply=Don't worry I'll get you back, your family is worried about you.
 DlgLostNPCThanks=*sobs* Thanks so much kind stranger!
 
-# Dialogue: Ebba
-DlgEbbaHello=Hello I am %s, the lumberjack of this small village.
-DlgEbbaReply=My name is %s, you seem sad.
-DlgEbbaSawmill=Yes, indeed. My sawmill got destroyed and I can't find any rock to rebuild it. Can you help me?
-DlgEbbaRock=Yes, I'll find you some rock.
-DlgEbbaWellDone=Thanks a lot, for constructing the sawmill. Can I do anything for you?
-DlgEbbaFavor=Actually you can, I need wood, do you happen to have an axe?
-DlgEbbaMines=No, I don't, but I have dropped my axe in the mines when I was hiding there during the attack.
-DlgEbbaLook=Ok, I'll have a look.
+# Dialogue: Warra
+DlgWarraHelp=If you want a challenge, kill the cave dweller below instead of helping the villager.
+DlgWarraHelpReply=[Choose reply]
+DlgWarraKill=Just kill the cave dweller below.
 
 # Dialogue: Aerin
 DlgAerinHelp=Help! Please listen to me! I am %s, there was a huge sandstorm and my family and pets are missing.

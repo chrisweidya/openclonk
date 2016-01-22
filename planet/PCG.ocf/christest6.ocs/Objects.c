@@ -4,13 +4,15 @@ static baseHeight;
 static seed;
 static lost_npc;
 static immersion_npc;
+static achievement_npc;
 static target_npc;
+
 func InitializeObjects()
 {
 	var groundOffset = GetMapDataFromPlayer();
 	baseHeight = (LandscapeHeight() / 2 + groundOffset * LandscapeHeight() / 8);
 	seed = GetSeed();
-	
+	Log("base height: %v %v", LandscapeWidth(), LandscapeHeight());
 	var respawn = CreateObject(Rule_BaseRespawn);
 	respawn->SetInventoryTransfer(true);
 	respawn->SetFreeCrew(true);
@@ -22,6 +24,7 @@ func InitializeObjects()
 	cabin->SetObjectLayer(cabin);
 
 	InitImmersionNPC();
+	InitAchievementNPC();
 	InitLostNPC(seed);
 	InitFoundNPC();
 	InitTargetNPC(seed);
@@ -29,9 +32,9 @@ func InitializeObjects()
 	
 }
 
-private func InitImmersionNPC(int seed) {
+private func InitImmersionNPC() {
 
-	immersion_npc = CreateObjectAbove(Clonk, LandscapeWidth() / 2 - 100, baseHeight - 20);
+	immersion_npc = CreateObjectAbove(Clonk, LandscapeWidth() / 2 - 100, baseHeight - 10);
 	immersion_npc->SetColor(0x00997a);
 	immersion_npc->SetName(Format("Aerin"));
 	//	immersion_npc->SetName(Translate(Format("ImmersionNPC%d", immersion_npc_index)));
@@ -39,7 +42,19 @@ private func InitImmersionNPC(int seed) {
 	immersion_npc->SetSkin(3);
 	immersion_npc->SetDir(DIR_Right);
 	immersion_npc->SetDialogue(immersion_npc->GetName(), true);
+	immersion_npc->MakeInvincible();
+}
 
+private func InitAchievementNPC() {
+
+	achievement_npc = CreateObjectAbove(Clonk, LandscapeWidth() / 2 + 100, baseHeight - 10);
+	achievement_npc->SetColor(0x00007a);
+	achievement_npc->SetName(Format("Warra"));
+	achievement_npc->SetObjectLayer(achievement_npc);
+	achievement_npc->SetSkin(2);
+	achievement_npc->SetDir(DIR_Left);
+	achievement_npc->SetDialogue(achievement_npc->GetName(), true);
+	achievement_npc->MakeInvincible();
 }
 
 private func InitLostNPC(int seed) {
@@ -63,6 +78,7 @@ private func InitLostNPC(int seed) {
 	lost_npc->SetSkin(skin);
 	lost_npc->SetDir(DIR_Right);
 	lost_npc->SetDialogue(Format("$LostNPC$"), true);
+	lost_npc->MakeInvincible();
 }
 
 private func InitFoundNPC() {
@@ -98,7 +114,11 @@ private func InitTargetNPC(int seed) {
 	var x = GetRandomNum(LandscapeWidth(), seed);
 
 	
-	y += baseHeight + 250;
+	y += baseHeight + 50;
+	if (y >= LandscapeHeight() - 10) {
+		Log("exceeded y ");
+		y = LandscapeHeight() - 20;
+	}
 	Log("Base height %v", y);
 	var width = 150;	
 	var height = 100;

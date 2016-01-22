@@ -3,13 +3,14 @@ local baseHeight;
 local immersion_npc;
 local lost_npc;
 local target_npc;
+local site;
 local player;
 local guide;
 local goal;
 
 func Initialize()
 {	
-//	resetProfile();
+	resetProfile();
 	var groundOffset = GetMapDataFromPlayer();
 	baseHeight = (LandscapeHeight() / 2 + groundOffset * LandscapeHeight() / 8);
 	seed = GetSeed();
@@ -26,6 +27,7 @@ protected func InitGoal()
 	goal.Description = "$MsgGoalDescription$";
 	target_npc.goal = goal;
 	var effect = AddEffect("TargetDeath", target_npc, 100, 10);
+	InitBuildQuest();
 }
 
 protected func InitializePlayer(int plr)
@@ -38,6 +40,7 @@ protected func InitializePlayer(int plr)
 	clonk->CreateContents(GrappleBow);
 	clonk->CreateContents(Sword);
 	clonk->CreateContents(TeleportScroll);
+	var loam = clonk->CreateContents(LoamUnlimited);
 	clonk->SetPosition(LandscapeWidth()/2, baseHeight - 20);	
 	/*
 	for (var structure in FindObjects(Find_Or(Find_Category(C4D_Structure), Find_Func("IsFlagpole"))))
@@ -56,8 +59,7 @@ protected func InitializePlayer(int plr)
 
 // Gamecall from goals, set next mission.
 protected func OnGoalsFulfilled()
-{
-	UpdateFoundNPC(seed, player);
+{	
 	SetNextMission("PCG.ocf\\christest6.ocs", "$MsgNext$", "$MsgNextDesc$");
 	return false;
 }
@@ -69,47 +71,58 @@ private func InitAI()
 //	InitFoundNPC();
 //	InitLostNPC(seed);
 //	InitTargetNPC(seed);
+	
 	InitEnemyHealth();
 	return;
 }
 
+private func InitBuildQuest() {
+	var immersion_level = GetPlayerImmLevel();
+	InitConstructionGoal(immersion_level);
+}
+
 private func InitEnemyHealth() {
 	var fx;
-	for (var enemy in FindObjects(Find_ID(Clonk), Find_Owner(NO_OWNER)))
-		if (fx = AI->GetAI(enemy))
+	for (var npc in FindObjects(Find_ID(Clonk), Find_Owner(NO_OWNER))) {
+		if (fx = AI->GetAI(npc))
 		{
-			if (enemy.isTarget)
-				target_npc = enemy;
+			if (npc.isTarget)
+				target_npc = npc;
 			fx.weapon = fx.target = nil;
-			AI->BindInventory(enemy);
-			enemy->DoEnergy(10000);
-			enemy->AddEnergyBar();
+			AI->BindInventory(npc);
+			npc->DoEnergy(10000);
+			npc->AddEnergyBar();
 		}
+		if (npc->GetName() == "Aerin")
+			immersion_npc = npc;
+	}
 }
 
-/*
-private func initQuest() {
-	var site = CreateObjectAbove(ConstructionSite, 364, baseHeight +5);
-	site.MeshTransformation = Trans_Mul(Trans_Rotate(RandomX(-30, 30), 0, 1, 0), Trans_Rotate(RandomX(-10, 10), 1, 0, 0));
-	site->Set(Sawmill);
-	site->CreateContents(Wood, 1);
-	site->CreateContents(Rock, 1);
-	addImmersionObjective(1);
-}
 
-private func addImmersionObjective(int index) {
+private func InitConstructionGoal(int index) {
 	var effect;
-	if(index == 1)
-		effect = AddEffect("CheckConstruction", immersion_npc, 100, 5);
-	effect.player = player;
+	if (index == 2) {
+		immersion_npc.objective = Sawmill;
+		immersion_npc.goal = goal;
+		site = CreateObjectAbove(ConstructionSite, 364, baseHeight + 5);
+		site.MeshTransformation = Trans_Mul(Trans_Rotate(RandomX(-30, 30), 0, 1, 0), Trans_Rotate(RandomX(-10, 10), 1, 0, 0));
+		site->Set(Sawmill);
+		site->CreateContents(Wood, 1);
+		site->CreateContents(Rock, 1);		
+		if (index == 2) {
+			effect = AddEffect("CheckConstruction", immersion_npc, 100, 5);
+			effect.player = player;
+		}
+	}
 }
-*/
+
+
 public func OnHasTalkedToLostNPC()
 {	
 //	guide->AddGuideMessage("$GameCompleted$");
 //	guide->ShowGuideMessage(0);
 //	guide->ShowGuide();
-	
+	UpdateFoundNPC(seed, player);
 	goal->Fulfill();
 	return;
 }
@@ -125,23 +138,21 @@ public func EncounterOutpost(object enemy, object player)
 	return true;
 }
 
-/*
+
 global func FxCheckConstructionTimer(object target, proplist effect) {
 	if (FindObject(Find_ID(target.objective)))
 	{
-		// Notify lumberjack the sawmill is done.
-		var dialogue_lumberjack = Dialogue->FindByName(target->GetName());
-		if (dialogue_lumberjack)
-			dialogue_lumberjack->SetDialogueProgress(5, nil, true);
+		target.goal->Fulfill();
 		return FX_Execute_Kill;
 	}
 }
-*/
+
 global func FxTargetDeathStop(object target, effect, int reason, bool  temporary)
 {
 	if (reason == 3 || reason == 4)
 	{
 		target.goal->Fulfill();
+		return FX_Execute_Kill;
 	}
 	return FX_OK;
 }

@@ -18,7 +18,7 @@ void PlayerProfile::updatePlayerType(float achievementScore, float socialScore, 
 
 int32_t PlayerProfile::getScoreDiff() {
 	int32_t scoreDiff = immersionLevel - achievementLevel;
-	return -2;
+	return 0;
 	if (scoreDiff > 2)
 		return 2;
 	if (scoreDiff < -2)

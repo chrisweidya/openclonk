@@ -1,6 +1,6 @@
 # Goal Description
-MsgGoalName=Reconstruct Village
-MsgGoalDescription=Help the villagers reconstruct their destroyed buildings.
+MsgGoalName=Quest
+MsgGoalDescription=Help Aerin or Warra.
 
 # Dialogue options
 MsgNext=&Next game

@@ -2,10 +2,13 @@
 
 func InitializeMap(proplist map)
 {
+	Resize(120, 160);
 	var seed = GetRandomSeed();
 	Log("ssed%v", seed);
 	var groundHeightOffset = GetMapDataFromPlayer() * map.Hgt / 8;
-	
+
+	Log("base height at map: %v %v", GetMapDataFromPlayer(), map.Wdt);
+
 	var ground = draw_ground(seed, map, groundHeightOffset);
 	var coal = draw_mat(seed, "Coal", ground, 30, 5, 3, 1);
 	var fireStone = draw_mat(seed, "Firestone", ground, 30, 8, 2, 1);
@@ -19,13 +22,13 @@ func InitializeMap(proplist map)
 }
 
 func draw_platform(proplist map, int groundHeightOffset) {
-	var platform = { Algo = MAPALGO_Rect, X = map.Wdt/4, Y = map.Hgt / 2 + (groundHeightOffset), Wdt = map.Wdt/2, Hgt = 5 };
+	var platform = { Algo = MAPALGO_Rect, X = map.Wdt/6, Y = map.Hgt / 2 + (groundHeightOffset), Wdt = 2*map.Wdt/3, Hgt = 2 };
 	var clearArea = { Algo = MAPALGO_Rect, X = map.Wdt / 4 - 10, Y = map.Hgt / 2 + (groundHeightOffset) - 15, Wdt = map.Wdt / 2 + 20, Hgt = 15 };
 //	var jumbled_clearing = { Algo = MAPALGO_Turbulence, Amplitude = 10, Scale = 10, Op = clearArea };
 	
 //	Draw("Sky", jumbled_clearing);
 	Draw("Sky", clearArea);
-	Draw("Brick", platform);
+	Draw("BrickSoft", platform);
 }
 
 func draw_ground(int seed, proplist map, int groundHeightOffset) {
