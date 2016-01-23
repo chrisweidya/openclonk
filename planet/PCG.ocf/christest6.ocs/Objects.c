@@ -2,6 +2,8 @@
 
 static baseHeight;
 static seed;
+static immersion_level;
+static achievement_level;
 static lost_npc;
 static immersion_npc;
 static achievement_npc;
@@ -12,7 +14,9 @@ func InitializeObjects()
 	var groundOffset = GetMapDataFromPlayer();
 	baseHeight = (LandscapeHeight() / 2 + groundOffset * LandscapeHeight() / 8);
 	seed = GetSeed();
-	Log("base height: %v %v", LandscapeWidth(), LandscapeHeight());
+	immersion_level = GetPlayerImmLevel();
+	achievement_level = GetPlayerAchLevel();
+	Log("base height: %v %v", seed, LandscapeHeight());
 
 	var respawn = CreateObject(Rule_BaseRespawn);
 	respawn->SetInventoryTransfer(true);
@@ -27,12 +31,13 @@ func InitializeObjects()
 
 	var sm = CreateObjectAbove(Sawmill, LandscapeWidth() / 2 - 220, baseHeight - 1);
 
-	InitChest(GetPlayerImmLevel(), GetPlayerAchLevel());
+	InitChest(immersion_level, achievement_level);
 	InitImmersionNPC();
 	InitAchievementNPC();
 	InitLostNPC(seed);
 	InitFoundNPC();
 	InitTargetNPC(seed);
+	InitTrees(seed, immersion_level);
 	return true;
 	
 }
@@ -81,7 +86,7 @@ private func InitLostNPC(int seed) {
 	var outer = 25;
 	var inner = 15;
 	DrawMaterialQuad("Sand", x - inner, y + inner, x + inner, y + inner, x + outer, y + outer, x - outer, y + outer);
-	DigFree(x, y, 18);
+	DigFree(x, y-5, 18);
 
 	//	lost_npc = CreateObjectAbove(Clonk, 600, baseHeight-5);
 	lost_npc = CreateObjectAbove(Clonk, x, y);
@@ -152,4 +157,23 @@ private func InitTargetNPC(int seed) {
 	AI->SetGuardRange(target_npc, x, y, width/2, height/2);
 	//	AI->SetEncounterCB(target_npc, "EncounterKing");
 	//	target_npc->SetDialogue(Format("$LostNPC$"), true);
+}
+
+private func InitTrees(int seed, int immersion_level) {
+	var x = 123, y = baseHeight;
+	var inner = 15;
+	var num_plants = immersion_level + 1;
+	Fern->Place(12*num_plants, Rectangle(0, 0, LandscapeWidth(), baseHeight));
+	Wheat->Place(5 * num_plants, Rectangle(0, 0, LandscapeWidth(), baseHeight));
+	Cotton->Place(3 * num_plants, Rectangle(0, 0, LandscapeWidth(), baseHeight));
+	Tree_Coniferous->Place(3 * num_plants, Rectangle(0, baseHeight / 2, LandscapeWidth(), baseHeight / 2));
+	Tree_Deciduous->Place(3 * num_plants, Rectangle(0, baseHeight / 2, LandscapeWidth(), baseHeight / 2));
+	Grass->Place(100*num_plants);
+	if (immersion_level > 0) {
+		Tree_Coconut->Place(3 * num_plants, Rectangle(0, 0, LandscapeWidth(), baseHeight));
+	}
+	if (immersion_level > 1) {
+		Flower->Place(20 * num_plants, Rectangle(0, 0, LandscapeWidth(), baseHeight));
+		Butterfly->Place(10 * num_plants, Rectangle(0, 0, LandscapeWidth(), baseHeight));
+	}
 }

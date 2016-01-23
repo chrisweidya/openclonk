@@ -10,13 +10,16 @@ func InitializeMap(proplist map)
 	Log("base height at map: %v %v", immersionLevel, map.Wdt);
 
 	var ground = draw_ground(seed, map, groundHeightOffset);
-	var coal = draw_mat(seed, "Coal", ground, 30, 5, 3, 1);
+//	var coal = draw_mat(seed, "Coal", ground, 30, 5, 3, 1);
 	var fireStone = draw_mat(seed, "Firestone", ground, 30, 8, 2, 1);
 	var largeTunnels = draw_mat(seed, "Tunnel", ground, 40, 8, 3, 1);
 
 	var skyLand = draw_sky(seed, map, groundHeightOffset);
 	if (immersionLevel > 0) {
-		draw_mat(seed, "^Rock", skyLand, 30, 8, 2, 1);
+		draw_mat(seed+1, "^Rock", skyLand, 30, 8, 2, 1);
+	}
+	if (immersionLevel > 1) {
+		draw_mat(seed+2, "^Everrock", skyLand, 30, 8, 2, 1);
 	}
 	var sky = draw_mat(seed, "Sky", skyLand, 50, 7, 3, 2);
 

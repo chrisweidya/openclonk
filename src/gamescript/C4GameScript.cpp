@@ -152,9 +152,9 @@ static int32_t FnGetSeed(C4PropList * _this)
 static int32_t FnGetRandomNum(C4PropList * _this, int32_t range, int32_t seed)
 {
 	srand(seed);
-	int npc_index =rand()%range;	
+	int randNum =rand()%range;	
 
-	return npc_index;
+	return randNum;
 }
 
 static int32_t FnGetRandomColour(C4PropList * _this, int32_t seed)

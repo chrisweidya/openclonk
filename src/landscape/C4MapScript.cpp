@@ -600,7 +600,7 @@ static int32_t FnGetRandomSeed(C4PropList * _this) {
 static int32_t FnGetPlayerImmLevel(C4PropList * _this) {
 	PlayerProfile *profile = PlayerProfile::getSingleProfile();
 	if (profile) {
-		return 1;
+		return 2;
 		return profile->immersionLevel;
 	}
 	else
