@@ -86,7 +86,7 @@ private func InitLostNPC(int seed) {
 	var outer = 25;
 	var inner = 15;
 	DrawMaterialQuad("Sand", x - inner, y + inner, x + inner, y + inner, x + outer, y + outer, x - outer, y + outer);
-	DigFree(x, y-5, 18);
+	ClearFreeRect(x - outer/2, y - outer/2, outer, outer);
 
 	//	lost_npc = CreateObjectAbove(Clonk, 600, baseHeight-5);
 	lost_npc = CreateObjectAbove(Clonk, x, y);
@@ -174,6 +174,6 @@ private func InitTrees(int seed, int immersion_level) {
 	}
 	if (immersion_level > 1) {
 		Flower->Place(20 * num_plants, Rectangle(0, 0, LandscapeWidth(), baseHeight));
-		Butterfly->Place(10 * num_plants, Rectangle(0, 0, LandscapeWidth(), baseHeight));
+		Butterfly->Place(10, Rectangle(0, 0, LandscapeWidth(), baseHeight));
 	}
 }
