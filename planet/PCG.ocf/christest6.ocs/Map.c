@@ -21,6 +21,7 @@ func InitializeMap(proplist map)
 	}
 	if (immersionLevel > 0) {
 		draw_mat(seed + 1, "^Rock", skyLand, 30, 6, 2, 1);
+		draw_mat(seed + 1, "^Ore", skyLand, 30, 7, 2, 1);
 	}
 	
 	var sky = draw_mat(seed, "Sky", skyLand, 50, 7, 3, 2);

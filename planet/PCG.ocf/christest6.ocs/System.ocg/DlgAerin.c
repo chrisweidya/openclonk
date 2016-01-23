@@ -42,21 +42,35 @@ public func Dlg_Aerin_5(object clonk)
 
 public func Dlg_Aerin_6(object clonk)
 {
-	MessageBox("$DlgAerinFavor$", clonk, clonk);
+	MessageBox(Format("$DlgAerinHelp2$", dlg_target->GetName()), clonk, dlg_target);
 	return true;
 }
 
 public func Dlg_Aerin_7(object clonk)
 {
-	MessageBox("$DlgAerinMines$", clonk, dlg_target);
+	MessageBox(Format("$DlgAerinHelpReply2$"), clonk, clonk, nil, false, ["I know a thing or two about buildings. I can help!", "I don't really care."], true);
 	return true;
 }
 
 public func Dlg_Aerin_8(object clonk)
 {
-	MessageBox("$DlgAerinLook$", clonk, clonk);
+	MessageBox("$DlgAerinSkylands2$", clonk, dlg_target);
+	return true;
+}
+
+public func Dlg_Aerin_9(object clonk)
+{
+	MessageBox("$DlgAerinSkylandsReply2$", clonk, clonk, nil, false, ["Okay I'm on it.", "Bye."], true);
 	StopDialogue();
-	SetDialogueProgress(5);
+	SetDialogueProgress(10);
+	return true;
+}
+
+public func Dlg_Aerin_10(object clonk)
+{
+	MessageBox("$DlgAerinFindThem2$", clonk, dlg_target);
+	StopDialogue();
+	SetDialogueProgress(10);
 	return true;
 }
 /*

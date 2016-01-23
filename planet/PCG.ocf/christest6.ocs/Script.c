@@ -40,7 +40,7 @@ protected func InitializePlayer(int plr)
 	clonk->CreateContents(GrappleBow);
 	clonk->CreateContents(Sword);
 	clonk->CreateContents(TeleportScroll);
-	clonk->SetPosition(LandscapeWidth()/2, baseHeight - 20);	
+	clonk->SetPosition(LandscapeWidth()/2 + 100, baseHeight - 20);	
 	/*
 	for (var structure in FindObjects(Find_Or(Find_Category(C4D_Structure), Find_Func("IsFlagpole"))))
 		structure->SetOwner(plr);
@@ -100,13 +100,30 @@ private func InitEnemyHealth() {
 
 private func InitConstructionGoal(int index) {
 	var effect;
-	if (index == 2) {
-		if (!FindObject(Find_ID(Sawmill))) {
-			immersion_npc.objective = Sawmill;
-			immersion_npc.goal = goal;
-			site = CreateObjectAbove(ConstructionSite, 300, baseHeight);
+	
+	if (index > 1) {
+		if (!FindObject(Find_ID(Foundry))) {
+			immersion_npc.objective = Foundry;
+			site = CreateObjectAbove(ConstructionSite, 400, baseHeight+2);
 			site.MeshTransformation = Trans_Mul(Trans_Rotate(RandomX(-30, 30), 0, 1, 0), Trans_Rotate(RandomX(-10, 10), 1, 0, 0));
-			site->Set(Sawmill);
+			site->Set(Foundry);
+		}
+		else if (!FindObject(Find_ID(WindGenerator))) {
+			immersion_npc.objective = WindGenerator;
+			site = CreateObjectAbove(ConstructionSite, 360, baseHeight);
+			site.MeshTransformation = Trans_Mul(Trans_Rotate(RandomX(-30, 30), 0, 1, 0), Trans_Rotate(RandomX(-10, 10), 1, 0, 0));
+			site->Set(WindGenerator);
+		}
+		else if (!FindObject(Find_ID(Shipyard))) {
+			immersion_npc.objective = Shipyard;
+			site = CreateObjectAbove(ConstructionSite, 250, baseHeight);
+			site->Set(Shipyard);
+		}
+		else {
+			CreateObjectAbove(Airship, 250, baseHeight-10);
+		}
+		if (site) {
+			immersion_npc.goal = goal;
 			effect = AddEffect("CheckConstruction", immersion_npc, 100, 5);
 			effect.player = player;
 		}

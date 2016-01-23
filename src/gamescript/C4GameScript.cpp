@@ -119,7 +119,7 @@ static int32_t FnGetPlayerImmLevel(C4PropList * _this)
 {
 	PlayerProfile *profile = PlayerProfile::getSingleProfile();
 	if (profile) {
-		return 2;
+		return 0;
 		return profile->immersionLevel;
 	}
 	else

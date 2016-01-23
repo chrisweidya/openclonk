@@ -22,14 +22,16 @@ func InitializeObjects()
 	respawn->SetInventoryTransfer(true);
 	respawn->SetFreeCrew(true);
 
-	var flagpole = CreateObjectAbove(Flagpole, LandscapeWidth() / 2, baseHeight);
+	var flagpole = CreateObjectAbove(Flagpole, LandscapeWidth() / 2 + 100, baseHeight);
 	flagpole->SetNeutral(true);
 	flagpole->SetObjectLayer(flagpole);
 	
-	var cabin = CreateObjectAbove(WoodenCabin, LandscapeWidth() / 2 - 120, baseHeight-1);
+	var cabin = CreateObjectAbove(WoodenCabin, LandscapeWidth() / 2 + 10, baseHeight-1);
 	cabin->SetObjectLayer(cabin);
 
-	var sm = CreateObjectAbove(Sawmill, LandscapeWidth() / 2 - 220, baseHeight - 1);
+//	var sm = CreateObjectAbove(Foundry, 400, baseHeight - 1);
+//	var sm = CreateObjectAbove(WindGenerator, 360, baseHeight - 1);
+//	var sm = CreateObjectAbove(Shipyard, 250, baseHeight - 1);
 
 	InitChest(immersion_level, achievement_level);
 	InitImmersionNPC();
@@ -43,29 +45,39 @@ func InitializeObjects()
 }
 
 private func InitChest(int immersion_level, int achievement_level) {
-	var chest = CreateObjectAbove(Chest, LandscapeWidth() / 2 + 15, baseHeight);
+	var chest = CreateObjectAbove(Chest, LandscapeWidth() / 2 + 115, baseHeight);
 	chest->CreateContents(LoamUnlimited);
 	if (immersion_level > 0) {
 		chest->CreateContents(Pickaxe);
+		chest->CreateContents(Axe);
+		chest->CreateContents(Rock, 8);
+		chest->CreateContents(Wood, 8);
+		chest->CreateContents(Coal, 8);
+		chest->CreateContents(Ore, 8);
 	}
 }
 
 private func InitImmersionNPC() {
 
-	immersion_npc = CreateObjectAbove(Clonk, LandscapeWidth() / 2 - 100, baseHeight - 10);
+	immersion_npc = CreateObjectAbove(Clonk, LandscapeWidth() / 2 , baseHeight - 10);
 	immersion_npc->SetColor(0x00997a);
 	immersion_npc->SetName(Format("Aerin"));
 	//	immersion_npc->SetName(Translate(Format("ImmersionNPC%d", immersion_npc_index)));
 	immersion_npc->SetObjectLayer(immersion_npc);
 	immersion_npc->SetSkin(3);
-	immersion_npc->SetDir(DIR_Right);
-	immersion_npc->SetDialogue(immersion_npc->GetName(), true);
+	immersion_npc->SetDir(DIR_Right);	
+	if (immersion_level > 1) {
+		immersion_npc->SetDialogue("Aerin2", true);
+	}
+	else {
+		immersion_npc->SetDialogue("Aerin", true);
+	}
 	immersion_npc->MakeInvincible();
 }
 
 private func InitAchievementNPC() {
 
-	achievement_npc = CreateObjectAbove(Clonk, LandscapeWidth() / 2 + 100, baseHeight - 10);
+	achievement_npc = CreateObjectAbove(Clonk, LandscapeWidth() / 2 + 200, baseHeight - 10);
 	achievement_npc->SetColor(0x00007a);
 	achievement_npc->SetName(Format("Warra"));
 	achievement_npc->SetObjectLayer(achievement_npc);
