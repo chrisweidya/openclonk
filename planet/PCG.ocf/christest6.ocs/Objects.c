@@ -181,6 +181,9 @@ private func InitTargetNPC(int seed) {
 		SetWeapon(1, target_npc);
 	else
 		SetWeapon(0, target_npc);
+	if (achievement_level > 1) {
+		target_npc->SetCon(100);
+	}
 	target_npc.isTarget = true;
 	AI->AddAI(target_npc);
 	AI->SetGuardRange(target_npc, x, y, width/2, height/2);
@@ -191,9 +194,10 @@ private func InitTargetNPC(int seed) {
 private func InitBats(int achievement_level) {
 	var bats = Bat->Place(6 * achievement_level, 0, 0, LandscapeWidth(), baseHeight);
 	// Make the bats a bit weaker so that they are killed with a single arrow.
+	var extra_hp = achievement_level * 3000;
 	for (var bat in bats)
 	{
-		bat.MaxEnergy = 7000;
+		bat.MaxEnergy = 7000 + extra_hp;
 		bat->DoEnergy(bat.MaxEnergy - bat->GetEnergy());
 	}
 }

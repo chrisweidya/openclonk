@@ -82,8 +82,8 @@ private func InitBuildQuest() {
 
 private func InitEnemyHealth() {
 	var fx;
-	var hp = 10000;
-	hp += achievement_level * 5000;
+	var hp = 50000;
+	hp += achievement_level * 10000;
 	for (var npc in FindObjects(Find_ID(Clonk), Find_Owner(NO_OWNER))) {
 		if (fx = AI->GetAI(npc))
 		{
@@ -91,7 +91,8 @@ private func InitEnemyHealth() {
 				target_npc = npc;
 			fx.weapon = fx.target = nil;
 			AI->BindInventory(npc);
-			npc->DoEnergy(hp);
+			npc.MaxEnergy = hp;
+			npc->DoEnergy((npc.MaxEnergy - npc->GetEnergy())/1000);
 			npc->AddEnergyBar();
 		}
 		if (npc->GetName() == "Aerin")
