@@ -10,7 +10,7 @@ local goal;
 
 func Initialize()
 {	
-	resetProfile();
+//	resetProfile();
 	var groundOffset = GetMapDataFromPlayer();
 	baseHeight = (LandscapeHeight() / 2 + groundOffset * LandscapeHeight() / 8);
 	seed = GetSeed();
@@ -82,6 +82,8 @@ private func InitBuildQuest() {
 
 private func InitEnemyHealth() {
 	var fx;
+	var hp = 10000;
+	hp += achievement_level * 5000;
 	for (var npc in FindObjects(Find_ID(Clonk), Find_Owner(NO_OWNER))) {
 		if (fx = AI->GetAI(npc))
 		{
@@ -89,7 +91,7 @@ private func InitEnemyHealth() {
 				target_npc = npc;
 			fx.weapon = fx.target = nil;
 			AI->BindInventory(npc);
-			npc->DoEnergy(10000);
+			npc->DoEnergy(hp);
 			npc->AddEnergyBar();
 		}
 		if (npc->GetName() == "Aerin")

@@ -170,8 +170,10 @@ private func FxCoreBehaviorTimer(object target, proplist effect, int time)
 		// Check if path free and if there are enough buddies to mount an attack with.
 		if (possible_prey && PathFree(GetX(), GetY(), possible_prey->GetX(), possible_prey->GetY()) && WillAttackPrey())
 		{
-			effect.attack_target = possible_prey;
-			DoSonarWave(true);
+			if (!AI->GetAI(possible_prey)) {
+				effect.attack_target = possible_prey;
+				DoSonarWave(true);
+			}
 		}
 		return FX_OK;
 	}

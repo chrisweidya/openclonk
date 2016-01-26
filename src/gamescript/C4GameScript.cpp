@@ -108,6 +108,7 @@ static int32_t FnGetPlayerAchLevel(C4PropList * _this)
 {
 	PlayerProfile *profile = PlayerProfile::getSingleProfile();
 	if (profile) {
+		return 2;
 		return profile->achievementLevel;
 	}
 	else
@@ -187,7 +188,9 @@ static int32_t FnGetFoundNPC(C4PropList *_this, int32_t index)
 {
 	PlayerProfile *profile = PlayerProfile::getSingleProfile();
 	if (profile) {
-		return profile->getFoundNPC(index);		
+		int32_t temp = profile->getFoundNPC(index);
+		std::cout << temp << "npc \n";
+		return temp;		
 	}
 	else
 		Log("failed to get found npc");
@@ -196,20 +199,7 @@ static int32_t FnGetFoundNPC(C4PropList *_this, int32_t index)
 
 static C4Void FnResetProfile(C4PropList *_this)
 {
-	PlayerProfile *profile = PlayerProfile::getSingleProfile();
-	if (profile) {
-		profile->foundNPC[0] = 0;
-		profile->foundNPC[1] = 0;
-		profile->foundNPC[2] = 0;
-		profile->foundNPC[3] = 0;
-		profile->foundNPC[4] = 0;
-		profile->achievementLevel = 0;
-		profile->immersionLevel = 0;
-		PlayerProfile::saveSingleProfile(*profile);
-		return C4Void();
-	}
-	else
-		Log("failed to save profile");
+	PlayerProfile::saveNPC(0, 0, 0, 0, 0);
 	return C4Void();
 }
 

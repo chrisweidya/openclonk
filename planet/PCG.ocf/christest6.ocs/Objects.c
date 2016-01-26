@@ -14,6 +14,7 @@ func InitializeObjects()
 	var groundOffset = GetMapDataFromPlayer();
 	baseHeight = (LandscapeHeight() / 2 + groundOffset * LandscapeHeight() / 8);
 	seed = GetSeed();
+	Log("seed %v", baseHeight);
 	immersion_level = GetPlayerImmLevel();
 	achievement_level = GetPlayerAchLevel();
 	Log("base height: %v %v", seed, LandscapeHeight());
@@ -24,7 +25,7 @@ func InitializeObjects()
 
 	var flagpole = CreateObjectAbove(Flagpole, LandscapeWidth() / 2 + 100, baseHeight);
 	flagpole->SetNeutral(true);
-	flagpole->SetObjectLayer(flagpole);
+//	flagpole->SetObjectLayer(flagpole);
 	
 	var cabin = CreateObjectAbove(WoodenCabin, LandscapeWidth() / 2 + 10, baseHeight-1);
 	cabin->SetObjectLayer(cabin);
@@ -39,6 +40,7 @@ func InitializeObjects()
 	InitLostNPC(seed);
 	InitFoundNPC();
 	InitTargetNPC(seed);
+	InitBats(achievement_level);
 	InitTrees(seed, immersion_level);
 	return true;
 	
@@ -54,6 +56,15 @@ private func InitChest(int immersion_level, int achievement_level) {
 		chest->CreateContents(Wood, 8);
 		chest->CreateContents(Coal, 8);
 		chest->CreateContents(Ore, 8);
+	}
+	if (achievement_level > 0) {
+		chest->CreateContents(Bow);
+		var arrow = chest->CreateContents(Arrow);
+		arrow->SetInfiniteStackCount();
+	}
+	if (achievement_level > 1) {
+		var javelin = chest->CreateContents(Javelin);
+		javelin->SetInfiniteStackCount();
 	}
 }
 
@@ -83,7 +94,10 @@ private func InitAchievementNPC() {
 	achievement_npc->SetObjectLayer(achievement_npc);
 	achievement_npc->SetSkin(2);
 	achievement_npc->SetDir(DIR_Left);
-	achievement_npc->SetDialogue(achievement_npc->GetName(), true);
+	if(achievement_level > 1)
+		achievement_npc->SetDialogue("Warra2", true);
+	else
+		achievement_npc->SetDialogue("Warra", true);
 	achievement_npc->MakeInvincible();
 }
 
@@ -121,6 +135,7 @@ private func InitFoundNPC() {
 	var found_npc;
 	npc_seed = GetFoundNPC(0);
 	if (npc_seed != 0) {
+		Log("npc in script: %v", npc_seed);
 		name_index = GetRandomNum(name_size, npc_seed);
 		skin = GetRandomNum(4, npc_seed);
 		colour = GetRandomColour(npc_seed);
@@ -146,10 +161,9 @@ private func InitTargetNPC(int seed) {
 	
 	y += baseHeight + 50;
 	if (y >= LandscapeHeight() - 10) {
-		Log("exceeded y ");
 		y = LandscapeHeight() - 20;
 	}
-	Log("Base height %v", y);
+
 	var width = 150;	
 	var height = 100;
 
@@ -163,7 +177,10 @@ private func InitTargetNPC(int seed) {
 	target_npc->SetName(Translate(Format("AchievementNPCName%d", name_index)));
 	target_npc->SetSkin(skin);
 	target_npc->SetDir(DIR_Right);
-	target_npc->CreateContents(Sword);
+	if (achievement_level > 0) 
+		SetWeapon(1, target_npc);
+	else
+		SetWeapon(0, target_npc);
 	target_npc.isTarget = true;
 	AI->AddAI(target_npc);
 	AI->SetGuardRange(target_npc, x, y, width/2, height/2);
@@ -171,16 +188,34 @@ private func InitTargetNPC(int seed) {
 	//	target_npc->SetDialogue(Format("$LostNPC$"), true);
 }
 
+private func InitBats(int achievement_level) {
+	var bats = Bat->Place(6 * achievement_level, 0, 0, LandscapeWidth(), baseHeight);
+	// Make the bats a bit weaker so that they are killed with a single arrow.
+	for (var bat in bats)
+	{
+		bat.MaxEnergy = 7000;
+		bat->DoEnergy(bat.MaxEnergy - bat->GetEnergy());
+	}
+}
+
+private func SetWeapon(int index, object npc) {
+	if (index == 0) 
+		npc->CreateContents(Sword);
+	else if (index == 1) {
+		npc->CreateContents(Bow);
+		var arrow = npc->CreateContents(Arrow);
+		arrow->SetInfiniteStackCount();
+	}
+}
+
 private func InitTrees(int seed, int immersion_level) {
-	var x = 123, y = baseHeight;
-	var inner = 15;
 	var num_plants = immersion_level + 1;
 	Fern->Place(12*num_plants, Rectangle(0, 0, LandscapeWidth(), baseHeight));
 	Wheat->Place(5 * num_plants, Rectangle(0, 0, LandscapeWidth(), baseHeight));
 	Cotton->Place(3 * num_plants, Rectangle(0, 0, LandscapeWidth(), baseHeight));
-	Tree_Coniferous->Place(3 * num_plants, Rectangle(0, baseHeight / 2, LandscapeWidth(), baseHeight / 2));
-	Tree_Deciduous->Place(3 * num_plants, Rectangle(0, baseHeight / 2, LandscapeWidth(), baseHeight / 2));
-	Grass->Place(100*num_plants);
+	Tree_Coniferous->Place(3 * num_plants, Rectangle(0, 0, LandscapeWidth(), baseHeight-100));
+	Tree_Deciduous->Place(3 * num_plants, Rectangle(0, 0, LandscapeWidth(), baseHeight-100));
+	Grass->Place(10*num_plants);
 	if (immersion_level > 0) {
 		Tree_Coconut->Place(3 * num_plants, Rectangle(0, 0, LandscapeWidth(), baseHeight));
 	}
@@ -188,4 +223,8 @@ private func InitTrees(int seed, int immersion_level) {
 		Flower->Place(20 * num_plants, Rectangle(0, 0, LandscapeWidth(), baseHeight));
 		Butterfly->Place(10, Rectangle(0, 0, LandscapeWidth(), baseHeight));
 	}
+
+//	CreateObjectAbove(Tree_Coniferous, 790, baseHeight);
+//	CreateObjectAbove(Tree_Coniferous, 770, baseHeight);
+//	CreateObjectAbove(Tree_Coniferous, 780, baseHeight);
 }
