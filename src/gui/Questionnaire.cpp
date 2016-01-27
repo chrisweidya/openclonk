@@ -70,10 +70,11 @@ int Questionnaire::ModifyProfile()
 	PlayerProfile *profile = PlayerProfile::getSingleProfile();
 	if (!profile)
 		return -1;
-	profile->achievementScore = (int) (newAchievementScore * 100);
-	profile->socialScore = (int)(newSocialScore * 100);
-	profile->immersionScore = (int)(newImmersionScore * 100);
-	return PlayerProfile::saveSingleProfile(*profile);
+	int32_t achievementScore = (int) (newAchievementScore * 100);
+	int32_t socialScore = (int)(newSocialScore * 100);
+	int32_t immersionScore = (int)(newImmersionScore * 100);
+	std::cout << achievementScore << " " << socialScore << " " << immersionScore << "\n";
+	return PlayerProfile::saveQuestionnaireData(achievementScore, socialScore, immersionScore);
 }
 
 void Questionnaire::DoBack()

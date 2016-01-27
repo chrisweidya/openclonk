@@ -20,6 +20,7 @@ public:
 	int32_t getSeed(bool init);
 	int32_t saveSeed(int32_t seed);
 	static int32_t saveNPC(int32_t npc1, int32_t npc2, int32_t npc3, int32_t npc4, int32_t npc5);
+	static int32_t saveQuestionnaireData(int32_t achievementSCore, int32_t socialScore, int32_t immersionScore);
 
 	void updateFoundNPC(int seed);
 	int32_t getFoundNPC(int index);

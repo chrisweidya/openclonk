@@ -126,6 +126,23 @@ int32_t PlayerProfile::saveNPC(int32_t npc1, int32_t npc2, int32_t npc3, int32_t
 	return 1;
 }
 
+int32_t PlayerProfile::saveQuestionnaireData(int32_t achievementScore, int32_t socialScore, int32_t immersionScore) {
+
+	assert(SModuleCount(Config.General.Participants) == 1);
+	C4Group PlayerGrp;
+	C4PlayerInfoCore core;
+	const char *szPlayerFilename = Config.AtUserDataPath(Config.General.Participants);
+	if (!FileExists(szPlayerFilename) || !PlayerGrp.Open(szPlayerFilename) || !core.Load(PlayerGrp))
+		return -1;
+	std::cout << core.Profile.achievementScore << " " << core.Profile.socialScore << " " << core.Profile.immersionScore << "after \n";
+	core.Profile.achievementScore = achievementScore;
+	core.Profile.socialScore = socialScore;
+	core.Profile.immersionScore = immersionScore;
+	if (!core.Save(PlayerGrp) || !PlayerGrp.Close())
+		return -1;
+	return 1;
+}
+
 void PlayerProfile::CompileFunc(StdCompiler *pComp)
 {
 	pComp->Value(mkNamingAdapt(achievementScore, "achievementScore", 0));
