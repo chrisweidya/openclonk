@@ -44,8 +44,8 @@ Questionnaire::Questionnaire() : C4StartupDlg("Questionnaire")
 	//rcBottomButtons = caButtonArea.GetAll();	
 	iBottomButtonWidth = (caButtonArea.GetWidth() - iButtonXSpacing * (iButtonCount - 1)) / iButtonCount;
 	C4Rect rcMain = caMain.GetAll();
-	C4Rect rcInstructionsWindow = C4Rect(rcMain.Wdt / 8, rcMain.Hgt / 11, rcMain.Wdt * 11 / 16, rcMain.Hgt * 1 / 16);
-	C4Rect rcQuestionWindow = C4Rect(rcMain.Wdt / 8, rcMain.Hgt / 6, rcMain.Wdt * 11 / 16, rcMain.Hgt * 1 / 8);
+	C4Rect rcInstructionsWindow = C4Rect(rcMain.Wdt / 8, rcMain.Hgt / 11, rcMain.Wdt * 11 / 16, rcMain.Hgt * 1 / 12);
+	C4Rect rcQuestionWindow = C4Rect(rcMain.Wdt / 8, rcMain.Hgt / 5, rcMain.Wdt * 11 / 16, rcMain.Hgt * 1 / 8);
 	rcBottomButtons = C4Rect(rcMain.Wdt / 8, rcQuestionWindow.GetBottom(), rcMain.Wdt * 11 / 16, rcMain.Hgt * 2 / 8);
 	AddElement(instructionsWindow = new C4GUI::TextWindow(rcInstructionsWindow, 0, 0, 0, 100, 4096, "  ", false, NULL, 0, true));
 	AddElement(questionWindow = new C4GUI::TextWindow(rcQuestionWindow, 0, 0, 0, 100, 4096, "  ", false, NULL, 0, true));
