@@ -38,8 +38,8 @@ protected func InitializePlayer(int plr)
 	var clonk = GetCrew(plr);
 	clonk->CreateContents(Shovel);
 	clonk->CreateContents(GrappleBow);
-	clonk->CreateContents(Sword);
 	clonk->CreateContents(TeleportScroll);
+	clonk->CreateContents(Sword);
 	clonk->SetPosition(LandscapeWidth()/2 + 100, baseHeight - 20);	
 	/*
 	for (var structure in FindObjects(Find_Or(Find_Category(C4D_Structure), Find_Func("IsFlagpole"))))
@@ -83,17 +83,22 @@ private func InitBuildQuest() {
 private func InitEnemyHealth() {
 	var fx;
 	var hp = 50000;
-	hp += achievement_level * 10000;
+	hp += achievement_level * 15000;
 	for (var npc in FindObjects(Find_ID(Clonk), Find_Owner(NO_OWNER))) {
 		if (fx = AI->GetAI(npc))
 		{
-			if (npc.isTarget)
-				target_npc = npc;
 			fx.weapon = fx.target = nil;
 			AI->BindInventory(npc);
-			npc.MaxEnergy = hp;
-			npc->DoEnergy((npc.MaxEnergy - npc->GetEnergy())/1000);
-			npc->AddEnergyBar();
+			if (npc.isTarget) {
+				target_npc = npc;
+				npc.MaxEnergy = hp;
+				npc->DoEnergy((npc.MaxEnergy - npc->GetEnergy()) / 1000);
+				npc->AddEnergyBar();
+			}
+			else {
+				npc.MaxEnergy = 25000;
+				npc->AddEnergyBar();
+			}
 		}
 		if (npc->GetName() == "Aerin")
 			immersion_npc = npc;

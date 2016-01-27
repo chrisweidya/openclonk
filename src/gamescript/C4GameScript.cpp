@@ -108,7 +108,7 @@ static int32_t FnGetPlayerAchLevel(C4PropList * _this)
 {
 	PlayerProfile *profile = PlayerProfile::getSingleProfile();
 	if (profile) {
-		return 2;
+		return 5;
 		return profile->achievementLevel;
 	}
 	else

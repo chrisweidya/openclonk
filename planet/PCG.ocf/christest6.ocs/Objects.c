@@ -66,6 +66,14 @@ private func InitChest(int immersion_level, int achievement_level) {
 		var javelin = chest->CreateContents(Javelin);
 		javelin->SetInfiniteStackCount();
 	}
+	if (achievement_level > 2) {chest->CreateContents(Musket);
+		var leadshot = chest->CreateContents(LeadShot);
+		leadshot->SetInfiniteStackCount();
+	}
+	if (achievement_level > 3) {
+		chest->CreateContents(GrenadeLauncher);
+		chest->CreateContents(IronBomb, 10);
+	}
 }
 
 private func InitImmersionNPC() {
@@ -155,50 +163,59 @@ private func InitTargetNPC(int seed) {
 	var name_index = GetRandomNum(name_size, seed);
 	var skin = GetRandomNum(4, seed);
 	var colour = GetRandomColour(seed);
+	var weapon = GetRandomNum(3, seed);
 	var y = GetRandomNum(LandscapeHeight() - baseHeight, seed);
 	var x = GetRandomNum(LandscapeWidth(), seed);
-
 	
 	y += baseHeight + 50;
 	if (y >= LandscapeHeight() - 10) {
 		y = LandscapeHeight() - 20;
 	}
-
+	
 	var width = 150;	
 	var height = 100;
-
 	DigFreeRect(x - width / 2, y - height / 2, width, height);
-	DrawMaterialQuad("Granite", x - width / 2, y + height / 2 - 10, x + width / 2, y + height / 2 - 10, 
-		x + width / 2, y + height / 2, x - width / 2, y + height / 2);
-	
+	DrawMaterialQuad("Brick", x - width / 2, y + height / 2 - 10, x + width / 2, y + height / 2 - 10, 
+		x + width / 2, y + height / 2, x - width / 2, y + height / 2);	
 
 	target_npc = CreateObjectAbove(Clonk, x, y);
 	target_npc->SetColor(colour);
 	target_npc->SetName(Translate(Format("AchievementNPCName%d", name_index)));
 	target_npc->SetSkin(skin);
 	target_npc->SetDir(DIR_Right);
-	if (achievement_level > 0) 
-		SetWeapon(1, target_npc);
-	else
-		SetWeapon(0, target_npc);
-	if (achievement_level > 1) {
-		target_npc->SetCon(100);
-	}
+	SetWeapon(weapon, target_npc);
 	target_npc.isTarget = true;
 	AI->AddAI(target_npc);
 	AI->SetGuardRange(target_npc, x, y, width/2, height/2);
-	//	AI->SetEncounterCB(target_npc, "EncounterKing");
-	//	target_npc->SetDialogue(Format("$LostNPC$"), true);
+	AI->SetAllyAlertRange(target_npc, 60);
+
+	if (achievement_level > 3) {
+		InitGuards(x, y, colour);
+	}
+}
+
+private func InitGuards(int x, int y, int colour) {
+	var guard;
+	guard = CreateObjectAbove(Clonk, x-5, y);
+	guard->SetColor(colour);
+	guard->SetName("Guard");
+	guard->SetSkin(0);
+	guard->SetDir(DIR_Left);
+	SetWeapon(0, guard);
+	AI->AddAI(guard);
+	AI->SetGuardRange(guard, x-100, y, 100, 50);
+	AI->SetAllyAlertRange(guard, 60);
 }
 
 private func InitBats(int achievement_level) {
 	var bats = Bat->Place(6 * achievement_level, 0, 0, LandscapeWidth(), baseHeight);
 	// Make the bats a bit weaker so that they are killed with a single arrow.
-	var extra_hp = achievement_level * 3000;
+	var extra_hp = achievement_level * 2000;
 	for (var bat in bats)
 	{
 		bat.MaxEnergy = 7000 + extra_hp;
 		bat->DoEnergy(bat.MaxEnergy - bat->GetEnergy());
+		bat->AddEnergyBar();
 	}
 }
 
@@ -210,6 +227,11 @@ private func SetWeapon(int index, object npc) {
 		var arrow = npc->CreateContents(Arrow);
 		arrow->SetInfiniteStackCount();
 	}
+	else if (index == 2) {
+		var jav = npc->CreateContents(Javelin);
+		jav->SetInfiniteStackCount();
+	}
+	
 }
 
 private func InitTrees(int seed, int immersion_level) {
