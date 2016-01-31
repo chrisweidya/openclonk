@@ -103,23 +103,23 @@ private func InitEnemyHealth() {
 }
 
 
-private func InitConstructionGoal(int index) {
+private func InitConstructionGoal(int level) {
 	var effect;
-	
-	if (index > 1) {
-		if (!FindObject(Find_ID(Foundry))) {
+	var buildingsCompleted = GetBuildingsCompleted();
+	if (level > 1) {
+		if (!FindObject(Find_ID(Foundry)) && buildingsCompleted == 0) {
 			immersion_npc.objective = Foundry;
 			site = CreateObjectAbove(ConstructionSite, 400, baseHeight+2);
 			site.MeshTransformation = Trans_Mul(Trans_Rotate(RandomX(-30, 30), 0, 1, 0), Trans_Rotate(RandomX(-10, 10), 1, 0, 0));
 			site->Set(Foundry);
 		}
-		else if (!FindObject(Find_ID(WindGenerator))) {
+		else if (!FindObject(Find_ID(WindGenerator)) && buildingsCompleted == 1) {
 			immersion_npc.objective = WindGenerator;
-			site = CreateObjectAbove(ConstructionSite, 360, baseHeight);
+			site = CreateObjectAbove(ConstructionSite, 360, baseHeight+2);
 			site.MeshTransformation = Trans_Mul(Trans_Rotate(RandomX(-30, 30), 0, 1, 0), Trans_Rotate(RandomX(-10, 10), 1, 0, 0));
 			site->Set(WindGenerator);
 		}
-		else if (!FindObject(Find_ID(Shipyard))) {
+		else if (!FindObject(Find_ID(Shipyard)) && buildingsCompleted == 2) {
 			immersion_npc.objective = Shipyard;
 			site = CreateObjectAbove(ConstructionSite, 250, baseHeight);
 			site->Set(Shipyard);
@@ -163,6 +163,7 @@ global func FxCheckConstructionTimer(object target, proplist effect) {
 	if (FindObject(Find_ID(target.objective)))
 	{
 		SetPlayerImmLevel(-1);
+		UpdateBuildingsCompleted();
 		target.goal->Fulfill();
 		return FX_Execute_Kill;
 	}

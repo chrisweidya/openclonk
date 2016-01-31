@@ -41,6 +41,7 @@ func InitializeObjects()
 	InitLostNPC(seed);
 	InitFoundNPC();
 	InitTargetNPC(seed);
+	InitBuildings();
 	InitBats(achievement_level);
 	InitTrees(seed, immersion_level);
 	return true;
@@ -107,7 +108,7 @@ private func InitAchievementNPC() {
 }
 
 private func InitLostNPC(int seed) {
-	if (immersion_level < 2) {
+	if (immersion_level < 2 || GetBuildingsCompleted() == 3) {
 		var name_size = $ImmersionNPCNameSize$;
 		var name_index = GetRandomNum(name_size, seed);
 		var skin = GetRandomNum(4, seed);
@@ -213,6 +214,16 @@ private func InitGuards(int x, int y, int colour) {
 	AI->AddAI(guard);
 	AI->SetGuardRange(guard, x-100, y, 100, 50);
 	AI->SetAllyAlertRange(guard, 60);
+}
+
+private func InitBuildings() {
+	var buildingsCompleted = GetBuildingsCompleted();
+	if (buildingsCompleted > 0)
+		CreateObjectAbove(Foundry, 400, baseHeight-1);
+	if (buildingsCompleted > 1)
+		CreateObjectAbove(WindGenerator, 360, baseHeight);
+	if (buildingsCompleted > 2)
+		CreateObjectAbove(Shipyard, 250, baseHeight);
 }
 
 private func InitBats(int achievement_level) {

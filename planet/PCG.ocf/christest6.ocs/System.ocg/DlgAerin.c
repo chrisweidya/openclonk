@@ -3,7 +3,7 @@
 
 public func Dlg_Aerin_Init(object clonk)
 {
-	if (clonk.level == 1)
+	if (clonk.level == 1 || GetBuildingsCompleted() == 3)
 		SetDialogueProgress(11);
 	else if (clonk.level >= 2)
 		SetDialogueProgress(6);

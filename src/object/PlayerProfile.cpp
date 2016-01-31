@@ -58,6 +58,15 @@ int32_t PlayerProfile::getFoundNPC(int index) {
 	return npc_seed;
 }
 
+void PlayerProfile::updateBuildingsCompleted() {
+	buildingsCompleted++;
+}
+
+int32_t PlayerProfile::getBuildingsCompleted() {
+	int32_t count = buildingsCompleted;
+	return count;
+}
+
 PlayerProfile* PlayerProfile::getSingleProfile() {
 	assert(SModuleCount(Config.General.Participants) == 1);
 	C4Group PlayerGrp;
@@ -121,6 +130,7 @@ int32_t PlayerProfile::saveNPC(int32_t npc1, int32_t npc2, int32_t npc3, int32_t
 	core.Profile.foundNPC[4] = npc5;
 	core.Profile.achievementLevel = 0;
 	core.Profile.immersionLevel = 0;
+	core.Profile.buildingsCompleted = 0;
 	if (!core.Save(PlayerGrp) || !PlayerGrp.Close())
 		return -1;
 	std::cout << core.Profile.foundNPC[0] << " npc\n";
@@ -153,4 +163,5 @@ void PlayerProfile::CompileFunc(StdCompiler *pComp)
 	pComp->Value(mkNamingAdapt(immersionLevel, "immersionLevel", 0));
 	pComp->Value(mkNamingAdapt(seed, "seed", 0));
 	pComp->Value(mkNamingAdapt(toC4CArr(foundNPC), "foundNPC"));
+	pComp->Value(mkNamingAdapt(buildingsCompleted, "buildingsCompleted", 0));
 }

@@ -225,6 +225,31 @@ static int32_t FnGetFoundNPC(C4PropList *_this, int32_t index)
 	return 0;
 }
 
+static C4Void FnUpdateBuildingsCompleted(C4PropList *_this, int player)
+{
+	C4Player *plr = ::Players.Get(player);
+	if (plr) {
+		plr->Profile.updateBuildingsCompleted();
+		return C4Void();
+	}
+	else
+		Log("failed to update buildings completed");
+	return C4Void();
+}
+
+static int32_t FnGetBuildingsCompleted(C4PropList *_this)
+{
+	PlayerProfile *profile = PlayerProfile::getSingleProfile();
+	if (profile) {
+		int32_t temp = profile->getBuildingsCompleted();
+		std::cout << temp << "buildings \n";
+		return temp;
+	}
+	else
+		Log("failed to get buildings completed");
+	return 0;
+}
+
 static C4Void FnResetProfile(C4PropList *_this)
 {
 	PlayerProfile::saveNPC(0, 0, 0, 0, 0);
@@ -3084,6 +3109,8 @@ void InitGameFunctionMap(C4AulScriptEngine *pEngine)
 	AddFunc(pEngine, "GetRandomColour", FnGetRandomColour);
 	AddFunc(pEngine, "UpdateFoundNPC", FnUpdateFoundNPC);
 	AddFunc(pEngine, "GetFoundNPC", FnGetFoundNPC);
+	AddFunc(pEngine, "UpdateBuildingsCompleted", FnUpdateBuildingsCompleted);
+	AddFunc(pEngine, "GetBuildingsCompleted", FnGetBuildingsCompleted);
 	AddFunc(pEngine, "ResetProfile", FnResetProfile);
 	AddFunc(pEngine, "GetPlayerImmLevel", FnGetPlayerImmLevel);
 	AddFunc(pEngine, "GetPlayerAchLevel", FnGetPlayerAchLevel);
