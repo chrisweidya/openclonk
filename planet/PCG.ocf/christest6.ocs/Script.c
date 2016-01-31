@@ -1,6 +1,5 @@
 local seed;
 local baseHeight;
-local immersion_npc;
 local lost_npc;
 local target_npc;
 local site;
@@ -100,8 +99,6 @@ private func InitEnemyHealth() {
 				npc->AddEnergyBar();
 			}
 		}
-		if (npc->GetName() == "Aerin")
-			immersion_npc = npc;
 	}
 }
 
@@ -216,3 +213,4 @@ global func FxClonkRestoreStop(object target, effect, int reason, bool  temporar
 	}
 	return FX_OK;
 }
+

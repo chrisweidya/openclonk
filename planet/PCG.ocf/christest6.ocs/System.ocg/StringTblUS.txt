@@ -8,9 +8,9 @@ DlgWarraHelp=If you want a challenge, kill the cave dweller below instead of hel
 DlgWarraHelpReply=[Choose reply]
 DlgWarraKill=Just kill the cave dweller below.
 
-DlgWarraHelp2=Enemies are more difficult now, try killing them!
+DlgWarraHelp2=Enemies are always more difficult every time you kill the cave dweller, try killing them now!
 DlgWarraHelpReply2=[Choose reply]
-DlgWarraKill2=Kill the cave boss below.
+DlgWarraKill2=Kill the cave boss below. I gave you more weapons in the chest.
 
 
 # Dialogue: Aerin
@@ -29,3 +29,7 @@ DlgAerinFindThem2=The materials are up in the skylands, and the tools are in the
 DlgAerinHelp3=Can you help me find my children?
 DlgAerinHelpReply3=[Choose reply]
 DlgAerinSkylands3=Please! I've put some tools to help you out in the chest if you need them.
+
+# Dialogue: FoundNPC
+
+DlgFoundNPCSaved=Thanks for saving me!

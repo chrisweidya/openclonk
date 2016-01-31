@@ -89,6 +89,7 @@ private func InitImmersionNPC() {
 	immersion_npc.level = immersion_level;
 	immersion_npc->SetDialogue("Aerin", true);
 	immersion_npc->MakeInvincible();
+	immersion_npc.StaticSaveVar = "immersion_npc";
 }
 
 private func InitAchievementNPC() {
@@ -99,11 +100,10 @@ private func InitAchievementNPC() {
 	achievement_npc->SetObjectLayer(achievement_npc);
 	achievement_npc->SetSkin(2);
 	achievement_npc->SetDir(DIR_Left);
-	if(achievement_level > 1)
-		achievement_npc->SetDialogue("Warra2", true);
-	else
-		achievement_npc->SetDialogue("Warra", true);
+	achievement_npc.level = achievement_level;
+	achievement_npc->SetDialogue("Warra", true);
 	achievement_npc->MakeInvincible();
+	achievement_npc.StaticSaveVar = "achievement_npc";
 }
 
 private func InitLostNPC(int seed) {
@@ -158,6 +158,8 @@ private func InitFoundNPC() {
 			else
 				found_npc->SetDir(DIR_Left);
 			//	found_npc->SetDialogue(Format("$LostNPC$"), true);
+			found_npc->CreateContents(Hammer);
+			found_npc->SetDialogue("FoundNPC");
 		}
 		else
 			break;
@@ -260,3 +262,4 @@ private func InitTrees(int seed, int immersion_level) {
 //	CreateObjectAbove(Tree_Coniferous, 770, baseHeight);
 //	CreateObjectAbove(Tree_Coniferous, 780, baseHeight);
 }
+

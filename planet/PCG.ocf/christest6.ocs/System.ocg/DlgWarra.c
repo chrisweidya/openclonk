@@ -3,6 +3,8 @@
 
 public func Dlg_Warra_Init(object clonk)
 {
+	if (clonk.level > 0)
+		SetDialogueProgress(4);
 	return true;
 }
 
@@ -28,3 +30,24 @@ public func Dlg_Warra_3(object clonk)
 	return true;
 }
 
+public func Dlg_Warra_4(object clonk)
+{
+	MessageBox(Format("$DlgWarraHelp2$", dlg_target->GetName()), clonk, dlg_target);
+	return true;
+}
+
+public func Dlg_Warra_5(object clonk)
+{
+	MessageBox(Format("$DlgWarraHelpReply2$"), clonk, clonk, nil, false, ["I'm going to help the other guy.", "Killing is my specialty."], true);
+	StopDialogue();
+	SetDialogueProgress(6);
+	return true;
+}
+
+public func Dlg_Warra_6(object clonk)
+{
+	MessageBox("$DlgWarraKill2$", clonk, dlg_target);
+	StopDialogue();
+	SetDialogueProgress(6);
+	return true;
+}
