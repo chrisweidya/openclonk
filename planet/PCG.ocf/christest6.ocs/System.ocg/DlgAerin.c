@@ -3,6 +3,10 @@
 
 public func Dlg_Aerin_Init(object clonk)
 {
+	if (clonk.level == 1)
+		SetDialogueProgress(11);
+	else if (clonk.level >= 2)
+		SetDialogueProgress(6);
 	return true;
 }
 
@@ -73,6 +77,27 @@ public func Dlg_Aerin_10(object clonk)
 	SetDialogueProgress(10);
 	return true;
 }
+
+public func Dlg_Aerin_11(object clonk)
+{
+	MessageBox("$DlgAerinHelp3$", clonk, dlg_target);
+	return true;
+}
+
+public func Dlg_Aerin_12(object clonk)
+{
+	MessageBox(Format("$DlgAerinHelpReply3$"), clonk, clonk, nil, false, ["Okay. Don't worry I'm on it.", "I don't really care."], true);
+	return true;
+}
+
+public func Dlg_Aerin_13(object clonk)
+{
+	MessageBox("$DlgAerinSkylands3$", clonk, dlg_target);
+	StopDialogue();
+	SetDialogueProgress(13);
+	return true;
+}
+
 /*
 public func Dlg_Aerin_Closed(object clonk)
 {

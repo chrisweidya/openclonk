@@ -14,14 +14,18 @@ DlgWarraKill2=Kill the cave boss below.
 
 
 # Dialogue: Aerin
-DlgAerinHelp=Help! Please listen to me! I am %s, there was a huge sandstorm and my family and pets are missing.
+DlgAerinHelp=Help! Please listen to me! I am %s, there was a huge sandstorm and my family is missing.
 DlgAerinHelpReply=[Choose reply]
 DlgAerinSkylands=Please! They're somwehere in the skylands above, help me find them!
 DlgAerinSkylandsReply=[Choose reply]
 DlgAerinFindThem=Please find them! They're somewhere up in the skyland!
 
-DlgAerinHelp2=Our buildings got destroyed in the sandstorm. Can you please help us with them?
+DlgAerinHelp2=Our buildings got destroyed in the sandstorm as well. Can you please help us with them?
 DlgAerinHelpReply2=[Choose reply]
 DlgAerinSkylands2=Please! The materials can be gathered in the skylands above. The tools required can be found in the chest.
 DlgAerinSkylandsReply2=[Choose reply]
 DlgAerinFindThem2=The materials are up in the skylands, and the tools are in the chest. Please help us!
+
+DlgAerinHelp3=Can you help me find my children?
+DlgAerinHelpReply3=[Choose reply]
+DlgAerinSkylands3=Please! I've put some tools to help you out in the chest if you need them.

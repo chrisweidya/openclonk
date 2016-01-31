@@ -18,7 +18,6 @@ void PlayerProfile::updatePlayerType(float achievementScore, float socialScore, 
 
 int32_t PlayerProfile::getScoreDiff() {
 	int32_t scoreDiff = immersionLevel - achievementLevel;
-	return 0;
 	if (scoreDiff > 2)
 		return 2;
 	if (scoreDiff < -2)
@@ -120,6 +119,8 @@ int32_t PlayerProfile::saveNPC(int32_t npc1, int32_t npc2, int32_t npc3, int32_t
 	core.Profile.foundNPC[2] = npc3;
 	core.Profile.foundNPC[3] = npc4;
 	core.Profile.foundNPC[4] = npc5;
+	core.Profile.achievementLevel = 0;
+	core.Profile.immersionLevel = 0;
 	if (!core.Save(PlayerGrp) || !PlayerGrp.Close())
 		return -1;
 	std::cout << core.Profile.foundNPC[0] << " npc\n";

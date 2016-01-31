@@ -10,7 +10,7 @@ local goal;
 
 func Initialize()
 {	
-//	resetProfile();
+	//resetProfile();
 	var groundOffset = GetMapDataFromPlayer();
 	baseHeight = (LandscapeHeight() / 2 + groundOffset * LandscapeHeight() / 8);
 	seed = GetSeed();
@@ -145,6 +145,7 @@ public func OnHasTalkedToLostNPC()
 //	guide->ShowGuideMessage(0);
 //	guide->ShowGuide();
 	UpdateFoundNPC(seed, player);
+	SetPlayerImmLevel(-1);
 	goal->Fulfill();
 	return;
 }
@@ -164,6 +165,7 @@ public func EncounterOutpost(object enemy, object player)
 global func FxCheckConstructionTimer(object target, proplist effect) {
 	if (FindObject(Find_ID(target.objective)))
 	{
+		SetPlayerImmLevel(-1);
 		target.goal->Fulfill();
 		return FX_Execute_Kill;
 	}
@@ -173,6 +175,7 @@ global func FxTargetDeathStop(object target, effect, int reason, bool  temporary
 {
 	if (reason == 3 || reason == 4)
 	{
+		SetPlayerAchLevel(-1);
 		target.goal->Fulfill();
 		return FX_Execute_Kill;
 	}

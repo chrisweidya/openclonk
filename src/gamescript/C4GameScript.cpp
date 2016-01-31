@@ -108,7 +108,6 @@ static int32_t FnGetPlayerAchLevel(C4PropList * _this)
 {
 	PlayerProfile *profile = PlayerProfile::getSingleProfile();
 	if (profile) {
-		return 5;
 		return profile->achievementLevel;
 	}
 	else
@@ -120,11 +119,40 @@ static int32_t FnGetPlayerImmLevel(C4PropList * _this)
 {
 	PlayerProfile *profile = PlayerProfile::getSingleProfile();
 	if (profile) {
-		return 0;
 		return profile->immersionLevel;
 	}
 	else
 		Log("failed to load player profile");
+	return -1;
+}
+
+static int32_t FnSetPlayerAchLevel(C4PropList * _this, int32_t level, int player)
+{
+	C4Player *plr = ::Players.Get(player);
+	if (plr) {
+		if(level >= 0)
+			plr->Profile.achievementLevel = level;
+		else
+			plr->Profile.achievementLevel++;
+		return 1;
+	}
+	else
+		Log("failed to update lvevel");
+	return -1;
+}
+
+static int32_t FnSetPlayerImmLevel(C4PropList * _this, int32_t level, int player)
+{
+	C4Player *plr = ::Players.Get(player);
+	if (plr) {
+		if(level >= 0)
+			plr->Profile.immersionLevel = level;
+		else
+			plr->Profile.immersionLevel++;
+		return 1;
+	}
+	else
+		Log("failed to update level");
 	return -1;
 }
 
@@ -3059,6 +3087,8 @@ void InitGameFunctionMap(C4AulScriptEngine *pEngine)
 	AddFunc(pEngine, "ResetProfile", FnResetProfile);
 	AddFunc(pEngine, "GetPlayerImmLevel", FnGetPlayerImmLevel);
 	AddFunc(pEngine, "GetPlayerAchLevel", FnGetPlayerAchLevel);
+	AddFunc(pEngine, "SetPlayerImmLevel", FnSetPlayerImmLevel);
+	AddFunc(pEngine, "SetPlayerAchLevel", FnSetPlayerAchLevel);
 
 	F(GetPlrKnowledge);
 	F(GetComponent);

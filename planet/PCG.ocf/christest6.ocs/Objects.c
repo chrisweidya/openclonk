@@ -14,10 +14,11 @@ func InitializeObjects()
 	var groundOffset = GetMapDataFromPlayer();
 	baseHeight = (LandscapeHeight() / 2 + groundOffset * LandscapeHeight() / 8);
 	seed = GetSeed();
-	Log("seed %v", baseHeight);
+	Log("seed %v", seed);
+	Log(" offset %v ", groundOffset);
 	immersion_level = GetPlayerImmLevel();
 	achievement_level = GetPlayerAchLevel();
-	Log("base height: %v %v", seed, LandscapeHeight());
+	Log("imm/ach level %v %v", immersion_level, achievement_level);
 
 	var respawn = CreateObject(Rule_BaseRespawn);
 	respawn->SetInventoryTransfer(true);
@@ -85,12 +86,8 @@ private func InitImmersionNPC() {
 	immersion_npc->SetObjectLayer(immersion_npc);
 	immersion_npc->SetSkin(3);
 	immersion_npc->SetDir(DIR_Right);	
-	if (immersion_level > 1) {
-		immersion_npc->SetDialogue("Aerin2", true);
-	}
-	else {
-		immersion_npc->SetDialogue("Aerin", true);
-	}
+	immersion_npc.level = immersion_level;
+	immersion_npc->SetDialogue("Aerin", true);
 	immersion_npc->MakeInvincible();
 }
 
@@ -110,27 +107,29 @@ private func InitAchievementNPC() {
 }
 
 private func InitLostNPC(int seed) {
-	var name_size = $ImmersionNPCNameSize$;
-	var name_index = GetRandomNum(name_size, seed);
-	var skin = GetRandomNum(4, seed);
-	var colour = GetRandomColour(seed);
-	var y = GetRandomNum(baseHeight - 150, seed);
-	var x = GetRandomNum(LandscapeWidth(), seed);
+	if (immersion_level < 2) {
+		var name_size = $ImmersionNPCNameSize$;
+		var name_index = GetRandomNum(name_size, seed);
+		var skin = GetRandomNum(4, seed);
+		var colour = GetRandomColour(seed);
+		var y = GetRandomNum(baseHeight - 150, seed);
+		var x = GetRandomNum(LandscapeWidth(), seed);
 
-	var outer = 25;
-	var inner = 15;
-	DrawMaterialQuad("Sand", x - inner, y + inner, x + inner, y + inner, x + outer, y + outer, x - outer, y + outer);
-	ClearFreeRect(x - outer/2, y - outer/2, outer, outer);
+		var outer = 25;
+		var inner = 15;
+		DrawMaterialQuad("Sand", x - inner, y + inner, x + inner, y + inner, x + outer, y + outer, x - outer, y + outer);
+		ClearFreeRect(x - outer / 2, y - outer / 2, outer, outer);
 
-	//	lost_npc = CreateObjectAbove(Clonk, 600, baseHeight-5);
-	lost_npc = CreateObjectAbove(Clonk, x, y);
-	lost_npc->SetColor(colour);
-	lost_npc->SetName(Translate(Format("ImmersionNPCName%d", name_index)));
-	lost_npc->SetObjectLayer(lost_npc);
-	lost_npc->SetSkin(skin);
-	lost_npc->SetDir(DIR_Right);
-	lost_npc->SetDialogue(Format("$LostNPC$"), true);
-	lost_npc->MakeInvincible();
+		//	lost_npc = CreateObjectAbove(Clonk, 600, baseHeight-5);
+		lost_npc = CreateObjectAbove(Clonk, x, y);
+		lost_npc->SetColor(colour);
+		lost_npc->SetName(Translate(Format("ImmersionNPCName%d", name_index)));
+		lost_npc->SetObjectLayer(lost_npc);
+		lost_npc->SetSkin(skin);
+		lost_npc->SetDir(DIR_Right);
+		lost_npc->SetDialogue(Format("$LostNPC$"), true);
+		lost_npc->MakeInvincible();
+	}
 }
 
 private func InitFoundNPC() {
@@ -141,20 +140,27 @@ private func InitFoundNPC() {
 	var max = 10;
 	var npc_seed = -1;
 	var found_npc;
-	npc_seed = GetFoundNPC(0);
-	if (npc_seed != 0) {
-		Log("npc in script: %v", npc_seed);
-		name_index = GetRandomNum(name_size, npc_seed);
-		skin = GetRandomNum(4, npc_seed);
-		colour = GetRandomColour(npc_seed);
+	for (var i = 0; i < 5; i++) {
+		npc_seed = GetFoundNPC(i);
+		if (npc_seed != 0) {
+			Log("npc in script: %v", npc_seed);
+			name_index = GetRandomNum(name_size, npc_seed);
+			skin = GetRandomNum(4, npc_seed);
+			colour = GetRandomColour(npc_seed);
 
-		found_npc = CreateObjectAbove(Clonk, 700, baseHeight - 5);
-		found_npc->SetColor(colour);
-		found_npc->SetName(Translate(Format("ImmersionNPCName%d", name_index)));
-		found_npc->SetObjectLayer(found_npc);
-		found_npc->SetSkin(skin);
-		found_npc->SetDir(DIR_Right);
-		//	found_npc->SetDialogue(Format("$LostNPC$"), true);
+			found_npc = CreateObjectAbove(Clonk, 450 + i*50, baseHeight - 5);
+			found_npc->SetColor(colour);
+			found_npc->SetName(Translate(Format("ImmersionNPCName%d", name_index)));
+			found_npc->SetObjectLayer(found_npc);
+			found_npc->SetSkin(skin);
+			if (i % 2 == 0)
+				found_npc->SetDir(DIR_Right);
+			else
+				found_npc->SetDir(DIR_Left);
+			//	found_npc->SetDialogue(Format("$LostNPC$"), true);
+		}
+		else
+			break;
 	}
 }
 
