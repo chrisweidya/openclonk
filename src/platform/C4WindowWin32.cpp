@@ -152,6 +152,8 @@ LRESULT APIENTRY FullScreenWinProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM l
 			Application.MusicSystem.NotifySuccess();
 		return true;
 	case WM_KEYUP:
+
+		std::cout << "press \n";
 		if (Game.DoKeyboardInput(scancode, KEYEV_Up, !!(lParam & 0x20000000), GetKeyState(VK_CONTROL) < 0, GetKeyState(VK_SHIFT) < 0, false, NULL))
 			return 0;
 		break;

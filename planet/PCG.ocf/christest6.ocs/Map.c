@@ -17,11 +17,12 @@ func InitializeMap(proplist map)
 	var skyLand = draw_sky(seed, map, groundHeightOffset);
 
 	if (immersion_level > 1) {
-		draw_mat(seed + 2, "^Coal", skyLand, 26, 5, 2, 1);
+		var upperSkyLand = { Algo = MAPALGO_Rect, X = 0, Y = 0, Wdt = map.Wdt, Hgt = map.Hgt / 8 + (groundHeightOffset) };
+		draw_mat(seed + 1, "^Ore", upperSkyLand, 35, 7, 2, 1);
+		draw_mat(seed + 2, "^Coal", upperSkyLand, 32, 8, 3, 1);
 	}
 	if (immersion_level > 0) {
-		draw_mat(seed + 1, "^Rock", skyLand, 30, 6, 2, 1);
-		draw_mat(seed + 1, "^Ore", skyLand, 30, 7, 2, 1);
+		draw_mat(seed + 1, "^Rock", skyLand, 30, 6, 2, 1);		
 	}
 	if (achievement_level > 0) {
 		var fireStone = draw_mat(seed, "Firestone", ground, 30, 8, 2, 1);
