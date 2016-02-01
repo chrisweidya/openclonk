@@ -64,6 +64,7 @@ void PlayerProfile::updateBuildingsCompleted() {
 
 int32_t PlayerProfile::getBuildingsCompleted() {
 	int32_t count = buildingsCompleted;
+	std::cout << timeTakenToComplete << "check \n";
 	return count;
 }
 
@@ -164,4 +165,6 @@ void PlayerProfile::CompileFunc(StdCompiler *pComp)
 	pComp->Value(mkNamingAdapt(seed, "seed", 0));
 	pComp->Value(mkNamingAdapt(toC4CArr(foundNPC), "foundNPC"));
 	pComp->Value(mkNamingAdapt(buildingsCompleted, "buildingsCompleted", 0));
+
+	pComp->Value(mkNamingAdapt(timeTakenToComplete, "timeTakenToComplete", 0));
 }

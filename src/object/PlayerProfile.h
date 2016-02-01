@@ -18,6 +18,9 @@ public:
 	int32_t foundNPC[5] = { 0, 0, 0, 0, 0 };
 	int32_t buildingsCompleted = 0;
 
+	//Game data
+	int32_t timeTakenToComplete = 0;
+
 	//profile saving or loading
 	void updatePlayerType(float achievementScore, float socialScore, float immersionScore);
 	int32_t getScoreDiff();

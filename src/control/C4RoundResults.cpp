@@ -300,6 +300,12 @@ void C4RoundResults::EvaluateGoals(C4IDList &GoalList, C4IDList &FulfilledGoalLi
 	}
 }
 
+void C4RoundResults::SaveProfileData() {
+	C4Player *pFirstLocalPlayer = ::Players.GetLocalByIndex(0);
+	pFirstLocalPlayer->Profile.timeTakenToComplete = Game.Time;
+	std::cout << Game.Time << "time taken \n";
+}
+
 void C4RoundResults::EvaluateGame()
 {
 	// set game data

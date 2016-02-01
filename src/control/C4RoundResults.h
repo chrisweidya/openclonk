@@ -140,6 +140,7 @@ private:
 	C4IDList Goals;     // Goals at time of evaluation
 	C4IDList FulfilledGoals; // only those goals that are fulfilled
 	uint32_t iPlayingTime; // game time in seconds
+	 // game time in seconds
 	int32_t iLeaguePerformance; // settlement league performance points
 	bool fHideSettlementScore; // to hide the score in the evaluation dialogue (for melees)
 
@@ -162,6 +163,8 @@ public:
 public:
 	// fill GoalList with current goal status - also called by goal menu!
 	static void EvaluateGoals(C4IDList &GoalList, C4IDList &FulfilledGoalList, int32_t iPlayerNumber);
+
+	void SaveProfileData();
 
 	// Evaluation called by C4Game::Evaluate
 	// Caution: This does script callbacks for goal fulfillment check and must be called in sync,

@@ -1490,6 +1490,8 @@ void C4Game::Evaluate()
 	if (fLeague)
 		Network.LeagueGameEvaluate(RecordName.getData(), RecordSHA);
 
+	RoundResults.SaveProfileData();
+
 	// Players
 	// saving local players only, because remote players will probably not rejoin after evaluation anyway)
 	Players.Evaluate();

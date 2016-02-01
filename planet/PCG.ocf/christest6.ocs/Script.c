@@ -81,8 +81,8 @@ private func InitBuildQuest() {
 
 private func InitEnemyHealth() {
 	var fx;
-	var hp = 40000;
-	hp += achievement_level * 15000;
+	var hp = 20000;
+	hp += achievement_level * 17000;
 	for (var npc in FindObjects(Find_ID(Clonk), Find_Owner(NO_OWNER))) {
 		if (fx = AI->GetAI(npc))
 		{

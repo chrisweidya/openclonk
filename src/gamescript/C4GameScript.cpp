@@ -156,6 +156,16 @@ static int32_t FnSetPlayerImmLevel(C4PropList * _this, int32_t level, int player
 	return -1;
 }
 
+static int32_t FnSetProfileData(C4PropList * _this, int32_t level, int player)
+{
+	C4Player *plr = ::Players.Get(player);
+	if (plr) {
+	}
+	else
+		Log("failed to update level");
+	return -1;
+}
+
 static int32_t FnGetMapDataFromPlayer(C4PropList * _this)
 {
 	PlayerProfile *profile = PlayerProfile::getSingleProfile();
@@ -3116,6 +3126,7 @@ void InitGameFunctionMap(C4AulScriptEngine *pEngine)
 	AddFunc(pEngine, "GetPlayerAchLevel", FnGetPlayerAchLevel);
 	AddFunc(pEngine, "SetPlayerImmLevel", FnSetPlayerImmLevel);
 	AddFunc(pEngine, "SetPlayerAchLevel", FnSetPlayerAchLevel);
+	AddFunc(pEngine, "SetProfileData", FnSetProfileData);
 
 	F(GetPlrKnowledge);
 	F(GetComponent);
