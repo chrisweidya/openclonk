@@ -8,7 +8,7 @@ DlgWarraHelp=If you want a challenge, kill the cave dweller below instead of hel
 DlgWarraHelpReply=[Choose reply]
 DlgWarraKill=Just kill the cave dweller below.
 
-DlgWarraHelp2=Enemies are always more difficult every time you kill the cave dweller, try killing them now!
+DlgWarraHelp2=Enemies are always more difficult every time you kill the cave dweller, try killing them now! I'll give you more weapons each time.
 DlgWarraHelpReply2=[Choose reply]
 DlgWarraKill2=Kill the cave boss below. I gave you more weapons in the chest.
 

@@ -81,7 +81,7 @@ private func InitBuildQuest() {
 
 private func InitEnemyHealth() {
 	var fx;
-	var hp = 50000;
+	var hp = 40000;
 	hp += achievement_level * 15000;
 	for (var npc in FindObjects(Find_ID(Clonk), Find_Owner(NO_OWNER))) {
 		if (fx = AI->GetAI(npc))
@@ -150,12 +150,6 @@ public func OnHasTalkedToLostNPC()
 private func resetProfile() {
 	ResetProfile();
 	return;
-}
-
-public func EncounterOutpost(object enemy, object player)
-{
-	Dialogue->MessageBoxAll("$MsgEncounterOutpost$", enemy, true);
-	return true;
 }
 
 
