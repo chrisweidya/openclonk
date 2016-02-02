@@ -122,7 +122,7 @@ private func InitLostNPC(int seed) {
 		ClearFreeRect(x - outer / 2, y - outer / 2, outer, outer);
 
 		//	lost_npc = CreateObjectAbove(Clonk, 600, baseHeight-5);
-		lost_npc = CreateObjectAbove(Clonk, x, y);
+		lost_npc = CreateObjectAbove(Clonk, x, baseHeight-10);
 		lost_npc->SetColor(colour);
 		lost_npc->SetName(Translate(Format("ImmersionNPCName%d", name_index)));
 		lost_npc->SetObjectLayer(lost_npc);

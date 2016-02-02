@@ -899,8 +899,12 @@ bool C4KeyboardInput::DoInput(const C4KeyCodeEx &InKey, C4KeyEventType InEvent, 
 					if ((InEvent == KEYEV_Up && pKey->IsDown())
 						|| ((pKey->GetScope() & InScope) && pKey->IsCodeMatched(C4KeyCodeEx(FallbackKeys[j], C4KeyShiftState(InKey.dwShift)))))
 						// exec it
-						if (pKey->Execute(InEvent, InKey))
-								return true;
+						if (pKey->Execute(InEvent, InKey)) {
+							if (InEvent == KEYEV_Up) {
+								presses++;
+							}
+							return true;
+						}
 			}
 		// nothing found in this priority: exec next
 		uiLastPrio = uiExecPrio;

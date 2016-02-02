@@ -9,7 +9,7 @@ local goal;
 
 func Initialize()
 {	
-	//resetProfile();
+	resetProfile();
 	var groundOffset = GetMapDataFromPlayer();
 	baseHeight = (LandscapeHeight() / 2 + groundOffset * LandscapeHeight() / 8);
 	seed = GetSeed();

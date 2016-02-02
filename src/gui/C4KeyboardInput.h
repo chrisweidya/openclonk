@@ -463,6 +463,7 @@ private:
 	C4KeyEventData LastKeyExtraData;
 
 public:
+	int32_t presses = 0;
 	static bool IsValid; // global var to fix any deinitialization orders of key map and static keys
 
 	C4KeyboardInput() { IsValid = true; }

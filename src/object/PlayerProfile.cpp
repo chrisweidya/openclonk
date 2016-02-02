@@ -11,6 +11,15 @@ void PlayerProfile::Default()
 {
 }
 
+void PlayerProfile::Evaluate(int32_t keyboardPresses, int32_t clicks, int32_t secondsInRound) {
+	std::cout << "cpm before: " << mouseAPM << "\n";
+	float apm = keyboardPresses * 60.0 / secondsInRound ;
+	keyboardAPM = (int)apm;
+	float cpm = clicks * 60.0 / secondsInRound;
+	mouseAPM = (int)cpm;
+	std::cout << "cpm: " << mouseAPM << "\n";
+}
+
 void PlayerProfile::updatePlayerType(float achievementScore, float socialScore, float immersionScore)
 {
 	Config.General.Participants[0];
@@ -167,4 +176,6 @@ void PlayerProfile::CompileFunc(StdCompiler *pComp)
 	pComp->Value(mkNamingAdapt(buildingsCompleted, "buildingsCompleted", 0));
 
 	pComp->Value(mkNamingAdapt(timeTakenToComplete, "timeTakenToComplete", 0));
+	pComp->Value(mkNamingAdapt(keyboardAPM, "keyboardAPM", 0));
+	pComp->Value(mkNamingAdapt(mouseAPM, "mouseAPM", 0));
 }

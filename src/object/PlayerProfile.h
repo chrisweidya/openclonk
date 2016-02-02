@@ -20,6 +20,10 @@ public:
 
 	//Game data
 	int32_t timeTakenToComplete = 0;
+	int32_t keyboardAPM = 0;
+	int32_t mouseAPM = 0;
+
+	void Evaluate(int32_t keyboardPresses, int32_t clicks, int32_t secondsInRound);
 
 	//profile saving or loading
 	void updatePlayerType(float achievementScore, float socialScore, float immersionScore);

@@ -149,6 +149,7 @@ public:
 	bool IsDragging();
 	bool IsLeftDown() { return LeftButtonDown; }
 	int32_t GetPlayer() { return Player; }
+	int32_t clicks = 0;
 };
 
 extern C4MouseControl MouseControl;

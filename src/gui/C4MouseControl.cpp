@@ -621,6 +621,7 @@ void C4MouseControl::LeftDown()
 
 void C4MouseControl::LeftUp()
 {
+	clicks++;
 	// Ignore left up after double click
 	if (LeftDoubleIgnoreUp)
 	{
