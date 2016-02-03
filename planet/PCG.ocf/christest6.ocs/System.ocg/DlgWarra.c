@@ -17,8 +17,6 @@ public func Dlg_Warra_1(object clonk)
 public func Dlg_Warra_2(object clonk)
 {
 	MessageBox(Format("$DlgWarraHelpReply$"), clonk, clonk, nil, false, ["How could you ignore him? He needs help!", "I prefer a challenge anyway."], true);
-	StopDialogue();
-	SetDialogueProgress(3);
 	return true;
 }
 

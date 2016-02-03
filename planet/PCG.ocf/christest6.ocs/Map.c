@@ -1,8 +1,15 @@
 #include Library_Map
 
+local i_width;
+local a_width;
+
 func InitializeMap(proplist map)
 {
 	//Resize(120, 160);
+	var offset = GetMapDataFromPlayer();
+	i_width = map.Wdt / 2 + map.Wdt*offset / 12;
+	a_width = map.Wdt - i_width;
+
 	var seed = GetRandomSeed();
 	Log("ssed%v", seed);
 	var immersion_level = GetPlayerImmLevel();
@@ -33,7 +40,7 @@ func InitializeMap(proplist map)
 }
 
 func draw_platform(proplist map) {
-	var platform = { Algo = MAPALGO_Rect, X = map.Wdt / 3, Y = map.Hgt / 2 , Wdt = map.Wdt / 3, Hgt = map.Hgt / 2 };
+	var platform = { Algo = MAPALGO_Rect, X = map.Wdt / 3, Y = map.Hgt / 2 , Wdt = map.Wdt / 3, Hgt = 3 };
 	var clearArea = { Algo = MAPALGO_Rect, X = map.Wdt /3, Y = map.Hgt / 2 - 15, Wdt = map.Wdt / 3, Hgt = 15 };
 //	var jumbled_clearing = { Algo = MAPALGO_Turbulence, Amplitude = 10, Scale = 10, Op = clearArea };
 	
@@ -43,7 +50,7 @@ func draw_platform(proplist map) {
 }
 
 func draw_ground(int seed, proplist map) {
-	var ground = { Algo = MAPALGO_Rect, X = map.Wdt * 2 / 3, Y = 0, Wdt = map.Wdt/3 + 1, Hgt = map.Hgt};
+	var ground = { Algo = MAPALGO_Rect, X = i_width, Y = 0, Wdt = a_width + 1, Hgt = map.Hgt};
 	Draw("Earth", ground);
 
 	var ground2 = { Algo = MAPALGO_SimplexNoise, Seed = (seed + 1), Ratio = 50, Octave = 8, Persistence = 5, Scale = 3, Wdt = 1, Hgt = 1 };
@@ -54,7 +61,7 @@ func draw_ground(int seed, proplist map) {
 
 func draw_sky(int seed, proplist map) {
 	var skyLand = { Algo = MAPALGO_Rect, X = 0, Y = 0,
-		Wdt = map.Wdt/3, Hgt = map.Hgt};
+		Wdt = i_width, Hgt = map.Hgt};
 	Draw("^Sand", skyLand);
 
 	return skyLand;
@@ -68,7 +75,9 @@ func draw_mat(int seed, string type, proplist area, int ratio, int octave, int s
 }
 
 func draw_underground(proplist map) {
-	var underground = { Algo = MAPALGO_Rect, X = map.Wdt / 3, Y = map.Hgt * 9 / 10, Wdt = map.Wdt / 3, Hgt = map.Hgt / 10 };
+	var undersky = { Algo = MAPALGO_Rect, X = map.Wdt / 3, Y = map.Hgt - 4, Wdt = i_width - map.Wdt / 3, Hgt = 4 };
+	Draw("Sky", undersky);
+	var underground = { Algo = MAPALGO_Rect, X = i_width, Y = map.Hgt - 4, Wdt = a_width, Hgt = 4 };
 	Draw("Tunnel", underground);
 	return underground;
 }
