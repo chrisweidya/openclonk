@@ -86,6 +86,7 @@ static bool FnPunch(C4Object *Obj, C4Object *target, long punch)
 
 static bool FnKill(C4PropList * _this, C4Object *pObj, bool fForced)
 {
+	std::cout << "fewf";
 	if (!pObj) pObj=Object(_this); if (!pObj) return false;
 	if (!pObj->GetAlive()) return false;
 	// Trace kills by player-owned objects

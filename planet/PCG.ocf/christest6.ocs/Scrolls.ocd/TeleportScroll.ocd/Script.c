@@ -8,8 +8,6 @@
 
 public func ControlUse(object clonk, int x, int y)
 {
-	var groundOffset = GetMapDataFromPlayer();
-	var baseHeight = (LandscapeHeight() / 2 + groundOffset * LandscapeHeight() / 8);
 	x = LandscapeWidth() / 2 + 100;
 	y = baseHeight - 20;	
 	DrawParticleLine("Flash", 0,0,-GetX()+x,-GetY()+y, 3, 0, 0, 8, {Prototype = Particles_Flash(), Size = 20, R = 50, G = 50, B = 255});
@@ -21,8 +19,8 @@ public func ControlUse(object clonk, int x, int y)
 	clonk->SetPosition(x, y);
 	clonk->SetXDir(0);
 	clonk->SetYDir(-5);
-	
-//	RemoveObject();
+
+	RemoveObject();	
 	return 1;
 }
 

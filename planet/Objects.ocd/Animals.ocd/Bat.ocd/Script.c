@@ -499,9 +499,9 @@ private func Decaying()
 
 /*-- Reproduction --*/
 
-private func ReproductionAreaSize() { return 1200; }
-private func ReproductionRate() { return 200; }
-private func MaxAnimalCount() { return 10; }
+private func ReproductionAreaSize() { return 1; }
+private func ReproductionRate() { return 1000000; }
+private func MaxAnimalCount() { return 1; }
 
 // Only bats with full health reproduce.
 private func SpecialReproductionCondition()

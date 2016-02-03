@@ -2,24 +2,21 @@
 
 func InitializeMap(proplist map)
 {
-	Resize(120, 160);
+	//Resize(120, 160);
 	var seed = GetRandomSeed();
 	Log("ssed%v", seed);
-	var groundHeightOffset = GetMapDataFromPlayer() * map.Hgt / 8;
 	var immersion_level = GetPlayerImmLevel();
 	var achievement_level = GetPlayerAchLevel();
 
-	var ground = draw_ground(seed, map, groundHeightOffset);
-//	var coal = draw_mat(seed, "Coal", ground, 30, 5, 3, 1);
+	var ground = draw_ground(seed, map);
 	
 	var largeTunnels = draw_mat(seed, "Tunnel", ground, 40, 8, 3, 1);
 
-	var skyLand = draw_sky(seed, map, groundHeightOffset);
+	var skyLand = draw_sky(seed, map);
 
 	if (immersion_level > 1) {
-		var upperSkyLand = { Algo = MAPALGO_Rect, X = 0, Y = 0, Wdt = map.Wdt, Hgt = map.Hgt / 8 + (groundHeightOffset) };
-		draw_mat(seed + 1, "^Ore", upperSkyLand, 35, 7, 2, 1);
-		draw_mat(seed + 2, "^Coal", upperSkyLand, 32, 8, 3, 1);
+		draw_mat(seed + 1, "^Ore", skyLand, 30, 7, 2, 1);
+		draw_mat(seed + 2, "^Coal", skyLand, 32, 8, 3, 1);
 	}
 	if (immersion_level > 0) {
 		draw_mat(seed + 1, "^Rock", skyLand, 30, 6, 2, 1);		
@@ -30,13 +27,14 @@ func InitializeMap(proplist map)
 	
 	var sky = draw_mat(seed, "Sky", skyLand, 50, 7, 3, 2);
 
-	var platform = draw_platform(map, groundHeightOffset);
+	var platform = draw_platform(map);
+	var underground_tunnel = draw_underground(map);
 	return true;
 }
 
-func draw_platform(proplist map, int groundHeightOffset) {
-	var platform = { Algo = MAPALGO_Rect, X = map.Wdt/6, Y = map.Hgt / 2 + (groundHeightOffset), Wdt = 2*map.Wdt/3, Hgt = 2 };
-	var clearArea = { Algo = MAPALGO_Rect, X = map.Wdt / 4 - 10, Y = map.Hgt / 2 + (groundHeightOffset) - 15, Wdt = map.Wdt / 2 + 20, Hgt = 15 };
+func draw_platform(proplist map) {
+	var platform = { Algo = MAPALGO_Rect, X = map.Wdt / 3, Y = map.Hgt / 2 , Wdt = map.Wdt / 3, Hgt = map.Hgt / 2 };
+	var clearArea = { Algo = MAPALGO_Rect, X = map.Wdt /3, Y = map.Hgt / 2 - 15, Wdt = map.Wdt / 3, Hgt = 15 };
 //	var jumbled_clearing = { Algo = MAPALGO_Turbulence, Amplitude = 10, Scale = 10, Op = clearArea };
 	
 //	Draw("Sky", jumbled_clearing);
@@ -44,9 +42,8 @@ func draw_platform(proplist map, int groundHeightOffset) {
 	Draw("BrickSoft", platform);
 }
 
-func draw_ground(int seed, proplist map, int groundHeightOffset) {
-	var ground = { Algo = MAPALGO_Rect, X = 0, Y = map.Hgt / 2 + (groundHeightOffset), 
-		Wdt = map.Wdt, Hgt = map.Hgt / 2 -  (groundHeightOffset)};
+func draw_ground(int seed, proplist map) {
+	var ground = { Algo = MAPALGO_Rect, X = map.Wdt * 2 / 3, Y = 0, Wdt = map.Wdt/3 + 1, Hgt = map.Hgt};
 	Draw("Earth", ground);
 
 	var ground2 = { Algo = MAPALGO_SimplexNoise, Seed = (seed + 1), Ratio = 50, Octave = 8, Persistence = 5, Scale = 3, Wdt = 1, Hgt = 1 };
@@ -55,14 +52,11 @@ func draw_ground(int seed, proplist map, int groundHeightOffset) {
 	return ground;
 }
 
-func draw_sky(int seed, proplist map, int groundHeightOffset) {
+func draw_sky(int seed, proplist map) {
 	var skyLand = { Algo = MAPALGO_Rect, X = 0, Y = 0,
-		Wdt = map.Wdt, Hgt = map.Hgt / 2 + (groundHeightOffset) };
+		Wdt = map.Wdt/3, Hgt = map.Hgt};
 	Draw("^Sand", skyLand);
 
-//	var ground2 = { Algo = MAPALGO_SimplexNoise, Seed = (seed + 1), Ratio = 50, Octave = 8, Persistence = 5, Scale = 3, Wdt = 1, Hgt = 1 };
-//	var result = { Algo = MAPALGO_And, Op = [ground2, ground] };
-//	Draw("Earth-earth_spongy", result);
 	return skyLand;
 }
 
@@ -71,4 +65,10 @@ func draw_mat(int seed, string type, proplist area, int ratio, int octave, int s
 	var result = { Algo = MAPALGO_And, Op = [mat, area] };
 	Draw(type, result);
 	return result;
+}
+
+func draw_underground(proplist map) {
+	var underground = { Algo = MAPALGO_Rect, X = map.Wdt / 3, Y = map.Hgt * 9 / 10, Wdt = map.Wdt / 3, Hgt = map.Hgt / 10 };
+	Draw("Tunnel", underground);
+	return underground;
 }

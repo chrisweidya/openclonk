@@ -140,6 +140,9 @@ int32_t PlayerProfile::saveNPC(int32_t npc1, int32_t npc2, int32_t npc3, int32_t
 	core.Profile.foundNPC[4] = npc5;
 	core.Profile.achievementLevel = 0;
 	core.Profile.immersionLevel = 0;
+	core.Profile.keyboardAPM = 0;
+	core.Profile.mouseAPM = 0;
+	core.Profile.timeTakenToComplete = 0;
 	core.Profile.buildingsCompleted = 0;
 	if (!core.Save(PlayerGrp) || !PlayerGrp.Close())
 		return -1;

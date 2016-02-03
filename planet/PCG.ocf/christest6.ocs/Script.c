@@ -9,9 +9,8 @@ local goal;
 
 func Initialize()
 {	
-	resetProfile();
-	var groundOffset = GetMapDataFromPlayer();
-	baseHeight = (LandscapeHeight() / 2 + groundOffset * LandscapeHeight() / 8);
+	//resetProfile();
+	baseHeight = LandscapeHeight() / 2 ;
 	seed = GetSeed();
 	InitAI();
 	InitGoal();
@@ -35,9 +34,10 @@ protected func InitializePlayer(int plr)
 //	SetPlayerZoomByViewRange(plr, 400, 0, PLRZOOM_LimitMin);
 	player = plr;
 	var clonk = GetCrew(plr);
+	clonk.MaxEnergy = 100000;
+	clonk->DoEnergy(100000);
 	clonk->CreateContents(Shovel);
 	clonk->CreateContents(GrappleBow);
-	clonk->CreateContents(TeleportScroll);
 	clonk->CreateContents(Sword);
 	clonk->SetPosition(LandscapeWidth()/2 + 100, baseHeight - 20);	
 	/*
@@ -81,8 +81,8 @@ private func InitBuildQuest() {
 
 private func InitEnemyHealth() {
 	var fx;
-	var hp = 20000;
-	hp += achievement_level * 17000;
+	var hp = 10000;
+	hp += achievement_level * 15000;
 	for (var npc in FindObjects(Find_ID(Clonk), Find_Owner(NO_OWNER))) {
 		if (fx = AI->GetAI(npc))
 		{
@@ -109,23 +109,23 @@ private func InitConstructionGoal(int level) {
 	if (level > 1) {
 		if (!FindObject(Find_ID(Foundry)) && buildingsCompleted == 0) {
 			immersion_npc.objective = Foundry;
-			site = CreateObjectAbove(ConstructionSite, 400, baseHeight+2);
+			site = CreateObjectAbove(ConstructionSite, LandscapeWidth() / 2 - 80, baseHeight+2);
 			site.MeshTransformation = Trans_Mul(Trans_Rotate(RandomX(-30, 30), 0, 1, 0), Trans_Rotate(RandomX(-10, 10), 1, 0, 0));
 			site->Set(Foundry);
 		}
 		else if (!FindObject(Find_ID(WindGenerator)) && buildingsCompleted == 1) {
 			immersion_npc.objective = WindGenerator;
-			site = CreateObjectAbove(ConstructionSite, 360, baseHeight+2);
+			site = CreateObjectAbove(ConstructionSite, LandscapeWidth() / 2 - 120, baseHeight+2);
 			site.MeshTransformation = Trans_Mul(Trans_Rotate(RandomX(-30, 30), 0, 1, 0), Trans_Rotate(RandomX(-10, 10), 1, 0, 0));
 			site->Set(WindGenerator);
 		}
 		else if (!FindObject(Find_ID(Shipyard)) && buildingsCompleted == 2) {
 			immersion_npc.objective = Shipyard;
-			site = CreateObjectAbove(ConstructionSite, 250, baseHeight);
+			site = CreateObjectAbove(ConstructionSite, LandscapeWidth() / 2 - 230, baseHeight);
 			site->Set(Shipyard);
 		}
 		else {
-			CreateObjectAbove(Airship, 250, baseHeight-10);
+			CreateObjectAbove(Airship, LandscapeWidth() / 2 - 230, baseHeight-10);
 		}
 		if (site) {
 			immersion_npc.goal = goal;

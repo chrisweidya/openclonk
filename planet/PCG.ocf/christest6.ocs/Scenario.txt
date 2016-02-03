@@ -23,8 +23,8 @@ Definition2=Decoration.ocd
 
 [Landscape]
 Sky=Clouds1
-MapWidth=100,0,64,10000
-MapHeight=50,0,40,10000
+MapWidth=280
+MapHeight=40
 SkyScrollMode=2
 
 [Weather]

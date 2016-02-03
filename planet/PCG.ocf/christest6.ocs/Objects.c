@@ -11,11 +11,9 @@ static target_npc;
 
 func InitializeObjects()
 {
-	var groundOffset = GetMapDataFromPlayer();
-	baseHeight = (LandscapeHeight() / 2 + groundOffset * LandscapeHeight() / 8);
+	baseHeight = (LandscapeHeight() / 2);
 	seed = GetSeed();
 	Log("seed %v", seed);
-	Log(" offset %v ", groundOffset);
 	immersion_level = GetPlayerImmLevel();
 	achievement_level = GetPlayerAchLevel();
 	Log("imm/ach level %v %v", immersion_level, achievement_level);
@@ -28,8 +26,16 @@ func InitializeObjects()
 	flagpole->SetNeutral(true);
 //	flagpole->SetObjectLayer(flagpole);
 	
+	var elevator = CreateObjectAbove(Elevator, LandscapeWidth() / 2 + 40, LandscapeHeight() / 2);
+	elevator->SetDir(DIR_Left);
+	elevator->CreateShaft(530);
+	elevator->SetCasePosition(LandscapeHeight() / 2);
+	elevator->SetNoPowerNeed(true);
+
 	var cabin = CreateObjectAbove(WoodenCabin, LandscapeWidth() / 2 + 10, baseHeight-1);
 	cabin->SetObjectLayer(cabin);
+
+	
 
 //	var sm = CreateObjectAbove(Foundry, 400, baseHeight - 1);
 //	var sm = CreateObjectAbove(WindGenerator, 360, baseHeight - 1);
@@ -113,8 +119,8 @@ private func InitLostNPC(int seed) {
 		var name_index = GetRandomNum(name_size, seed);
 		var skin = GetRandomNum(4, seed);
 		var colour = GetRandomColour(seed);
-		var y = GetRandomNum(baseHeight - 150, seed);
-		var x = GetRandomNum(LandscapeWidth(), seed);
+		var y = GetRandomNum(LandscapeHeight()-5, seed);
+		var x = GetRandomNum(LandscapeWidth()/3 - 100, seed);
 
 		var outer = 25;
 		var inner = 15;
@@ -122,7 +128,7 @@ private func InitLostNPC(int seed) {
 		ClearFreeRect(x - outer / 2, y - outer / 2, outer, outer);
 
 		//	lost_npc = CreateObjectAbove(Clonk, 600, baseHeight-5);
-		lost_npc = CreateObjectAbove(Clonk, x, baseHeight-10);
+		lost_npc = CreateObjectAbove(Clonk, x, y);
 		lost_npc->SetColor(colour);
 		lost_npc->SetName(Translate(Format("ImmersionNPCName%d", name_index)));
 		lost_npc->SetObjectLayer(lost_npc);
@@ -149,7 +155,7 @@ private func InitFoundNPC() {
 			skin = GetRandomNum(4, npc_seed);
 			colour = GetRandomColour(npc_seed);
 
-			found_npc = CreateObjectAbove(Clonk, 450 + i*50, baseHeight - 5);
+			found_npc = CreateObjectAbove(Clonk, LandscapeWidth()/2 - 25 + i*50, baseHeight - 5);
 			found_npc->SetColor(colour);
 			found_npc->SetName(Translate(Format("ImmersionNPCName%d", name_index)));
 			found_npc->SetObjectLayer(found_npc);
@@ -173,19 +179,16 @@ private func InitTargetNPC(int seed) {
 	var skin = GetRandomNum(4, seed);
 	var colour = GetRandomColour(seed);
 	var weapon = GetRandomNum(3, seed);
-	var y = GetRandomNum(LandscapeHeight() - baseHeight, seed);
-	var x = GetRandomNum(LandscapeWidth(), seed);
+	var y = GetRandomNum(LandscapeHeight(), seed);
+	var x = GetRandomNum(LandscapeWidth()/3, seed);
 	
-	y += baseHeight + 50;
-	if (y >= LandscapeHeight() - 10) {
-		y = LandscapeHeight() - 20;
-	}
-	
+	x += LandscapeWidth() * 2 / 3 + 50;
+
 	var width = 150;	
 	var height = 100;
 	DigFreeRect(x - width / 2, y - height / 2, width, height);
-	DrawMaterialQuad("Brick", x - width / 2, y + height / 2 - 10, x + width / 2, y + height / 2 - 10, 
-		x + width / 2, y + height / 2, x - width / 2, y + height / 2);	
+	DrawMaterialQuad("Earth", x - width / 2, y + height / 2 - 10, x + width / 2, y + height / 2 - 10, 
+		x + width / 2, y + height / 2, x - width / 2, y + height / 2, DMQ_Sub);
 
 	target_npc = CreateObjectAbove(Clonk, x, y);
 	target_npc->SetColor(colour);
@@ -219,20 +222,20 @@ private func InitGuards(int x, int y, int colour) {
 private func InitBuildings() {
 	var buildingsCompleted = GetBuildingsCompleted();
 	if (buildingsCompleted > 0)
-		CreateObjectAbove(Foundry, 400, baseHeight-1);
+		CreateObjectAbove(Foundry, LandscapeWidth() / 2 - 80, baseHeight-1);
 	if (buildingsCompleted > 1)
-		CreateObjectAbove(WindGenerator, 360, baseHeight);
+		CreateObjectAbove(WindGenerator, LandscapeWidth() / 2 - 120, baseHeight);
 	if (buildingsCompleted > 2)
-		CreateObjectAbove(Shipyard, 250, baseHeight);
+		CreateObjectAbove(Shipyard, LandscapeWidth() / 2 - 230, baseHeight);
 }
 
 private func InitBats(int achievement_level) {
-	var bats = Bat->Place(6 * achievement_level, 0, 0, LandscapeWidth(), baseHeight);
+	var bats = Bat->Place(6 * achievement_level, Rectangle( LandscapeWidth() * 2 / 3, 0, LandscapeWidth() / 3, LandscapeHeight()));
 	// Make the bats a bit weaker so that they are killed with a single arrow.
-	var extra_hp = achievement_level * 2000;
+	var extra_hp = achievement_level * 1000;
 	for (var bat in bats)
 	{
-		bat.MaxEnergy = 7000 + extra_hp;
+		bat.MaxEnergy = 3000 + extra_hp;
 		bat->DoEnergy(bat.MaxEnergy - bat->GetEnergy());
 		bat->AddEnergyBar();
 	}
@@ -255,22 +258,18 @@ private func SetWeapon(int index, object npc) {
 
 private func InitTrees(int seed, int immersion_level) {
 	var num_plants = immersion_level + 1;
-	Fern->Place(12*num_plants, Rectangle(0, 0, LandscapeWidth(), baseHeight));
-	Wheat->Place(5 * num_plants, Rectangle(0, 0, LandscapeWidth(), baseHeight));
-	Cotton->Place(3 * num_plants, Rectangle(0, 0, LandscapeWidth(), baseHeight));
-	Tree_Coniferous->Place(3 * num_plants, Rectangle(0, 0, LandscapeWidth(), baseHeight-100));
-	Tree_Deciduous->Place(3 * num_plants, Rectangle(0, 0, LandscapeWidth(), baseHeight-100));
-	Grass->Place(10*num_plants);
+	Fern->Place(8*num_plants, Rectangle(0, 0, LandscapeWidth()/3, LandscapeHeight()));
+	Wheat->Place(4 * num_plants, Rectangle(0, 0, LandscapeWidth() / 3, LandscapeHeight()));
+	Cotton->Place(3 * num_plants, Rectangle(0, 0, LandscapeWidth() / 3, LandscapeHeight()));
+	Tree_Coniferous->Place(2 * num_plants, Rectangle(0, 0, LandscapeWidth() / 3, LandscapeHeight()));
+	Tree_Deciduous->Place(2 * num_plants, Rectangle(0, 0, LandscapeWidth() / 3, LandscapeHeight()));
+	Grass->Place(5*num_plants);
 	if (immersion_level > 0) {
-		Tree_Coconut->Place(3 * num_plants, Rectangle(0, 0, LandscapeWidth(), baseHeight));
+		Tree_Coconut->Place(2 * num_plants, Rectangle(0, 0, LandscapeWidth() / 3, LandscapeHeight()));
 	}
 	if (immersion_level > 1) {
-		Flower->Place(20 * num_plants, Rectangle(0, 0, LandscapeWidth(), baseHeight));
-		Butterfly->Place(10, Rectangle(0, 0, LandscapeWidth(), baseHeight));
+		Flower->Place(20 * num_plants, Rectangle(0, 0, LandscapeWidth() / 3, LandscapeHeight()));
+		Butterfly->Place(10, Rectangle(0, 0, LandscapeWidth() / 3, LandscapeHeight()));
 	}
-
-//	CreateObjectAbove(Tree_Coniferous, 790, baseHeight);
-//	CreateObjectAbove(Tree_Coniferous, 770, baseHeight);
-//	CreateObjectAbove(Tree_Coniferous, 780, baseHeight);
 }
 
