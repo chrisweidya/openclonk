@@ -41,11 +41,7 @@ func InitializeMap(proplist map)
 
 func draw_platform(proplist map) {
 	var platform = { Algo = MAPALGO_Rect, X = map.Wdt / 3, Y = map.Hgt / 2 , Wdt = map.Wdt / 3, Hgt = 3 };
-	var clearArea = { Algo = MAPALGO_Rect, X = map.Wdt /3, Y = map.Hgt / 2 - 15, Wdt = map.Wdt / 3, Hgt = 15 };
-//	var jumbled_clearing = { Algo = MAPALGO_Turbulence, Amplitude = 10, Scale = 10, Op = clearArea };
 	
-//	Draw("Sky", jumbled_clearing);
-	Draw("Sky", clearArea);
 	Draw("BrickSoft", platform);
 }
 
@@ -77,7 +73,11 @@ func draw_mat(int seed, string type, proplist area, int ratio, int octave, int s
 func draw_underground(proplist map) {
 	var undersky = { Algo = MAPALGO_Rect, X = map.Wdt / 3, Y = map.Hgt - 4, Wdt = i_width - map.Wdt / 3, Hgt = 4 };
 	Draw("Sky", undersky);
-	var underground = { Algo = MAPALGO_Rect, X = i_width, Y = map.Hgt - 4, Wdt = a_width, Hgt = 4 };
+	var underground = { Algo = MAPALGO_Rect, X = i_width, Y = map.Hgt - 4, Wdt = a_width - map.Wdt / 3, Hgt = 4 };
 	Draw("Tunnel", underground);
+	var clearArea = { Algo = MAPALGO_Rect, X = map.Wdt / 3, Y = map.Hgt / 2 - 15, Wdt = i_width - map.Wdt / 3, Hgt = 15 };
+	Draw("Sky", clearArea);
+	clearArea = { Algo = MAPALGO_Rect, X = i_width, Y = map.Hgt / 2 - 15, Wdt = a_width - map.Wdt / 3, Hgt = 15 };
+	Draw("Tunnel", clearArea);
 	return underground;
 }

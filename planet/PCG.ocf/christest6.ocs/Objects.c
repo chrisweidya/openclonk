@@ -238,7 +238,7 @@ private func InitBuildings() {
 }
 
 private func InitBats(int achievement_level) {
-	var bats = Bat->Place(6 * achievement_level, Rectangle( LandscapeWidth() * 2 / 3, 0, LandscapeWidth() / 3, LandscapeHeight()));
+	var bats = Bat->Place(8 * achievement_level, Rectangle( i_width, 0, a_width, LandscapeHeight()));
 	// Make the bats a bit weaker so that they are killed with a single arrow.
 	var extra_hp = achievement_level * 1000;
 	for (var bat in bats)
