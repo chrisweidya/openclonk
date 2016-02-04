@@ -5,7 +5,7 @@ global func PlayerControl(int plr, int ctrl, id spec_id, int x, int y, int stren
 	if (ctrl != CON_PCGGuide)
 		return _inherited(plr, ctrl, spec_id, x, y, strength, repeat, release, ...);
 	// Find the guide object for this player.
-	var guide = FindObject(Find_ID(PCGGuide), Find_Owner(plr));
+	var guide = FindObject(Find_ID(TutorialGuide), Find_Owner(plr));
 	if (!guide)
 		return;
 	// If hidden, show the guide. If shown, hide the guide.

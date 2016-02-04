@@ -142,6 +142,7 @@ private func InitLostNPC(int seed) {
 		lost_npc->SetDir(DIR_Right);
 		lost_npc->SetDialogue(Format("$LostNPC$"), true);
 		lost_npc->MakeInvincible();
+		lost_npc.StaticSaveVar = "lost_npc";
 	}
 }
 
@@ -205,6 +206,7 @@ private func InitTargetNPC(int seed) {
 	target_npc->SetDir(DIR_Right);
 	SetWeapon(weapon, target_npc);
 	target_npc.isTarget = true;
+	target_npc.StaticSaveVar = "target_npc";
 	AI->AddAI(target_npc);
 	AI->SetGuardRange(target_npc, x, y, width/2, height/2);
 	AI->SetAllyAlertRange(target_npc, 60);

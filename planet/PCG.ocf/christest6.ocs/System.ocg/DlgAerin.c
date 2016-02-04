@@ -12,6 +12,7 @@ public func Dlg_Aerin_Init(object clonk)
 
 public func Dlg_Aerin_1(object clonk)
 {
+	GameCall("IsTalking", clonk);
 	MessageBox(Format("$DlgAerinHelp$", dlg_target->GetName()), clonk, dlg_target);
 	return true;
 }
@@ -31,8 +32,6 @@ public func Dlg_Aerin_3(object clonk)
 public func Dlg_Aerin_4(object clonk)
 {
 	MessageBox("$DlgAerinSkylandsReply$", clonk, clonk, nil, false, ["Okay I'm on it.", "Bye."], true);
-	StopDialogue();
-	SetDialogueProgress(5);	
 	return true;
 }
 
@@ -41,11 +40,13 @@ public func Dlg_Aerin_5(object clonk)
 	MessageBox("$DlgAerinFindThem$", clonk, dlg_target);
 	StopDialogue();
 	SetDialogueProgress(5);
+	GameCall("OnHasTalkedToAerin", clonk);
 	return true;
 }
 
 public func Dlg_Aerin_6(object clonk)
 {
+	GameCall("IsTalking", clonk);
 	MessageBox(Format("$DlgAerinHelp2$", dlg_target->GetName()), clonk, dlg_target);
 	return true;
 }
@@ -65,8 +66,6 @@ public func Dlg_Aerin_8(object clonk)
 public func Dlg_Aerin_9(object clonk)
 {
 	MessageBox("$DlgAerinSkylandsReply2$", clonk, clonk, nil, false, ["Okay I'm on it.", "Bye."], true);
-	StopDialogue();
-	SetDialogueProgress(10);
 	return true;
 }
 
@@ -75,11 +74,13 @@ public func Dlg_Aerin_10(object clonk)
 	MessageBox("$DlgAerinFindThem2$", clonk, dlg_target);
 	StopDialogue();
 	SetDialogueProgress(10);
+	GameCall("OnHasTalkedToAerin", clonk);
 	return true;
 }
 
 public func Dlg_Aerin_11(object clonk)
 {
+	GameCall("IsTalking", clonk);
 	MessageBox("$DlgAerinHelp3$", clonk, dlg_target);
 	return true;
 }
@@ -95,6 +96,7 @@ public func Dlg_Aerin_13(object clonk)
 	MessageBox("$DlgAerinSkylands3$", clonk, dlg_target);
 	StopDialogue();
 	SetDialogueProgress(13);
+	GameCall("OnHasTalkedToAerin", clonk);
 	return true;
 }
 

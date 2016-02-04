@@ -1,10 +1,8 @@
 local seed;
 local baseHeight;
-local lost_npc;
-local target_npc;
 local site;
 local player;
-local guide;
+static guide;
 local goal;
 
 func Initialize()
@@ -32,6 +30,7 @@ protected func InitializePlayer(int plr)
 {
 	// Position player's clonk.
 //	SetPlayerZoomByViewRange(plr, 400, 0, PLRZOOM_LimitMin);
+	DisablePlrControls(plr);
 	player = plr;
 	var clonk = GetCrew(plr);
 	clonk.MaxEnergy = 100000;
@@ -53,6 +52,23 @@ protected func InitializePlayer(int plr)
 //	var effect = AddEffect("ClonkRestore", clonk, 100, 10);
 //	effect.to_x = 300;
 //	effect.to_y = 374;
+	InitGuide(plr);
+}
+
+protected func InitGuide(int plr) {
+	var left = GetPlayerControlAssignment(plr, CON_Left, true, true);
+	var right = GetPlayerControlAssignment(plr, CON_Right, true, true);
+	var up = GetPlayerControlAssignment(plr, CON_Up, true, true);
+	var down = GetPlayerControlAssignment(plr, CON_Down, true, true);
+	var jump = GetPlayerControlAssignment(plr, CON_Jump, true, true);
+	var control_keys = Format("[%s] [%s] [%s] [%s]", up, left, down, right);
+
+	// Create tutorial guide, add messages, show first.
+	guide = CreateObjectAbove(TutorialGuide, 0, 0, plr);
+	guide->AddGuideMessage(Format("$MsgTutorialWelcome$", control_keys));
+	guide->AddGuideMessage("$MsgTutorialHUD$");
+	guide->AddGuideMessage(Format("$MsgTutorialHelpThem$"));
+	guide->ShowGuideMessage(0);
 }
 
 // Gamecall from goals, set next mission.
@@ -209,3 +225,72 @@ global func FxClonkRestoreStop(object target, effect, int reason, bool  temporar
 	return FX_OK;
 }
 
+private func OnFinishedTutorialIntro(int plr)
+{
+	// enable crew
+	EnablePlrControls(plr);
+}
+
+
+
+protected func OnGuideMessageShown(int plr, int index)
+{
+	// Show the player his clonk and the guide.
+	if (index == 0)
+	{
+		TutArrowShowTarget(GetCrew(GetPlayerByIndex()), 225, 24);
+	}
+	// Show the player HUD.
+	if (index == 1)
+	{
+		TutArrowShowGUITarget(FindObject(Find_ID(GUI_Controller_CrewBar)), 0);
+		TutArrowShowGUITarget(FindObject(Find_ID(GUI_Controller_Goal)), 0);
+	}
+	// Show the clonks friend: the wipf.	
+	if (index == 2)
+	{
+		OnFinishedTutorialIntro(plr);
+		TutArrowShowTarget(immersion_npc);
+		TutArrowShowTarget(achievement_npc);
+	}
+
+	return;
+}
+
+protected func OnGuideMessageRemoved(int plr, int index)
+{
+	TutArrowClear();
+	return;
+}
+
+public func OnHasTalkedToAerin()
+{
+	guide->ShowGuide();
+	if (site) {
+		guide->AddGuideMessage("$MsgTutorialBuild$");
+		guide->AddGuideMessage("$MsgTutorialBuild2$");
+		TutArrowShowTarget(site);
+	}
+	else {
+		guide->AddGuideMessage("$MsgTutorialFindNPC$");
+		TutArrowShowTarget(lost_npc);
+	}
+	guide->AddGuideMessage("$MsgTutorialHide$");
+	guide->ShowGuideMessage();
+	return;
+}
+public func OnHasTalkedToWarra()
+{
+	guide->ShowGuide();
+	guide->AddGuideMessage("$MsgTutorialKillNPC$");
+	guide->AddGuideMessage("$MsgTutorialHide$");
+	guide->ShowGuideMessage();
+	TutArrowShowTarget(target_npc);
+	return;
+}
+
+public func IsTalking()
+{
+	guide->HideGuide();
+	return;
+}

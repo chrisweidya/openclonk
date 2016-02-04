@@ -10,6 +10,7 @@ public func Dlg_Warra_Init(object clonk)
 
 public func Dlg_Warra_1(object clonk)
 {
+	GameCall("IsTalking", clonk);
 	MessageBox(Format("$DlgWarraHelp$", dlg_target->GetName()), clonk, dlg_target);
 	return true;
 }
@@ -25,20 +26,20 @@ public func Dlg_Warra_3(object clonk)
 	MessageBox("$DlgWarraKill$", clonk, dlg_target);
 	StopDialogue();
 	SetDialogueProgress(3);
+	GameCall("OnHasTalkedToWarra", clonk);
 	return true;
 }
 
 public func Dlg_Warra_4(object clonk)
 {
+	GameCall("IsTalking", clonk);
 	MessageBox(Format("$DlgWarraHelp2$", dlg_target->GetName()), clonk, dlg_target);
 	return true;
 }
 
 public func Dlg_Warra_5(object clonk)
 {
-	MessageBox(Format("$DlgWarraHelpReply2$"), clonk, clonk, nil, false, ["I'm going to help the other guy.", "Killing is my specialty."], true);
-	StopDialogue();
-	SetDialogueProgress(6);
+	MessageBox(Format("$DlgWarraHelpReply2$"), clonk, clonk, nil, false, ["I'm going to help the other guy.", "Killing is my specialty."], true);	
 	return true;
 }
 
@@ -47,5 +48,14 @@ public func Dlg_Warra_6(object clonk)
 	MessageBox("$DlgWarraKill2$", clonk, dlg_target);
 	StopDialogue();
 	SetDialogueProgress(6);
+	GameCall("OnHasTalkedToWarra", clonk);
 	return true;
 }
+
+/*
+public func Dlg_Warra_Closed(object clonk)
+{
+	GameCall("OnHasTalkedToWarra", clonk);
+	return true;
+}
+*/
