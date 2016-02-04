@@ -25,7 +25,7 @@ DlgAerinSkylands2=Please! The materials can be gathered in the skylands on the l
 DlgAerinSkylandsReply2=[Choose reply]
 DlgAerinFindThem2=The materials are to the left in the skylands, and the tools are in the chest. Please help us!
 
-DlgAerinHelp3=Can you help me find my children? They're trapped somewhere in the skylands above.
+DlgAerinHelp3=Can you help me find my children? They're trapped somewhere in the skylands to the left.
 DlgAerinHelpReply3=[Choose reply]
 DlgAerinSkylands3=Please! I've put some tools to help you out in the chest if you need them.
 

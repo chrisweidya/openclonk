@@ -29,7 +29,7 @@ func InitializeMap(proplist map)
 		draw_mat(seed + 1, "^Rock", skyLand, 30, 6, 2, 1);		
 	}
 	if (achievement_level > 0) {
-		var fireStone = draw_mat(seed, "Firestone", ground, 30, 8, 2, 1);
+		var fireStone = draw_mat(seed, "Firestone", ground, 28, 8, 2, 1);
 	}
 	
 	var sky = draw_mat(seed, "Sky", skyLand, 50, 7, 3, 2);

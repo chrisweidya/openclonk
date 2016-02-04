@@ -24,29 +24,14 @@ func InitializeObjects()
 	achievement_level = GetPlayerAchLevel();
 	Log("imm/ach level %v %v", immersion_level, achievement_level);
 
-	var respawn = CreateObject(Rule_BaseRespawn);
-	respawn->SetInventoryTransfer(true);
-	respawn->SetFreeCrew(true);
-
-	var flagpole = CreateObjectAbove(Flagpole, LandscapeWidth() / 2 + 100, baseHeight);
-	flagpole->SetNeutral(true);
-//	flagpole->SetObjectLayer(flagpole);
 	
-	var elevator = CreateObjectAbove(Elevator, LandscapeWidth() / 2 + 40, LandscapeHeight() / 2);
-	elevator->SetDir(DIR_Left);
-	elevator->CreateShaft(530);
-	elevator->SetCasePosition(LandscapeHeight() / 2);
-	elevator->SetNoPowerNeed(true);
-
-	var cabin = CreateObjectAbove(WoodenCabin, LandscapeWidth() / 2 + 10, baseHeight-1);
-	cabin->SetObjectLayer(cabin);
 
 	
 
 //	var sm = CreateObjectAbove(Foundry, 400, baseHeight - 1);
 //	var sm = CreateObjectAbove(WindGenerator, 360, baseHeight - 1);
 //	var sm = CreateObjectAbove(Shipyard, 250, baseHeight - 1);
-
+	InitSettlement();
 	InitChest(immersion_level, achievement_level);
 	InitImmersionNPC();
 	InitAchievementNPC();
@@ -58,6 +43,26 @@ func InitializeObjects()
 	InitTrees(seed, immersion_level);
 	return true;
 	
+}
+
+private func InitSettlement() {
+	var respawn = CreateObject(Rule_BaseRespawn);
+	respawn->SetInventoryTransfer(true);
+	respawn->SetFreeCrew(true);
+
+	var flagpole = CreateObjectAbove(Flagpole, LandscapeWidth() / 2 + 100, baseHeight);
+	flagpole->SetNeutral(true);
+	//	flagpole->SetObjectLayer(flagpole);
+
+	var elevator = CreateObjectAbove(Elevator, LandscapeWidth() / 2 + 40, LandscapeHeight() / 2);
+	elevator->SetDir(DIR_Left);
+	elevator->CreateShaft(530);
+	elevator->SetCasePosition(LandscapeHeight() / 2);
+	elevator->SetNoPowerNeed(true);
+
+	var cabin = CreateObjectAbove(WoodenCabin, LandscapeWidth() / 2 + 10, baseHeight - 1);
+	cabin->SetObjectLayer(cabin);
+
 }
 
 private func InitChest(int immersion_level, int achievement_level) {
@@ -80,7 +85,8 @@ private func InitChest(int immersion_level, int achievement_level) {
 		var javelin = chest->CreateContents(Javelin);
 		javelin->SetInfiniteStackCount();
 	}
-	if (achievement_level > 2) {chest->CreateContents(Musket);
+	if (achievement_level > 2) {
+		chest->CreateContents(Musket);
 		var leadshot = chest->CreateContents(LeadShot);
 		leadshot->SetInfiniteStackCount();
 	}
