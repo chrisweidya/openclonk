@@ -3,9 +3,9 @@
 #include Library_Plant
 #include Library_Tree
 
-private func SeedChance() { return 500; }
+private func SeedChance() { return 0; }
 private func SeedArea() { return 400; }
-private func SeedAmount() { return 10; }
+private func SeedAmount() { return 0; }
 
 local lib_tree_burned = Tree_Coniferous_Burned;
 

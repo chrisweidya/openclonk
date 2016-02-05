@@ -239,6 +239,7 @@ public func BurstIntoAshes()
 */
 public func ChopDown()
 {
+	GameCall("OnTreeChopped");
 	// stop growing!
 	ClearScheduleCall(this, "RestartGrowth");
 	StopGrowth();

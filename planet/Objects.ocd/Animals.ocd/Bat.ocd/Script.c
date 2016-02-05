@@ -472,6 +472,7 @@ private func UpdateMovementDirectionOnContact()
 
 private func Death()
 {
+	GameCall("OnBatDeath");
 	// Stop current animation and play dying animation.
 	StopAnimation(1);
 	PlayAnimation("Land", 1, Anim_Linear(0, 0, GetAnimationLength("Land"), 19, ANIM_Hold), Anim_Const(1000));

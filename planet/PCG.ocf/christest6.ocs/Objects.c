@@ -80,6 +80,7 @@ private func InitChest(int immersion_level, int achievement_level) {
 		chest->CreateContents(Bow);
 		var arrow = chest->CreateContents(Arrow);
 		arrow->SetInfiniteStackCount();
+		chest->CreateContents(Sword);
 	}
 	if (achievement_level > 1) {
 		var javelin = chest->CreateContents(Javelin);
@@ -89,10 +90,6 @@ private func InitChest(int immersion_level, int achievement_level) {
 		chest->CreateContents(Musket);
 		var leadshot = chest->CreateContents(LeadShot);
 		leadshot->SetInfiniteStackCount();
-	}
-	if (achievement_level > 3) {
-		chest->CreateContents(GrenadeLauncher);
-		chest->CreateContents(IronBomb, 10);
 	}
 }
 

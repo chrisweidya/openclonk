@@ -108,7 +108,10 @@ static int32_t FnGetPlayerAchLevel(C4PropList * _this)
 {
 	PlayerProfile *profile = PlayerProfile::getSingleProfile();
 	if (profile) {
-		return profile->achievementLevel;
+		int level = profile->achievementLevel;
+		if (level > 5)
+			level = 5;
+		return level;
 	}
 	else
 		Log("failed to load player profile");
@@ -119,7 +122,10 @@ static int32_t FnGetPlayerImmLevel(C4PropList * _this)
 {
 	PlayerProfile *profile = PlayerProfile::getSingleProfile();
 	if (profile) {
-		return profile->immersionLevel;
+		int level = profile->immersionLevel;
+		if (level > 5)
+			level = 5;
+		return level;
 	}
 	else
 		Log("failed to load player profile");

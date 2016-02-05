@@ -3,9 +3,9 @@
 #include Library_Plant
 #include Library_Tree
 
-private func SeedChance() {	return 100; }
+private func SeedChance() {	return 0; }
 private func SeedArea() { return 400; }
-private func SeedAmount() { return 12; }
+private func SeedAmount() { return 0; }
 
 local coconuts;
 // Saved for GetTreetopPosition

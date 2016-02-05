@@ -4,11 +4,16 @@ local site;
 local player;
 static guide;
 local goal;
+local bat_deaths;
+local tree_chopped;
+local secs_spent_in_immersion;
+local secs_spent_in_achievement;
 
 func Initialize()
 {	
 	//resetProfile();
 	baseHeight = LandscapeHeight() / 2 ;
+	bat_deaths = tree_chopped = secs_spent_in_immersion = secs_spent_in_achievement = 0;
 	seed = GetSeed();
 	InitAI();
 	InitGoal();
@@ -31,19 +36,21 @@ protected func InitializePlayer(int plr)
 	// Position player's clonk.
 //	SetPlayerZoomByViewRange(plr, 400, 0, PLRZOOM_LimitMin);
 	DisablePlrControls(plr);
-	player = plr;
-	var clonk = GetCrew(plr);	
-	clonk->CreateContents(Shovel);
-	clonk->CreateContents(GrappleBow);
-	ItemGiver(clonk);
-	clonk->SetPosition(LandscapeWidth()/2 + 100, baseHeight - 20);	
-	clonk->MakeInvincible();
+	player = GetCrew(plr);	
+	player->CreateContents(Shovel);
+	player->CreateContents(GrappleBow);
+	ItemGiver(player);
+	player->SetPosition(LandscapeWidth()/2 + 100, baseHeight - 20);
+	player->MakeInvincible();
 
 	InitGuide(plr);
+	player.deaths = 0;
+	AddEffect("TrackDeaths", player, 100, 5);
+	AddEffect("TrackPlayer", player, 100, 60);
 }
 
 private func ItemGiver(object clonk) {
-	var index = GetRandomNum(5, seed);
+	var index = GetRandomNum(4, seed);
 	if (achievement_level == 0)
 		index = 0;
 
@@ -62,10 +69,6 @@ private func ItemGiver(object clonk) {
 		clonk->CreateContents(Musket);
 		var leadshot = clonk->CreateContents(LeadShot);
 		leadshot->SetInfiniteStackCount();
-	}
-	else if (index == 5) {
-		clonk->CreateContents(GrenadeLauncher);
-		clonk->CreateContents(IronBomb, 10);
 	}
 }
 
@@ -208,35 +211,38 @@ global func FxTargetDeathTimer(object target)
 	return FX_OK;
 }
 
-/*-- Clonk restoring --*/
+global func FxTrackPlayerTimer(object target, proplist effect, int time)
+{
+	var x = target->GetX();
+	if (x < LandscapeWidth() / 3)
+		secs_spent_in_immersion++;
+	else if (x > LandscapeWidth() * 2 / 3)
+		secs_spent_in_achievement++;
+	return FX_OK;
+}
 
-global func FxClonkRestoreTimer(object target, proplist effect, int time)
+global func FxTrackDeathsTimer(object target, proplist effect, int time)
 {
 	// Respawn clonk to new location if reached certain position.
 	return FX_OK;
 }
 
 // Relaunches the clonk, from death or removal.
-global func FxClonkRestoreStop(object target, effect, int reason, bool  temporary)
+global func FxTrackDeathsStop(object target, effect, int reason, bool  temporary)
 {
 	if (reason == 3 || reason == 4)
 	{
-		var restorer = CreateObjectAbove(ObjectRestorer, 0, 0, NO_OWNER);
-		var x = BoundBy(target->GetX(), 0, LandscapeWidth());
-		var y = BoundBy(target->GetY(), 0, LandscapeHeight());
-		restorer->SetPosition(x, y);
-		var to_x = effect.to_x;
-		var to_y = effect.to_y;
-		// Respawn new clonk.
-		var plr = target->GetOwner();
-		var clonk = CreateObjectAbove(Clonk, 0, 0, plr);
-		clonk->GrabObjectInfo(target);
-		Rule_BaseRespawn->TransferInventory(target, clonk);
-		SetCursor(plr, clonk);
-		clonk->DoEnergy(100000);
-		restorer->SetRestoreObject(clonk, nil, to_x, to_y, 0, "ClonkRestore");
+		target.deaths++;
 	}
 	return FX_OK;
+}
+
+private func OnBatDeath() {
+	bat_deaths++;
+}
+
+private func OnTreeChopped() {
+	tree_chopped++;
 }
 
 private func OnFinishedTutorialIntro(int plr)

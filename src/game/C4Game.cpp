@@ -1498,7 +1498,6 @@ void C4Game::Evaluate()
 	Players.Save(true);
 	// Round results
 	RoundResults.EvaluateGame();
-
 	// Set game flag
 	Log(LoadResStr("IDS_PRC_EVALUATED"));
 	Evaluated=true;
