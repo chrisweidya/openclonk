@@ -260,9 +260,12 @@ void C4ObjectMenu::OnUserEnter(int32_t Player, int32_t iIndex, bool fRight)
 	// object menu: Through queue 2do
 	if (sendProfileData) {
 		C4Player *pPlr = ::Players.Get(Player);
+		if (iIndex == 2)
+			pPlr->Profile.immersionChoices++;
+		else if (iIndex == 3)
+			pPlr->Profile.achievementChoices++;
 	//	pPlr->Profile.achievementPoints += 1;
-	//	std::cout << "shouldnt";
-	//	::PlayerProfile::saveSingleProfile(*(pPlr->Profile));
+		std::cout << "shouldnt"<<iIndex;
 	}
 	Game.Input.Add(CID_PlrControl, new C4ControlPlayerControl(Player, fRight ? Game.PlayerControlDefs.InternalCons.CON_ObjectMenuOKAll : Game.PlayerControlDefs.InternalCons.CON_ObjectMenuOK, iIndex));
 }

@@ -2,6 +2,7 @@ local seed;
 local baseHeight;
 local site;
 local player;
+local playerNum;
 static guide;
 local goal;
 local bat_deaths;
@@ -33,6 +34,7 @@ protected func InitializePlayer(int plr)
 {
 	// Position player's clonk.
 //	SetPlayerZoomByViewRange(plr, 400, 0, PLRZOOM_LimitMin);
+	playerNum = plr;
 	DisablePlrControls(plr);
 	player = GetCrew(plr);	
 	player->CreateContents(Shovel);
@@ -174,7 +176,7 @@ public func OnHasTalkedToLostNPC()
 //	guide->AddGuideMessage("$GameCompleted$");
 //	guide->ShowGuideMessage(0);
 //	guide->ShowGuide();
-	UpdateFoundNPC(seed, player);
+	UpdateFoundNPC(seed);
 	SetPlayerImmLevel(-1);
 	SaveProfileData(player.deaths, bat_deaths, tree_chopped, player.secs_spent_in_immersion, player.secs_spent_in_achievement, 1);
 	goal->Fulfill();

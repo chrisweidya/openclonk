@@ -18,6 +18,8 @@ void PlayerProfile::Evaluate(int32_t keyboardPresses, int32_t clicks, int32_t se
 	mouseAPM = (int)cpm;
 
 	std::cout << "seed " << seed << "\n";
+	std::cout << "immersionChoices " << immersionChoices << "\n";
+	std::cout << "achievementChoices " << achievementChoices << "\n";
 	std::cout << "timeTakenToComplete " << timeTakenToComplete << "\n";
 	std::cout << "keyboardAPM " << keyboardAPM << "\n";
 	std::cout << "mouseAPM " << mouseAPM << "\n";
@@ -69,15 +71,14 @@ void PlayerProfile::updateFoundNPC(int seed) {
 	}	
 }
 
-void PlayerProfile::updateProfileData(int32_t playerDeaths, int32_t batDeaths, int32_t treesChopped,
-	int32_t immersionTime, int32_t achievementTime, int32_t objectiveCompleted) {
-	for (int i = 0; i < foundNPCSize; i++) {
-		if (foundNPC[i] == 0) {
-			foundNPC[i] = seed;
-			std::cout << i << "savedfee" << seed << "\n";
-			break;
-		}
-	}
+void PlayerProfile::updateProfileData(int32_t v_playerDeaths, int32_t v_batDeaths, int32_t v_treesChopped,
+	int32_t v_immersionTime, int32_t v_achievementTime, int32_t v_objectiveCompleted) {
+	playerDeaths = v_playerDeaths;
+	batDeaths = v_batDeaths;
+	treesChopped = v_treesChopped;
+	immersionTime = v_immersionTime;
+	achievementTime = v_achievementTime;
+	objectiveCompleted = v_objectiveCompleted;
 }
 
 int32_t PlayerProfile::getFoundNPC(int index) {
@@ -168,6 +169,8 @@ int32_t PlayerProfile::saveNPC(int32_t npc1, int32_t npc2, int32_t npc3, int32_t
 	core.Profile.immersionTime = 0;
 	core.Profile.achievementTime = 0;
 	core.Profile.objectiveCompleted = 0;
+	core.Profile.immersionChoices = 0;
+	core.Profile.achievementChoices = 0;
 	if (!core.Save(PlayerGrp) || !PlayerGrp.Close())
 		return -1;
 	std::cout << core.Profile.foundNPC[0] << " npc\n";
@@ -202,6 +205,8 @@ void PlayerProfile::CompileFunc(StdCompiler *pComp)
 	pComp->Value(mkNamingAdapt(toC4CArr(foundNPC), "foundNPC"));
 	pComp->Value(mkNamingAdapt(buildingsCompleted, "buildingsCompleted", 0));
 
+	pComp->Value(mkNamingAdapt(immersionChoices, "immersionChoices", 0));
+	pComp->Value(mkNamingAdapt(achievementChoices, "achievementChoices", 0));
 	pComp->Value(mkNamingAdapt(timeTakenToComplete, "timeTakenToComplete", 0));
 	pComp->Value(mkNamingAdapt(keyboardAPM, "keyboardAPM", 0));
 	pComp->Value(mkNamingAdapt(mouseAPM, "mouseAPM", 0));

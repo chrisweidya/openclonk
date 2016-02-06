@@ -257,7 +257,7 @@ static int32_t FnGetBuildingsCompleted(C4PropList *_this)
 }
 
 static C4Void FnSaveProfileData(C4PropList *_this, int32_t playerDeaths, int32_t batDeaths, int32_t treesChopped,
-	int32_t immersionTime, int32_t achievementTime, int32_t objectiveCompleted) {
+	int32_t immersionTime, int32_t achievementTime, int32_t objectiveCompleted, int player) {
 	C4Player *plr = ::Players.Get(player);
 	if (plr) {
 		plr->Profile.updateProfileData(playerDeaths, batDeaths, treesChopped, immersionTime, achievementTime, objectiveCompleted);
