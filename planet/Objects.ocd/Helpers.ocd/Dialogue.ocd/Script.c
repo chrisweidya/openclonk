@@ -193,8 +193,7 @@ public func StopDialogue()
 	// clear remembered positions
 	dlg_last_opt_sel = nil;
 	// put on wait for a while; then reenable
-	SetDialogueStatus(DLG_Status_Wait);
-	ScheduleCall(this, this.SetDialogueStatus, 30, 1, DLG_Status_Stop);
+	SetDialogueStatus(DLG_Status_Stop);
 	return true;
 }
 
@@ -245,7 +244,8 @@ public func Interact(object clonk)
 	if (dlg_status == DLG_Status_Stop)
 	{
 		clonk->CloseMenu();
-		dlg_status = DLG_Status_Active;
+		dlg_status = DLG_Status_Wait;
+		ScheduleCall(this, this.SetDialogueStatus, 30, 0, DLG_Status_Active);
 		// Do a call on a closed dialogue as well.
 		var fn_closed = Format("~Dlg_%s_Closed", dlg_name);
 		if (!Call(fn_closed, clonk, dlg_target))
@@ -278,6 +278,7 @@ public func Interact(object clonk)
 		if (!GameCall(fn_generic, this, clonk, dlg_target))
 			if (!Call(fn_progress, clonk))
 				GameCall(fn_progress, this, clonk, dlg_target);
+
 	return true;
 }
 
@@ -448,10 +449,6 @@ private func MessageBox(string message, object clonk, object talker, int for_pla
 	}
 
 	return;
-}
-
-public func GetLastOption() {
-	return dlg_last_opt_sel;
 }
 
 public func MenuOK(proplist menu_id, object clonk)

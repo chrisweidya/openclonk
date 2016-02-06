@@ -22,6 +22,12 @@ public:
 	int32_t timeTakenToComplete = 0;
 	int32_t keyboardAPM = 0;
 	int32_t mouseAPM = 0;
+	int32_t playerDeaths = 0;
+	int32_t batDeaths = 0;
+	int32_t treesChopped = 0;
+	int32_t immersionTime = 0;
+	int32_t achievementTime = 0;
+	int32_t objectiveCompleted = 0;
 
 	void Evaluate(int32_t keyboardPresses, int32_t clicks, int32_t secondsInRound);
 
@@ -36,6 +42,8 @@ public:
 	int32_t getFoundNPC(int index);
 	void updateBuildingsCompleted();
 	int32_t getBuildingsCompleted();
+	void updateProfileData(int32_t playerDeaths, int32_t batDeaths, int32_t treesChopped,
+		int32_t immersionTime, int32_t achievementTime, int32_t objectiveCompleted);
 
 	static PlayerProfile *getSingleProfile();
 	static int32_t saveSingleProfile(PlayerProfile profile);

@@ -81,7 +81,7 @@ void C4MenuItem::DoTextProgress(int32_t &riByVal)
 	// normal text: move forward in unbroken message, ignoring markup
 	StdStrBuf sText(Caption);
 	C4Markup MarkupChecker(false);
-	const char *szPos = sText.getPtr(std::min<int>(TextDisplayProgress, sText.getLength()));
+	const char *szPos = sText.getPtr(sText.getLength());
 	while (riByVal && *szPos)
 	{
 		MarkupChecker.SkipTags(&szPos);

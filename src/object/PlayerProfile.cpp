@@ -12,12 +12,21 @@ void PlayerProfile::Default()
 }
 
 void PlayerProfile::Evaluate(int32_t keyboardPresses, int32_t clicks, int32_t secondsInRound) {
-	std::cout << "cpm before: " << mouseAPM << "\n";
 	float apm = keyboardPresses * 60.0 / secondsInRound ;
 	keyboardAPM = (int)apm;
 	float cpm = clicks * 60.0 / secondsInRound;
 	mouseAPM = (int)cpm;
-	std::cout << "cpm: " << mouseAPM << "\n";
+
+	std::cout << "seed " << seed << "\n";
+	std::cout << "timeTakenToComplete " << timeTakenToComplete << "\n";
+	std::cout << "keyboardAPM " << keyboardAPM << "\n";
+	std::cout << "mouseAPM " << mouseAPM << "\n";
+	std::cout << "playerDeaths " << playerDeaths << "\n";
+	std::cout << "batDeaths " << batDeaths << "\n";
+	std::cout << "treesChopped " << treesChopped << "\n";
+	std::cout << "immersionTime " << immersionTime << "\n";
+	std::cout << "achievementTime " << achievementTime << "\n";
+	std::cout << "objectiveCompleted " << objectiveCompleted << "\n";
 }
 
 void PlayerProfile::updatePlayerType(float achievementScore, float socialScore, float immersionScore)
@@ -60,10 +69,20 @@ void PlayerProfile::updateFoundNPC(int seed) {
 	}	
 }
 
+void PlayerProfile::updateProfileData(int32_t playerDeaths, int32_t batDeaths, int32_t treesChopped,
+	int32_t immersionTime, int32_t achievementTime, int32_t objectiveCompleted) {
+	for (int i = 0; i < foundNPCSize; i++) {
+		if (foundNPC[i] == 0) {
+			foundNPC[i] = seed;
+			std::cout << i << "savedfee" << seed << "\n";
+			break;
+		}
+	}
+}
+
 int32_t PlayerProfile::getFoundNPC(int index) {
 //	std::cout << "found npc " << foundNPC[index] << "\n";
 	int32_t npc_seed = foundNPC[index];
-	std::cout << "found npc2 " << npc_seed << "\n";
 	return npc_seed;
 }
 
@@ -73,7 +92,6 @@ void PlayerProfile::updateBuildingsCompleted() {
 
 int32_t PlayerProfile::getBuildingsCompleted() {
 	int32_t count = buildingsCompleted;
-	std::cout << timeTakenToComplete << "check \n";
 	return count;
 }
 
@@ -144,6 +162,12 @@ int32_t PlayerProfile::saveNPC(int32_t npc1, int32_t npc2, int32_t npc3, int32_t
 	core.Profile.mouseAPM = 0;
 	core.Profile.timeTakenToComplete = 0;
 	core.Profile.buildingsCompleted = 0;
+	core.Profile.playerDeaths = 0;
+	core.Profile.batDeaths = 0;
+	core.Profile.treesChopped = 0;
+	core.Profile.immersionTime = 0;
+	core.Profile.achievementTime = 0;
+	core.Profile.objectiveCompleted = 0;
 	if (!core.Save(PlayerGrp) || !PlayerGrp.Close())
 		return -1;
 	std::cout << core.Profile.foundNPC[0] << " npc\n";
@@ -181,4 +205,10 @@ void PlayerProfile::CompileFunc(StdCompiler *pComp)
 	pComp->Value(mkNamingAdapt(timeTakenToComplete, "timeTakenToComplete", 0));
 	pComp->Value(mkNamingAdapt(keyboardAPM, "keyboardAPM", 0));
 	pComp->Value(mkNamingAdapt(mouseAPM, "mouseAPM", 0));
+	pComp->Value(mkNamingAdapt(playerDeaths, "playerDeaths", 0));
+	pComp->Value(mkNamingAdapt(batDeaths, "batDeaths", 0));
+	pComp->Value(mkNamingAdapt(treesChopped, "treesChopped", 0));
+	pComp->Value(mkNamingAdapt(immersionTime, "immersionTime", 0));
+	pComp->Value(mkNamingAdapt(achievementTime, "achievementTime", 0));
+	pComp->Value(mkNamingAdapt(objectiveCompleted, "objectiveCompleted", 0));
 }

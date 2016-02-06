@@ -162,16 +162,6 @@ static int32_t FnSetPlayerImmLevel(C4PropList * _this, int32_t level, int player
 	return -1;
 }
 
-static int32_t FnSetProfileData(C4PropList * _this, int32_t level, int player)
-{
-	C4Player *plr = ::Players.Get(player);
-	if (plr) {
-	}
-	else
-		Log("failed to update level");
-	return -1;
-}
-
 static int32_t FnGetMapDataFromPlayer(C4PropList * _this)
 {
 	PlayerProfile *profile = PlayerProfile::getSingleProfile();
@@ -264,6 +254,18 @@ static int32_t FnGetBuildingsCompleted(C4PropList *_this)
 	else
 		Log("failed to get buildings completed");
 	return 0;
+}
+
+static C4Void FnSaveProfileData(C4PropList *_this, int32_t playerDeaths, int32_t batDeaths, int32_t treesChopped,
+	int32_t immersionTime, int32_t achievementTime, int32_t objectiveCompleted) {
+	C4Player *plr = ::Players.Get(player);
+	if (plr) {
+		plr->Profile.updateProfileData(playerDeaths, batDeaths, treesChopped, immersionTime, achievementTime, objectiveCompleted);
+		return C4Void();
+	}
+	else
+		Log("failed to save game data");
+	return C4Void();
 }
 
 static C4Void FnResetProfile(C4PropList *_this)
@@ -3132,7 +3134,7 @@ void InitGameFunctionMap(C4AulScriptEngine *pEngine)
 	AddFunc(pEngine, "GetPlayerAchLevel", FnGetPlayerAchLevel);
 	AddFunc(pEngine, "SetPlayerImmLevel", FnSetPlayerImmLevel);
 	AddFunc(pEngine, "SetPlayerAchLevel", FnSetPlayerAchLevel);
-	AddFunc(pEngine, "SetProfileData", FnSetProfileData);
+	AddFunc(pEngine, "SaveProfileData", FnSaveProfileData);
 
 	F(GetPlrKnowledge);
 	F(GetComponent);

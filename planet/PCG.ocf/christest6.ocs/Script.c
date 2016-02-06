@@ -6,14 +6,12 @@ static guide;
 local goal;
 local bat_deaths;
 local tree_chopped;
-local secs_spent_in_immersion;
-local secs_spent_in_achievement;
 
 func Initialize()
 {	
 	//resetProfile();
 	baseHeight = LandscapeHeight() / 2 ;
-	bat_deaths = tree_chopped = secs_spent_in_immersion = secs_spent_in_achievement = 0;
+	bat_deaths = tree_chopped = 0;
 	seed = GetSeed();
 	InitAI();
 	InitGoal();
@@ -45,6 +43,8 @@ protected func InitializePlayer(int plr)
 
 	InitGuide(plr);
 	player.deaths = 0;
+	player.secs_spent_in_immersion = 0;
+	player.secs_spent_in_achievement = 0;
 	AddEffect("TrackDeaths", player, 100, 5);
 	AddEffect("TrackPlayer", player, 100, 60);
 }
@@ -176,6 +176,7 @@ public func OnHasTalkedToLostNPC()
 //	guide->ShowGuide();
 	UpdateFoundNPC(seed, player);
 	SetPlayerImmLevel(-1);
+	SaveProfileData(player.deaths, bat_deaths, tree_chopped, player.secs_spent_in_immersion, player.secs_spent_in_achievement, 1);
 	goal->Fulfill();
 	return;
 }
@@ -191,9 +192,14 @@ global func FxCheckConstructionTimer(object target, proplist effect) {
 	{
 		SetPlayerImmLevel(-1);
 		UpdateBuildingsCompleted();
+		GameCall("UpdateProfile", 2);
 		target.goal->Fulfill();
 		return FX_Execute_Kill;
 	}
+}
+
+private func UpdateProfile(int objectiveCompleted) {
+	SaveProfileData(player.deaths, bat_deaths, tree_chopped, player.secs_spent_in_immersion, player.secs_spent_in_achievement, objectiveCompleted);
 }
 
 global func FxTargetDeathStop(object target, effect, int reason, bool  temporary)
@@ -201,6 +207,7 @@ global func FxTargetDeathStop(object target, effect, int reason, bool  temporary
 	if (reason == 3 || reason == 4)
 	{
 		SetPlayerAchLevel(-1);
+		GameCall("UpdateProfile", 3);
 		target.goal->Fulfill();
 		return FX_Execute_Kill;
 	}
@@ -215,9 +222,9 @@ global func FxTrackPlayerTimer(object target, proplist effect, int time)
 {
 	var x = target->GetX();
 	if (x < LandscapeWidth() / 3)
-		secs_spent_in_immersion++;
+		target.secs_spent_in_immersion++;
 	else if (x > LandscapeWidth() * 2 / 3)
-		secs_spent_in_achievement++;
+		target.secs_spent_in_achievement++;
 	return FX_OK;
 }
 
