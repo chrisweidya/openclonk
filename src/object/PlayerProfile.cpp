@@ -16,6 +16,7 @@ void PlayerProfile::Evaluate(int32_t keyboardPresses, int32_t clicks, int32_t se
 	keyboardAPM = (int)apm;
 	float cpm = clicks * 60.0 / secondsInRound;
 	mouseAPM = (int)cpm;
+	round++;
 
 	std::cout << "seed " << seed << "\n";
 	std::cout << "immersionChoices " << immersionChoices << "\n";
@@ -171,6 +172,7 @@ int32_t PlayerProfile::saveNPC(int32_t npc1, int32_t npc2, int32_t npc3, int32_t
 	core.Profile.objectiveCompleted = 0;
 	core.Profile.immersionChoices = 0;
 	core.Profile.achievementChoices = 0;
+	core.Profile.round = 0;
 	if (!core.Save(PlayerGrp) || !PlayerGrp.Close())
 		return -1;
 	std::cout << core.Profile.foundNPC[0] << " npc\n";
@@ -205,6 +207,7 @@ void PlayerProfile::CompileFunc(StdCompiler *pComp)
 	pComp->Value(mkNamingAdapt(toC4CArr(foundNPC), "foundNPC"));
 	pComp->Value(mkNamingAdapt(buildingsCompleted, "buildingsCompleted", 0));
 
+	pComp->Value(mkNamingAdapt(round, "round", 0));
 	pComp->Value(mkNamingAdapt(immersionChoices, "immersionChoices", 0));
 	pComp->Value(mkNamingAdapt(achievementChoices, "achievementChoices", 0));
 	pComp->Value(mkNamingAdapt(timeTakenToComplete, "timeTakenToComplete", 0));

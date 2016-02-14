@@ -7,7 +7,8 @@ func InitializeMap(proplist map)
 {
 	//Resize(120, 160);
 	var offset = GetMapDataFromPlayer();
-	i_width = map.Wdt / 2 + map.Wdt*offset / 12;
+//	i_width = map.Wdt / 2 + map.Wdt*offset / 12;
+	i_width = map.Wdt / 2;
 	a_width = map.Wdt - i_width;
 
 	var seed = GetRandomSeed();

@@ -4,7 +4,7 @@
 public func Dlg_Warra_Init(object clonk)
 {
 	if (clonk.level > 0)
-		SetDialogueProgress(4);
+		SetDialogueProgress(11);
 	return true;
 }
 

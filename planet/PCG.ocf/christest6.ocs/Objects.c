@@ -14,7 +14,8 @@ static target_npc;
 func InitializeObjects()
 {
 	var offset = GetMapDataFromPlayer();
-	i_width = LandscapeWidth() / 2 + LandscapeWidth()*offset / 12;
+//	i_width = LandscapeWidth() / 2 + LandscapeWidth()*offset / 12;
+	i_width = LandscapeWidth() / 2;
 	a_width = LandscapeWidth() - i_width;
 
 	baseHeight = (LandscapeHeight() / 2);
@@ -24,13 +25,7 @@ func InitializeObjects()
 	achievement_level = GetPlayerAchLevel();
 	Log("imm/ach level %v %v", immersion_level, achievement_level);
 
-	
 
-	
-
-//	var sm = CreateObjectAbove(Foundry, 400, baseHeight - 1);
-//	var sm = CreateObjectAbove(WindGenerator, 360, baseHeight - 1);
-//	var sm = CreateObjectAbove(Shipyard, 250, baseHeight - 1);
 	InitSettlement();
 	InitChest(immersion_level, achievement_level);
 	InitImmersionNPC();

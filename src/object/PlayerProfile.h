@@ -19,6 +19,7 @@ public:
 	int32_t buildingsCompleted = 0;
 
 	//Game data
+	int32_t round = 0;
 	int32_t immersionChoices = 0;
 	int32_t achievementChoices = 0;
 	int32_t timeTakenToComplete = 0;
