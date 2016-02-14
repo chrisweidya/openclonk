@@ -1,6 +1,6 @@
 # Goal Description
 MsgGoalName=Quest
-MsgGoalDescription=Help Aerin or Warra. New tools can be found in the chest each game.
+MsgGoalDescription=Help Aerin or Warra. New tools can be found in the chest each game. You can restart the round with a new map by aborting it and starting again.
 
 # Dialogue options
 MsgNext=&Next round
@@ -18,8 +18,8 @@ MsgTutorialFindNPC=Aerin lost her family members. Find him/her at the skylands t
 MsgTutorialBuild=Aerin needs your help to build her village. The building requirements can be seen below the consruction site. The materials can be gathered in the skylands using the tools in the chest.
 MsgTutorialBuild2=Press (E) to interact with your surroundings (transfer items). Advanced materials (e.g. steel) can be produced once you've built the foundry with required materials and fuel (coal), all gathered from the skylands.
 MsgTutorialKillNPC=Warra issued you a challenge. Find the cave dweller on the right side of the map and kill him. Use the tools and weapons you have in your inventory (select by pressing number and left-click to use/attack) to navigate the map and kill him.
-MsgTutorialHide=Press (G) to show/hide the guide.
-MsgTutorialRound=Each game round changes depending on what you do previously, try playing through it again! You can restart the game if you're stuck and a new map will be generated.
+MsgTutorialHide=Press (G) to show/hide the guide. You can restart the round by aborting (ESC) anytime to create a map in the event that you are stuck.
+MsgTutorialRound=Each game round changes depending on what you do previously, try playing through it again! You can restart the game by aborting (ESC) and starting it again if you're stuck and a new map will be generated.
 MsgTutorialChest=New items can be found each round in the chest, press E when near it to transfer items.
 
 

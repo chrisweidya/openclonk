@@ -11,14 +11,16 @@ void PlayerProfile::Default()
 {
 }
 
-void PlayerProfile::Evaluate(int32_t keyboardPresses, int32_t clicks, int32_t secondsInRound) {
+void PlayerProfile::Evaluate(int32_t keyboardPresses, int32_t clicks, int32_t secondsInRound, int32_t restarts) {
 	float apm = keyboardPresses * 60.0 / secondsInRound ;
 	keyboardAPM = (int)apm;
 	float cpm = clicks * 60.0 / secondsInRound;
 	mouseAPM = (int)cpm;
 	round++;
+	restartCount = restarts;
 
 	std::cout << "seed " << seed << "\n";
+	std::cout << "restartCount " << restartCount << "\n";
 	std::cout << "immersionChoices " << immersionChoices << "\n";
 	std::cout << "achievementChoices " << achievementChoices << "\n";
 	std::cout << "timeTakenToComplete " << timeTakenToComplete << "\n";
@@ -172,6 +174,7 @@ int32_t PlayerProfile::saveNPC(int32_t npc1, int32_t npc2, int32_t npc3, int32_t
 	core.Profile.objectiveCompleted = 0;
 	core.Profile.immersionChoices = 0;
 	core.Profile.achievementChoices = 0;
+	core.Profile.restartCount = 0;
 	core.Profile.round = 0;
 	if (!core.Save(PlayerGrp) || !PlayerGrp.Close())
 		return -1;
@@ -208,6 +211,7 @@ void PlayerProfile::CompileFunc(StdCompiler *pComp)
 	pComp->Value(mkNamingAdapt(buildingsCompleted, "buildingsCompleted", 0));
 
 	pComp->Value(mkNamingAdapt(round, "round", 0));
+	pComp->Value(mkNamingAdapt(restartCount, "restartCount", 0));
 	pComp->Value(mkNamingAdapt(immersionChoices, "immersionChoices", 0));
 	pComp->Value(mkNamingAdapt(achievementChoices, "achievementChoices", 0));
 	pComp->Value(mkNamingAdapt(timeTakenToComplete, "timeTakenToComplete", 0));

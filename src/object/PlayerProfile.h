@@ -20,6 +20,7 @@ public:
 
 	//Game data
 	int32_t round = 0;
+	int32_t restartCount = 0;
 	int32_t immersionChoices = 0;
 	int32_t achievementChoices = 0;
 	int32_t timeTakenToComplete = 0;
@@ -32,7 +33,7 @@ public:
 	int32_t achievementTime = 0;
 	int32_t objectiveCompleted = 0;
 
-	void Evaluate(int32_t keyboardPresses, int32_t clicks, int32_t secondsInRound);
+	void Evaluate(int32_t keyboardPresses, int32_t clicks, int32_t secondsInRound, int32_t restarts);
 
 	//profile saving or loading
 	void updatePlayerType(float achievementScore, float socialScore, float immersionScore);

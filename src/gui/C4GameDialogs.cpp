@@ -60,6 +60,8 @@ void C4AbortGameDialog::OnClosed(bool fOK)
 	typedef C4GUI::ConfirmationDialog Base;
 	Base::OnClosed(fOK);
 	// abort
-	if (fOK)
+	if (fOK) {
+		Game.restartCount++;
 		Game.Abort();
+	}
 }

@@ -219,6 +219,8 @@ public:
 	bool InitPlayerControlUserSettings(); // merge player control default settings and config overloads into user setting
 	void SetDefaultGamma();
 
+	int32_t restartCount = 0;
+
 	std::unique_ptr<C4ScriptGuiWindow> ScriptGuiRoot;
 protected:
 	void Default();
