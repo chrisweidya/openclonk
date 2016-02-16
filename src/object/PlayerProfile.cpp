@@ -2,6 +2,7 @@
 #include <C4Include.h>
 #include <C4StartupNetDlg.h>
 #include <time.h>
+#include <DBConnector.h>
 
 PlayerProfile::PlayerProfile()
 {	
@@ -11,7 +12,7 @@ void PlayerProfile::Default()
 {
 }
 
-void PlayerProfile::Evaluate(int32_t keyboardPresses, int32_t clicks, int32_t secondsInRound, int32_t restarts) {
+void PlayerProfile::Evaluate(int32_t keyboardPresses, int32_t clicks, int32_t secondsInRound, int32_t restarts, const char * name) {
 	float apm = keyboardPresses * 60.0 / secondsInRound ;
 	keyboardAPM = (int)apm;
 	float cpm = clicks * 60.0 / secondsInRound;
@@ -19,7 +20,10 @@ void PlayerProfile::Evaluate(int32_t keyboardPresses, int32_t clicks, int32_t se
 	round++;
 	restartCount = restarts;
 
+	DBConnector db_connector = DBConnector();
+	db_connector.Execute();
 	std::cout << "seed " << seed << "\n";
+	std::cout << "name " << name << "\n";
 	std::cout << "restartCount " << restartCount << "\n";
 	std::cout << "immersionChoices " << immersionChoices << "\n";
 	std::cout << "achievementChoices " << achievementChoices << "\n";

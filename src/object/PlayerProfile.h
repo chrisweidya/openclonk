@@ -33,7 +33,7 @@ public:
 	int32_t achievementTime = 0;
 	int32_t objectiveCompleted = 0;
 
-	void Evaluate(int32_t keyboardPresses, int32_t clicks, int32_t secondsInRound, int32_t restarts);
+	void Evaluate(int32_t keyboardPresses, int32_t clicks, int32_t secondsInRound, int32_t restarts, const char * name);
 
 	//profile saving or loading
 	void updatePlayerType(float achievementScore, float socialScore, float immersionScore);
