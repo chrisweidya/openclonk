@@ -1,5 +1,0 @@
-[Head]
-Title=------------
-MissionAccess=NEVER
-Difficulty=49
-Icon=0

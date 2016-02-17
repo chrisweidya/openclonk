@@ -1,6 +1,0 @@
-[Teams]
-TeamColors=false
-
-	[Team]
-	id=1
-	Name=$TeamName$

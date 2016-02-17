@@ -1,2 +1,0 @@
-Name=Power crystal
-Description=Marks a neutral area that cannot be used to transfer energy.

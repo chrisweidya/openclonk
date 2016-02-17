@@ -1,3 +1,0 @@
-# Achievements
-MsgTutorialCompleted=Lernrunde Abgeschlossen.
-MsgTutorialEasterEgg=Osterei gefunden.

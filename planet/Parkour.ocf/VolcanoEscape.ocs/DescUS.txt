@@ -1,7 +1,0 @@
- Escape the volcano
-
-Oh no, how will you get out of here? A cooperative escape scenario with tightened rules: Lava is always deadly and there is no respawn.
-
-Be careful!
-
-Goal: Race

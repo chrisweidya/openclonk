@@ -1,3 +1,0 @@
-[Particle]
-Name=LightningStrike
-Face=0,0,16,2000,-8,0

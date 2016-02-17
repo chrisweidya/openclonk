@@ -1,2 +1,0 @@
-Name=Propeller
-Description=Ein wichtiges Teil des Flugzeuges.

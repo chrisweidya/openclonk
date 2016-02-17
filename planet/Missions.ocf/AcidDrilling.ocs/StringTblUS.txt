@@ -1,2 +1,0 @@
-NamePlrTeam=Players
-NameCrysTeam=Crystals

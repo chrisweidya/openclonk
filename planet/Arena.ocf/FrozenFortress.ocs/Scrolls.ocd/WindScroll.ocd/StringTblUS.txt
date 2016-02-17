@@ -1,2 +1,0 @@
-Name=Wind Scroll
-Description=Create a storm to blow away your enemies.

@@ -1,2 +1,0 @@
-Name=Donner-Schriftrolle
-Description=Rufe einen vernichtenden Blitz vom Himmel!

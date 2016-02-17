@@ -1,2 +1,0 @@
-Name=Propeller
-Description=An important part of the plane.

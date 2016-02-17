@@ -1,2 +1,0 @@
-DE:Bergbauwerkzeuge
-US:Mining Tools

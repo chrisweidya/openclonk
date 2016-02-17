@@ -1,2 +1,0 @@
-Name=Thunder Scroll
-Description=Call down a devastating lightning from above!

@@ -1,5 +1,0 @@
-Name=Energy Supply
-
-#Goal window
-MsgGoalFulfilled=The elevator is operating.
-MsgGoalUnFulfilled=The elevator is not yet supplied with energy.

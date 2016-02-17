@@ -1,2 +1,0 @@
-Name=Fluegel
-Description=Ein wichtiges Teil des Flugzeuges.

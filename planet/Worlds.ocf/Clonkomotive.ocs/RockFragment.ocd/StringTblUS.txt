@@ -1,2 +1,0 @@
-Name=HeavyCrumb
-Description=Hurts Clonks and buildings!

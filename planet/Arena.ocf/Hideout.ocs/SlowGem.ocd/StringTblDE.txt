@@ -1,2 +1,0 @@
-Name=Antischwerkraft-Kristall
-Description=Erzeugt beim Aufprall kurz eine Zone mit geringer Schwerkraft.

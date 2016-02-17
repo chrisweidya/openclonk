@@ -1,4 +1,0 @@
-Name=Kill!
-Name2=Kill %s!
-MsgGoalFulfilled=%s is dead.
-MsgGoalUnFulfilled=Kill %s!

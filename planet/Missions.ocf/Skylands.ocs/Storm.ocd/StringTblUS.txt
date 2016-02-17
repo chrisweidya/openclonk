@@ -1,2 +1,0 @@
-Name=Storm
-Description=Blows you away!

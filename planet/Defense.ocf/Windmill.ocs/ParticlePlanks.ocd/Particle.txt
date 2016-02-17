@@ -1,3 +1,0 @@
-[Particle]
-Name=Planks
-Face=0,0,12,104,-6,-52

@@ -1,2 +1,0 @@
-Name=Castle construction site
-Description=A fortress is built here.

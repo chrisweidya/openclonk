@@ -1,2 +1,0 @@
-Name=Sturm
-Description=Blaest alles weg.

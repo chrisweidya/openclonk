@@ -1,2 +1,0 @@
-Name=Engine
-Description=An important part of the plane.

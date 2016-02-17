@@ -1,2 +1,0 @@
-Name=Teleport-Schriftrolle
-Description=Teleportiere dich an eine sichere stelle, falls du runterfällst.

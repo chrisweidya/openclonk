@@ -1,4 +1,0 @@
-[DefCore]
-id=Homebase
-Version=7,0
-Category=C4D_StaticBack

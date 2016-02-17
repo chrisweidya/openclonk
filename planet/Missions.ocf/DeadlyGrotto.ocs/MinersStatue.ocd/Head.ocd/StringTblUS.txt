@@ -1,2 +1,0 @@
-Name=Statue head
-Description=An important part of the statue.

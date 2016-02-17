@@ -1,2 +1,0 @@
-Name=PCG Goal
-Description=Replace this string by script.

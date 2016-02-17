@@ -1,2 +1,0 @@
-Name=Wings
-Description=An important part of the plane.
