@@ -520,8 +520,6 @@ bool C4Application::PreInit()
 	//Chriscomment: startup variables here?
 	// startup dialog: Only use if no next mission has been provided
 	bool fUseStartupDialog = !Game.HasScenario();
-	DBConnector db_connector = DBConnector();
-	db_connector.Execute();
 	// Load graphics early, before we draw anything, since we need shaders
 	// loaded to draw.
 	Game.SetInitProgress(0.0f);

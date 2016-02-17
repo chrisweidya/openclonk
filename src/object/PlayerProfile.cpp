@@ -20,10 +20,22 @@ void PlayerProfile::Evaluate(int32_t keyboardPresses, int32_t clicks, int32_t se
 	round++;
 	restartCount = restarts;
 
+	std::string nameStr(name);
+	std::string dataStr = "username=" + nameStr + "&achievementScore=" + std::to_string(achievementScore) + "&socialScore=" + std::to_string(socialScore) +
+		"&immersionScore=" + std::to_string(immersionScore) + "&achievementLevel=" + std::to_string(achievementLevel) +
+		"&immersionLevel=" + std::to_string(immersionLevel) + "&round=" + std::to_string(round) + "&seed=" + std::to_string(seed) +
+		"&restarts=" + std::to_string(restarts) +"&immersionChoices=" + std::to_string(immersionChoices) + 
+		"&achievementChoices=" + std::to_string(achievementChoices) + "&roundTime=" + std::to_string(timeTakenToComplete) + 
+		"&keyboardAPM=" + std::to_string(keyboardAPM) + "&mouseAPM=" + std::to_string(mouseAPM) +"&playerDeaths=" + std::to_string(playerDeaths) +
+		"&batDeaths=" + std::to_string(batDeaths) + "&treesChopped=" + std::to_string(treesChopped) + "&immersionTime=" + std::to_string(immersionTime) +
+		"&achievementTime=" + std::to_string(achievementTime) + "&objectiveCompleted=" + std::to_string(objectiveCompleted);
+	const char* sendData = dataStr.c_str();
+
 	DBConnector db_connector = DBConnector();
-	db_connector.Execute();
+	db_connector.Execute(sendData);
 	std::cout << "seed " << seed << "\n";
 	std::cout << "name " << name << "\n";
+	std::cout << "round " << round << "\n";
 	std::cout << "restartCount " << restartCount << "\n";
 	std::cout << "immersionChoices " << immersionChoices << "\n";
 	std::cout << "achievementChoices " << achievementChoices << "\n";

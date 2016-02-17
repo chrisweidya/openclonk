@@ -4,7 +4,7 @@
 DBConnector::DBConnector(){
 }
 
-bool DBConnector::Execute() {
+bool DBConnector::Execute(const char * options) {
 		
 	curl = curl_easy_init();
 
