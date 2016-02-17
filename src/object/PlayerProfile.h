@@ -6,6 +6,7 @@ class PlayerProfile
 public:
 	PlayerProfile();
 	//Player scores
+	bool doneQuestionnaire = false;
 	int32_t achievementScore = 0;
 	int32_t socialScore = 0;
 	int32_t immersionScore = 0;
@@ -42,6 +43,7 @@ public:
 	int32_t saveSeed(int32_t seed);
 	static int32_t saveNPC(int32_t npc1, int32_t npc2, int32_t npc3, int32_t npc4, int32_t npc5);
 	static int32_t saveQuestionnaireData(int32_t achievementSCore, int32_t socialScore, int32_t immersionScore);
+	static bool getDoneQuestionnaire();
 	void updateFoundNPC(int seed);
 	int32_t getFoundNPC(int index);
 	void updateBuildingsCompleted();

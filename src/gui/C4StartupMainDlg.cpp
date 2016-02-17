@@ -213,8 +213,27 @@ void C4StartupMainDlg::OnClosed(bool fOK)
 
 void C4StartupMainDlg::OnStartBtn(C4GUI::Control *btn)
 {
+	int32_t iPlrCount = SModuleCount(Config.General.Participants);
+	int32_t plrCount = 1;
+	StdStrBuf sError;
+
+	if (!::PlayerProfile::getDoneQuestionnaire()) {
+		sError.Format(LoadResStr("IDS_MSG_INCOMPLETEQUESTIONNAIRE"));
+		GetScreen()->ShowMessage(sError.getData(), LoadResStr("IDS_MSG_CANNOTSTARTSCENARIO"), C4GUI::Ico_Error);
+	}
+	else if (iPlrCount == plrCount) {
+		std::cout << "go";
+		C4Startup::Get()->SwitchDialog(C4Startup::SDID_ScenSel);
+	}
+	else if (iPlrCount > plrCount) {
+		sError.Format(LoadResStr("IDS_DLG__TOOMANY_QUESTIONNAIRE"));
+		GetScreen()->ShowMessage(sError.getData(), LoadResStr("IDS_MSG_CANNOTSTARTSCENARIO"), C4GUI::Ico_Error);
+	}
+	else if (iPlrCount < plrCount) {
+		sError.Format(LoadResStr("IDS_DLG__TOOFEW_QUESTIONNAIRE"));
+		GetScreen()->ShowMessage(sError.getData(), LoadResStr("IDS_MSG_CANNOTSTARTSCENARIO"), C4GUI::Ico_Error);
+	}
 	// advance to scenario selection screen
-	C4Startup::Get()->SwitchDialog(C4Startup::SDID_ScenSel);
 }
 
 void C4StartupMainDlg::OnPlayerSelectionBtn(C4GUI::Control *btn)
@@ -258,7 +277,6 @@ void C4StartupMainDlg::OnAboutBtn(C4GUI::Control *btn)
 
 void C4StartupMainDlg::OnQuestionnaireBtn(C4GUI::Control *btn)
 {
-	// advance to about screen
 	int32_t iPlrCount = SModuleCount(Config.General.Participants);
 	int32_t plrCount = 1;
 	StdStrBuf sError;
@@ -267,11 +285,11 @@ void C4StartupMainDlg::OnQuestionnaireBtn(C4GUI::Control *btn)
 		C4Startup::Get()->SwitchDialog(C4Startup::SDID_Questionnaire);
 	}
 	else if (iPlrCount > plrCount) {
-		sError.Format(LoadResStr("IDS_MSG_TOOMANYPLAYERS"), plrCount);
+		sError.Format(LoadResStr("IDS_DLG__TOOMANY_QUESTIONNAIRE"), plrCount);
 		GetScreen()->ShowMessage(sError.getData(), LoadResStr("IDS_MSG_CANNOTSTARTQUESTIONNAIRE"), C4GUI::Ico_Error);
 	}
 	else if (iPlrCount < plrCount) {
-		sError.Format(LoadResStr("IDS_MSG_TOOFEWPLAYERS"), plrCount);
+		sError.Format(LoadResStr("IDS_DLG__TOOFEW_QUESTIONNAIRE"), plrCount);
 		GetScreen()->ShowMessage(sError.getData(), LoadResStr("IDS_MSG_CANNOTSTARTQUESTIONNAIRE"), C4GUI::Ico_Error);
 	}
 	std::cout << "end of btn\n";

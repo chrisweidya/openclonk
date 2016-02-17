@@ -210,13 +210,25 @@ int32_t PlayerProfile::saveQuestionnaireData(int32_t achievementScore, int32_t s
 	core.Profile.achievementScore = achievementScore;
 	core.Profile.socialScore = socialScore;
 	core.Profile.immersionScore = immersionScore;
+	core.Profile.doneQuestionnaire = true;
 	if (!core.Save(PlayerGrp) || !PlayerGrp.Close())
 		return -1;
 	return 1;
 }
 
+bool PlayerProfile::getDoneQuestionnaire() {
+	assert(SModuleCount(Config.General.Participants) == 1);
+	C4Group PlayerGrp;
+	C4PlayerInfoCore core;
+	const char *szPlayerFilename = Config.AtUserDataPath(Config.General.Participants);
+	if (!FileExists(szPlayerFilename) || !PlayerGrp.Open(szPlayerFilename) || !core.Load(PlayerGrp))
+		return -1;
+	return core.Profile.doneQuestionnaire;
+}
+
 void PlayerProfile::CompileFunc(StdCompiler *pComp)
 {
+	pComp->Value(mkNamingAdapt(doneQuestionnaire, "doneQuestionnaire",false));
 	pComp->Value(mkNamingAdapt(achievementScore, "achievementScore", 0));
 	pComp->Value(mkNamingAdapt(socialScore, "socialScore", 0));
 	pComp->Value(mkNamingAdapt(immersionScore, "immersionScore", 0));
