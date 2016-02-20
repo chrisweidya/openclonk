@@ -1232,6 +1232,8 @@ namespace C4GUI
 			IR_Abort      // do nothing and stop any pastes
 		};
 
+		bool DoNothing = false;
+
 	private:
 		enum CursorOperation { COP_BACK, COP_DELETE, COP_LEFT, COP_RIGHT, COP_HOME, COP_END };
 		static const char *CursorRepresentation;

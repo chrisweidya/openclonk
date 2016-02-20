@@ -14,22 +14,22 @@
 * for the above references.
 */
 
-#ifndef INC_Questionnaire
-#define INC_Questionnaire
+#ifndef INC_Survey
+#define INC_Survey
 
 #include "C4Startup.h"
 
 #include <string>
 
 // startup dialog: Player selection
-class Questionnaire : public C4StartupDlg
+class Survey : public C4StartupDlg
 {
 private:
 	enum { IconLabelSpacing = 2 }; // space between an icon and its text
 
 public:
-	Questionnaire(); // ctor
-	~Questionnaire(); // dtor
+	Survey(); // ctor
+	~Survey(); // dtor
 
 private:
 	class C4GUI::TextWindow *questionWindow;
@@ -37,9 +37,12 @@ private:
 
 private:
 	C4Rect rcBottomButtons; int32_t iBottomButtonWidth;
-	class C4GUI::Button *btnBack, *btnVeryUnimpt, *btnUnimpt, *btnImpt, *btnVeryImpt;
+	class C4GUI::Button *btnBack, *btnVeryUnimpt, *btnUnimpt, *btnImpt, *btnVeryImpt, *btnSubmit;
+	class C4GUI::Edit *feedbackQs;
 	float newAchievementScore = 0.0, newSocialScore = 0.0, newImmersionScore = 0.0;
 	int currQs = 0;
+	int result[10] = { 0 };
+	char feedbackChar[250];
 
 	enum { VERY_UNIMPORTANT = 1, UNIMPORTANT = 2, IMPORTANT = 3, VERY_IMPORTANT = 4 };
 
@@ -57,6 +60,7 @@ protected:
 	void OnUnimptBtn(C4GUI::Control *btn) { DoNext(UNIMPORTANT); };
 	void OnImptBtn(C4GUI::Control *btn) { DoNext(IMPORTANT); };
 	void OnVeryImptBtn(C4GUI::Control *btn) { DoNext(VERY_IMPORTANT); };
+	void OnSubmitBtn(C4GUI::Control *btn) { DoNext(-1); };
 
 	bool KeyBack() { DoBack(); return true; }
 	void DoBack(); // back to main menu or previous question

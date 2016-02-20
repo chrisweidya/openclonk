@@ -51,7 +51,7 @@ void C4PlayerInfoCore::Default(C4RankSystem *pRanks)
 	ExtraData = C4ValueMapData();
 	PrefControl.Clear();
 	Rank=0;
-	SCopy("Neuling",PrefName);
+	SCopy("",PrefName);
 	if (pRanks) SCopy(pRanks->GetRankName(Rank,false).getData(),RankName);
 	else SCopy("Rang",RankName);
 	PrefClonkSkin=0;

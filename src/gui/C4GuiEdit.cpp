@@ -360,6 +360,8 @@ namespace C4GUI
 
 	bool Edit::KeyEnter()
 	{
+		if (DoNothing)
+			return true;
 		DoFinishInput(false, false);
 		// whatever happens: Enter key has been processed
 		return true;

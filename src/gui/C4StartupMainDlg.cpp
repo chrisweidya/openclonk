@@ -67,6 +67,10 @@ C4StartupMainDlg::C4StartupMainDlg() : C4StartupDlg(NULL) // create w/o title; i
 	//	btn->SetToolTip(LoadResStr("IDS_DLGTIP_ABOUT"));
 	btn->SetCustomGraphics(&C4Startup::Get()->Graphics.barMainButtons, &C4Startup::Get()->Graphics.barMainButtonsDown);
 
+	AddElement(btn = new C4GUI::CallbackButton<C4StartupMainDlg>(LoadResStr("IDS_DLG_SURVEY"), caButtons.GetFromTop(iButtonHeight), &C4StartupMainDlg::OnSurveyBtn));
+	//	btn->SetToolTip(LoadResStr("IDS_DLGTIP_ABOUT"));
+	btn->SetCustomGraphics(&C4Startup::Get()->Graphics.barMainButtons, &C4Startup::Get()->Graphics.barMainButtonsDown);
+
 	AddElement(btn = new C4GUI::CallbackButton<C4StartupMainDlg>(LoadResStr("IDS_DLG_EXIT"), caButtons.GetFromTop(iButtonHeight), &C4StartupMainDlg::OnExitBtn));
 	btn->SetToolTip(LoadResStr("IDS_DLGTIP_EXIT"));
 	btn->SetCustomGraphics(&C4Startup::Get()->Graphics.barMainButtons, &C4Startup::Get()->Graphics.barMainButtonsDown);
@@ -226,11 +230,11 @@ void C4StartupMainDlg::OnStartBtn(C4GUI::Control *btn)
 		C4Startup::Get()->SwitchDialog(C4Startup::SDID_ScenSel);
 	}
 	else if (iPlrCount > plrCount) {
-		sError.Format(LoadResStr("IDS_DLG__TOOMANY_QUESTIONNAIRE"));
+		sError.Format(LoadResStr("IDS_DLG_TOOMANY_QUESTIONNAIRE"));
 		GetScreen()->ShowMessage(sError.getData(), LoadResStr("IDS_MSG_CANNOTSTARTSCENARIO"), C4GUI::Ico_Error);
 	}
 	else if (iPlrCount < plrCount) {
-		sError.Format(LoadResStr("IDS_DLG__TOOFEW_QUESTIONNAIRE"));
+		sError.Format(LoadResStr("IDS_DLG_TOOFEW_QUESTIONNAIRE"));
 		GetScreen()->ShowMessage(sError.getData(), LoadResStr("IDS_MSG_CANNOTSTARTSCENARIO"), C4GUI::Ico_Error);
 	}
 	// advance to scenario selection screen
@@ -285,14 +289,32 @@ void C4StartupMainDlg::OnQuestionnaireBtn(C4GUI::Control *btn)
 		C4Startup::Get()->SwitchDialog(C4Startup::SDID_Questionnaire);
 	}
 	else if (iPlrCount > plrCount) {
-		sError.Format(LoadResStr("IDS_DLG__TOOMANY_QUESTIONNAIRE"), plrCount);
+		sError.Format(LoadResStr("IDS_DLG_TOOMANY_QUESTIONNAIRE"), plrCount);
 		GetScreen()->ShowMessage(sError.getData(), LoadResStr("IDS_MSG_CANNOTSTARTQUESTIONNAIRE"), C4GUI::Ico_Error);
 	}
 	else if (iPlrCount < plrCount) {
-		sError.Format(LoadResStr("IDS_DLG__TOOFEW_QUESTIONNAIRE"), plrCount);
+		sError.Format(LoadResStr("IDS_DLG_TOOFEW_QUESTIONNAIRE"), plrCount);
 		GetScreen()->ShowMessage(sError.getData(), LoadResStr("IDS_MSG_CANNOTSTARTQUESTIONNAIRE"), C4GUI::Ico_Error);
 	}
-	std::cout << "end of btn\n";
+}
+
+void C4StartupMainDlg::OnSurveyBtn(C4GUI::Control *btn)
+{
+	int32_t iPlrCount = SModuleCount(Config.General.Participants);
+	int32_t plrCount = 1;
+	StdStrBuf sError;
+
+	if (iPlrCount == plrCount) {
+		C4Startup::Get()->SwitchDialog(C4Startup::SDID_Survey);
+	}
+	else if (iPlrCount > plrCount) {
+		sError.Format(LoadResStr("IDS_DLG_TOOMANY_QUESTIONNAIRE"), plrCount);
+		GetScreen()->ShowMessage(sError.getData(), LoadResStr("IDS_MSG_CANNOTSTARTQUESTIONNAIRE"), C4GUI::Ico_Error);
+	}
+	else if (iPlrCount < plrCount) {
+		sError.Format(LoadResStr("IDS_DLG_TOOFEW_QUESTIONNAIRE"), plrCount);
+		GetScreen()->ShowMessage(sError.getData(), LoadResStr("IDS_MSG_CANNOTSTARTQUESTIONNAIRE"), C4GUI::Ico_Error);
+	}
 }
 
 void C4StartupMainDlg::OnExitBtn(C4GUI::Control *btn)

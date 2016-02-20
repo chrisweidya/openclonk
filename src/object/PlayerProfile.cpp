@@ -31,8 +31,9 @@ void PlayerProfile::Evaluate(int32_t keyboardPresses, int32_t clicks, int32_t se
 		"&achievementTime=" + std::to_string(achievementTime) + "&objectiveCompleted=" + std::to_string(objectiveCompleted);
 	const char* sendData = dataStr.c_str();
 
+	char * hostname = "http://openclonkplus.comp.nus.edu.sg/experiment1.php";
 	DBConnector db_connector = DBConnector();
-	db_connector.Execute(sendData);
+	db_connector.Execute(sendData, hostname);
 	std::cout << "seed " << seed << "\n";
 	std::cout << "name " << name << "\n";
 	std::cout << "round " << round << "\n";
@@ -48,6 +49,33 @@ void PlayerProfile::Evaluate(int32_t keyboardPresses, int32_t clicks, int32_t se
 	std::cout << "immersionTime " << immersionTime << "\n";
 	std::cout << "achievementTime " << achievementTime << "\n";
 	std::cout << "objectiveCompleted " << objectiveCompleted << "\n";
+}
+
+void PlayerProfile::SendFeedback(int ans1, int ans2, int ans3, int ans4, char * feedback) {
+	assert(SModuleCount(Config.General.Participants) == 1);
+	C4Group PlayerGrp;
+	C4PlayerInfoCore core;
+	const char *szPlayerFilename = Config.AtUserDataPath(Config.General.Participants);
+	if (!FileExists(szPlayerFilename) || !PlayerGrp.Open(szPlayerFilename) || !core.Load(PlayerGrp))
+		return;
+	core.Profile.doneQuestionnaire = true;
+	
+	std::cout << "here";
+	std::string nameStr(szPlayerFilename);
+	std::string dataStr = "username=" + nameStr + "&achievementScore=" + std::to_string(core.Profile.achievementScore) + "&socialScore=" + std::to_string(core.Profile.socialScore) +
+		"&immersionScore=" + std::to_string(core.Profile.immersionScore) + "&achievementLevel=" + std::to_string(core.Profile.achievementLevel) +
+		"&immersionLevel=" + std::to_string(core.Profile.immersionLevel) + "&question1=" + std::to_string(ans1) + "&question2=" + std::to_string(ans2) +
+		"&question3=" + std::to_string(ans3) + "&question4=" + std::to_string(ans4);
+
+	std::string feedback1(feedback);
+	dataStr += "&feedback=" + feedback1;
+	const char* sendData = dataStr.c_str();
+	std::cout << sendData << "\n";
+	char * hostname = "http://openclonkplus.comp.nus.edu.sg/feedback1.php";
+	DBConnector db_connector = DBConnector();
+	db_connector.Execute(sendData, hostname);
+	if (!PlayerGrp.Close())
+		return;
 }
 
 void PlayerProfile::updatePlayerType(float achievementScore, float socialScore, float immersionScore)
@@ -222,6 +250,8 @@ bool PlayerProfile::getDoneQuestionnaire() {
 	C4PlayerInfoCore core;
 	const char *szPlayerFilename = Config.AtUserDataPath(Config.General.Participants);
 	if (!FileExists(szPlayerFilename) || !PlayerGrp.Open(szPlayerFilename) || !core.Load(PlayerGrp))
+		return false;
+	if (!PlayerGrp.Close())
 		return -1;
 	return core.Profile.doneQuestionnaire;
 }

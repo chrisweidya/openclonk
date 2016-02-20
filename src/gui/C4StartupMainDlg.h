@@ -49,6 +49,7 @@ protected:
 	void OnOptionsBtn(C4GUI::Control *btn); // callback: Show options screen
 	void OnAboutBtn(C4GUI::Control *btn); // callback: Show about screen
 	void OnQuestionnaireBtn(C4GUI::Control *btn);
+	void OnSurveyBtn(C4GUI::Control *btn);
 	void OnExitBtn(C4GUI::Control *btn); // callback: exit button pressed
 	void OnTODO(C4GUI::Control *btn); // button not yet implemented
 

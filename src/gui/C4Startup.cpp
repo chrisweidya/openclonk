@@ -31,6 +31,7 @@
 #include <C4GraphicsResource.h>
 #include <C4GraphicsSystem.h>
 #include <Questionnaire.h>
+#include <Survey.h>
 
 bool C4StartupGraphics::LoadFile(C4FacetID &rToFct, const char *szFilename)
 {
@@ -167,6 +168,9 @@ C4StartupDlg *C4Startup::SwitchDialog(DialogID eToDlg, bool fFade, const char *s
 	case SDID_Questionnaire:
 		pToDlg = new Questionnaire();
 		break;
+	case SDID_Survey:
+		pToDlg = new Survey();
+		break;
 	case SDID_PlrSel:
 		pToDlg = new C4StartupPlrSelDlg();
 		break;
@@ -237,7 +241,7 @@ void C4Startup::DoStartup()
 	if (pCurrDlg) { delete pCurrDlg; pCurrDlg = NULL; }
 
 	// start with the last dlg that was shown - at first startup main dialog
-	SwitchDialog(eLastDlgID, true, sSubDialog.getData());
+	SwitchDialog(SDID_Main, true, sSubDialog.getData());
 
 	// show error dlg if restart
 	if (Game.fQuitWithError || GetFatalError())

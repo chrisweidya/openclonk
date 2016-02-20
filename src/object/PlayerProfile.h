@@ -35,6 +35,7 @@ public:
 	int32_t objectiveCompleted = 0;
 
 	void Evaluate(int32_t keyboardPresses, int32_t clicks, int32_t secondsInRound, int32_t restarts, const char * name);
+	static void SendFeedback(int ans1, int ans2, int ans3, int ans4, char * feedback);
 
 	//profile saving or loading
 	void updatePlayerType(float achievementScore, float socialScore, float immersionScore);
