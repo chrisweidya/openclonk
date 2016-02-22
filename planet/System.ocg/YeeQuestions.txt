@@ -1,4 +1,4 @@
-YEE_INSTRUCTIONS=Please rate how important each of the following game play elements is to you when play games.
+YEE_INSTRUCTIONS=Please rate your experience in the game.
 YEE_QUESTION1=Becoming powerful.
 YEE_QUESTION2=Acquiring rare items.
 YEE_QUESTION3=Optimizing your character as much as possible.

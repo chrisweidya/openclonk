@@ -15,7 +15,7 @@
  *
  */
 
-
+#include <C4Include.h>
 #include <math.h>
 #include <stdlib.h>
 #include "simplexnoise.h"

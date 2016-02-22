@@ -217,6 +217,11 @@ C4GameOverDlg::C4GameOverDlg() : C4GUI::Dialog( (C4GUI::GetScreenWdt() < 800) ? 
 	pBtnExit = btnExit = new C4GUI::CallbackButton<C4GameOverDlg>(LoadResStr("IDS_BTN_ENDROUND"), caBottom.GetGridCell(0,2, 0,1, iBottomButtonSize, -1, true), &C4GameOverDlg::OnExitBtn);
 	btnExit->SetToolTip(LoadResStr("IDS_DESC_ENDTHEROUND"));
 	AddElement(btnExit);
+	C4Player *pFirstLocalPlayer = ::Players.GetLocalByIndex(0);
+	//chriscomment: hide endroundbtn here
+	if (pFirstLocalPlayer->Profile.round < 6) {
+		btnExit->SetVisibility(false);
+	}
 	C4GUI::CallbackButton<C4GameOverDlg> *btnContinue;
 	pBtnContinue = btnContinue = new C4GUI::CallbackButton<C4GameOverDlg>(LoadResStr("IDS_BTN_CONTINUEGAME"), caBottom.GetGridCell(1,2, 0,1, iBottomButtonSize, -1, true), &C4GameOverDlg::OnContinueBtn);
 	btnContinue->SetToolTip(LoadResStr("IDS_DESC_CONTINUETHEROUNDWITHNOFUR"));
@@ -238,7 +243,7 @@ C4GameOverDlg::C4GameOverDlg() : C4GUI::Dialog( (C4GUI::GetScreenWdt() < 800) ? 
 	Application.Add(this);
 	Update();
 	// initial focus on quit button if visible, so space/enter/low gamepad buttons quit
-	if (fIsQuitBtnVisible) SetFocus(btnExit, false);
+//	if (fIsQuitBtnVisible) SetFocus(btnExit, false);
 }
 
 C4GameOverDlg::~C4GameOverDlg()

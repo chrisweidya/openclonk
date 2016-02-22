@@ -70,6 +70,7 @@ public func GetInteractionMenus(object clonk)
 		Priority = 15
 	};
 	PushBack(menus, comp_menu);
+	/*
 	var prod_menu =
 	{
 		title = "$TxtAbort$",
@@ -81,6 +82,7 @@ public func GetInteractionMenus(object clonk)
 		Priority = 20
 	};
 	PushBack(menus, prod_menu);
+	*/
 	return menus;
 }
 

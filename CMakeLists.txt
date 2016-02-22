@@ -207,6 +207,7 @@ find_package(ZLIB REQUIRED)
 find_package(Freetype REQUIRED)
 include_directories(
 	${JPEG_INCLUDE_DIR}
+	$(CURL_INCLUDE_DIR)
 	${PNG_INCLUDE_DIR}
 	${ZLIB_INCLUDE_DIR}
 	${FREETYPE_INCLUDE_DIRS})
@@ -575,6 +576,10 @@ set(OC_CLONK_SOURCES
 	src/gui/C4StartupScenSelDlg.h
 	src/gui/C4UpperBoard.cpp
 	src/gui/C4UpperBoard.h
+	src/gui/Questionnaire.cpp
+	src/gui/Questionnaire.h
+	src/gui/Survey.cpp
+	src/gui/Survey.h
 	src/landscape/fow/C4FoW.cpp
 	src/landscape/fow/C4FoW.h
 	src/landscape/fow/C4FoWAmbient.cpp
@@ -627,6 +632,8 @@ set(OC_CLONK_SOURCES
 	src/landscape/C4TextureShape.h
 	src/landscape/C4Weather.cpp
 	src/landscape/C4Weather.h
+	src/landscape/simplexnoise.cpp
+	src/landscape/simplexnoise.h
 	src/lib/C4LogBuf.cpp
 	src/lib/C4LogBuf.h
 	src/lib/C4Log.cpp
@@ -686,6 +693,8 @@ set(OC_CLONK_SOURCES
 	src/network/C4Network2UPnP.h
 	src/network/C4Packet2.cpp
 	src/network/C4PacketBase.h
+	src/network/DBConnector.cpp
+	src/network/DBConnector.h
 	src/object/C4Action.cpp
 	src/object/C4Command.cpp
 	src/object/C4Command.h
@@ -725,6 +734,8 @@ set(OC_CLONK_SOURCES
 	src/object/C4Sector.h
 	src/object/C4Shape.cpp
 	src/object/C4Shape.h
+	src/object/PlayerProfile.cpp
+	src/object/PlayerProfile.h
 	src/platform/C4App.cpp
 	src/platform/C4App.h
 	src/platform/C4AppWin32Impl.h
