@@ -38,7 +38,7 @@ func Initialize()
 		AimMode        = AIM_Position, // The aiming animation is done by adjusting the animation position to fit the angle
 		AnimationAim   = "MusketAimArms",
 		AnimationLoad  = "MusketLoadArms",
-		LoadTime       = 80,
+		LoadTime       = 20,
 		AnimationShoot = nil,
 		ShootTime      = 20,
 		WalkSpeed      = 84,

@@ -1,0 +1,54 @@
+# Goal Description
+MsgGoalName=Quest
+MsgGoalDescription=Help Aerin or Warra. New tools can be found in the chest each game. You can restart the round with a new map by aborting it and starting again.
+
+# Dialogue options
+MsgNext=&Next round
+MsgNextDesc=Start the next game.
+MsgRepeatRound=&Repeat this round
+MsgRepeatRoundDesc=Restart this scenario.
+
+GameCompleted=Well done! Continue to the next Round!
+
+#Tutorial
+MsgTutorialWelcome=Welcome to OpenClonk! This is your clonk and it is controlled with the %s keys. Click on the next button to read the next hint and click on my icon at any time to view the current hint. Press (G) to hide/show the guide.
+MsgTutorialHUD=In the upper left part of the screen, you can see your health. In the upper right part, you can see your objective. At the top, you can see your inventory. Use the numbers to select them, and left-click to use the item.
+MsgTutorialHelpThem=Help either Aerin or Warra to complete the round. Press (SPACE) when near them to speak. Press (E) to interact and transfer items with your surroundings.
+MsgTutorialFindNPC=Aerin lost her family members. Find him/her at the skylands to the left. Use the tools you have in your inventory (select by pressing number and left-click to use) to navigate the map.
+MsgTutorialBuild=Aerin needs your help to build her village. The building requirements can be seen below the consruction site. The materials can be gathered in the skylands using the tools in the chest.
+MsgTutorialBuild2=Press (E) to interact with your surroundings (transfer items). Advanced materials (e.g. steel) can be produced once you've built the foundry with required materials and fuel (coal), all gathered from the skylands.
+MsgTutorialKillNPC=Warra issued you a challenge. Find the cave dweller on the right side of the map and kill him. Use the tools and weapons you have in your inventory (select by pressing number and left-click to use/attack) to navigate the map and kill him.
+MsgTutorialHide=Press (G) to show/hide the guide. You can restart the round by aborting (ESC) anytime to re-create the map in the event that you are stuck.
+MsgTutorialRound=Each game round changes depending on what you do previously, try playing through it again! You can restart the game by aborting (ESC) and starting it again if you're stuck and a new map will be generated.
+MsgTutorialChest=New items can be found each round in the chest, press E when near it to transfer items.
+
+
+
+# Buildings
+
+# Immersion NPCs
+ImmersionNPCNameSize=10
+ImmersionNPCName0=Jules
+ImmersionNPCName1=Ebba
+ImmersionNPCName2=Ashley
+ImmersionNPCName3=Sage
+ImmersionNPCName4=Jacey
+ImmersionNPCName5=Sage
+ImmersionNPCName6=Igashu
+ImmersionNPCName7=Kaz
+ImmersionNPCName8=Bry
+ImmersionNPCName9=Orion
+LostNPC=LostNPC
+
+# Achievement NPCs
+AchievementNPCNameSize=10
+AchievementNPCName0=Horx
+AchievementNPCName1=Gurguta
+AchievementNPCName2=Tabi
+AchievementNPCName3=Burbur
+AchievementNPCName4=Jazeeta
+AchievementNPCName5=Vargshu
+AchievementNPCName6=Gimpo
+AchievementNPCName7=Shee
+AchievementNPCName8=Lazarus
+AchievementNPCName9=Borg

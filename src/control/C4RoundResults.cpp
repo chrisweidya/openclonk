@@ -302,6 +302,7 @@ void C4RoundResults::EvaluateGoals(C4IDList &GoalList, C4IDList &FulfilledGoalLi
 
 void C4RoundResults::SaveProfileData(int32_t keyboardPresses, int32_t clicks) {
 	C4Player *pFirstLocalPlayer = ::Players.GetLocalByIndex(0);
+	std::cout << "time" << Game.Time;
 	pFirstLocalPlayer->Profile.Evaluate(keyboardPresses, clicks, Game.Time, Game.restartCount, pFirstLocalPlayer->GetName());
 	Game.restartCount = 0;
 }

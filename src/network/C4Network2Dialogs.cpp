@@ -639,7 +639,7 @@ C4GameOptionButtons::C4GameOptionButtons(const C4Rect &rcBounds, bool fNetwork, 
 	else btnPassword=btnComment=NULL;
 	btnRecord = new C4GUI::CallbackButton<C4GameOptionButtons, C4GUI::IconButton>(Game.Record || fIsLeague ? C4GUI::Ico_Ex_RecordOn : C4GUI::Ico_Ex_RecordOff, caButtons.GetFromLeft(iIconSize, iIconSize), LoadResStr("IDS_DLGTIP_RECORD"), &C4GameOptionButtons::OnBtnRecord, this);
 	btnRecord->SetEnabled(!fIsLeague);
-	AddElement(btnRecord);
+//	AddElement(btnRecord);
 }
 
 void C4GameOptionButtons::OnBtnInternet(C4GUI::Control *btn)

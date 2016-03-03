@@ -19,6 +19,10 @@ void PlayerProfile::Evaluate(int32_t keyboardPresses, int32_t clicks, int32_t se
 	mouseAPM = (int)cpm;
 	round++;
 	restartCount = restarts;
+	timeTakenToComplete = secondsInRound;
+	int32_t percentageBatDeaths = 0;
+	if(achievementLevel > 0)
+		percentageBatDeaths = batDeaths * 100 / (8 * achievementLevel);
 
 	std::string nameStr(name);
 	std::string dataStr = "username=" + nameStr + "&achievementScore=" + std::to_string(achievementScore) + "&socialScore=" + std::to_string(socialScore) +
@@ -27,7 +31,7 @@ void PlayerProfile::Evaluate(int32_t keyboardPresses, int32_t clicks, int32_t se
 		"&restarts=" + std::to_string(restarts) +"&immersionChoices=" + std::to_string(immersionChoices) + 
 		"&achievementChoices=" + std::to_string(achievementChoices) + "&roundTime=" + std::to_string(timeTakenToComplete) + 
 		"&keyboardAPM=" + std::to_string(keyboardAPM) + "&mouseAPM=" + std::to_string(mouseAPM) +"&playerDeaths=" + std::to_string(playerDeaths) +
-		"&batDeaths=" + std::to_string(batDeaths) + "&treesChopped=" + std::to_string(treesChopped) + "&immersionTime=" + std::to_string(immersionTime) +
+		"&batDeaths=" + std::to_string(percentageBatDeaths) + "&treesChopped=" + std::to_string(treesChopped) + "&immersionTime=" + std::to_string(immersionTime) +
 		"&achievementTime=" + std::to_string(achievementTime) + "&objectiveCompleted=" + std::to_string(objectiveCompleted);
 	const char* sendData = dataStr.c_str();
 

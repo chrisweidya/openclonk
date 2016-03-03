@@ -1409,11 +1409,6 @@ set(OC_C4GROUPS
 	System.ocg
 	Objects.ocd
 	Decoration.ocd
-	Arena.ocf
-	Parkour.ocf
-	Defense.ocf
-	Missions.ocf
-	Tutorials.ocf
 	Worlds.ocf
 )
 

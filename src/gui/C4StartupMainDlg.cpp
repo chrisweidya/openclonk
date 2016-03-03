@@ -44,12 +44,32 @@ C4StartupMainDlg::C4StartupMainDlg() : C4StartupDlg(NULL) // create w/o title; i
 	C4GUI::ComponentAligner caMain(rcBounds, 0, 0, true);
 	C4GUI::ComponentAligner caRightPanel(caMain.GetFromLeft(rcBounds.Wdt * 2 / 5), rcBounds.Wdt / 26, 40 + rcBounds.Hgt / 5);
 	C4GUI::ComponentAligner caButtons(caRightPanel.GetAll(), 0, iButtonPadding);
+	//infobox
+	C4GUI::TextWindow* instructionsWindow;
+	C4Rect rcInstructionsWindow = C4Rect(rcBounds.Wdt / 2, rcBounds.Hgt / 11, rcBounds.Wdt * 5 / 16, rcBounds.Hgt * 5 / 12);
+	AddElement(instructionsWindow = new C4GUI::TextWindow(rcInstructionsWindow, 0, 0, 0, 100, 4096, "  ", false, NULL, 0, true));
+	instructionsWindow->SetDecoration(true, true, &C4Startup::Get()->Graphics.sfctBookScroll, true);
+	instructionsWindow->UpdateHeight();
+	instructionsWindow->AddTextLine(FormatString(LoadResStr("GAME_INSTRUCTIONS1")).getData(), &C4Startup::Get()->Graphics.BookFont, 4294967295U, false, false);
+	instructionsWindow->AddTextLine(FormatString(LoadResStr("GAME_INSTRUCTIONS2")).getData(), &C4Startup::Get()->Graphics.BookFont, 4294967295U, false, false);
+	instructionsWindow->AddTextLine(FormatString(LoadResStr("GAME_INSTRUCTIONS3")).getData(), &C4Startup::Get()->Graphics.BookFont, 4294967295U, false, false);
+	instructionsWindow->AddTextLine(FormatString(LoadResStr("GAME_INSTRUCTIONS4")).getData(), &C4Startup::Get()->Graphics.BookFont, 4294967295U, false, false);
+	instructionsWindow->AddTextLine(FormatString(LoadResStr("GAME_INSTRUCTIONS5")).getData(), &C4Startup::Get()->Graphics.BookFont, 4294967295U, false, false);
 	// main menu buttons
 	C4GUI::CallbackButton<C4StartupMainDlg> *btn;
 	AddElement(btn = new C4GUI::CallbackButton<C4StartupMainDlg>(LoadResStr("IDS_BTN_LOCALGAME"), caButtons.GetFromTop(iButtonHeight), &C4StartupMainDlg::OnStartBtn));
 	btn->SetToolTip(LoadResStr("IDS_DLGTIP_STARTGAME"));
 	btn->SetCustomGraphics(&C4Startup::Get()->Graphics.barMainButtons, &C4Startup::Get()->Graphics.barMainButtonsDown);
 	pStartButton = btn;
+
+	AddElement(btn = new C4GUI::CallbackButton<C4StartupMainDlg>(LoadResStr("IDS_DLG_QUESTIONNAIRE"), caButtons.GetFromTop(iButtonHeight), &C4StartupMainDlg::OnQuestionnaireBtn));
+	//	btn->SetToolTip(LoadResStr("IDS_DLGTIP_ABOUT"));
+	btn->SetCustomGraphics(&C4Startup::Get()->Graphics.barMainButtons, &C4Startup::Get()->Graphics.barMainButtonsDown);
+
+	AddElement(btn = new C4GUI::CallbackButton<C4StartupMainDlg>(LoadResStr("IDS_DLG_SURVEY"), caButtons.GetFromTop(iButtonHeight), &C4StartupMainDlg::OnSurveyBtn));
+	//	btn->SetToolTip(LoadResStr("IDS_DLGTIP_ABOUT"));
+	btn->SetCustomGraphics(&C4Startup::Get()->Graphics.barMainButtons, &C4Startup::Get()->Graphics.barMainButtonsDown);
+
 //	AddElement(btn = new C4GUI::CallbackButton<C4StartupMainDlg>(LoadResStr("IDS_BTN_NETWORKGAME"), caButtons.GetFromTop(iButtonHeight), &C4StartupMainDlg::OnNetJoinBtn));
 //	btn->SetToolTip(LoadResStr("IDS_DLGTIP_NETWORKGAME"));
 //	btn->SetCustomGraphics(&C4Startup::Get()->Graphics.barMainButtons, &C4Startup::Get()->Graphics.barMainButtonsDown);
@@ -61,14 +81,6 @@ C4StartupMainDlg::C4StartupMainDlg() : C4StartupDlg(NULL) // create w/o title; i
 	btn->SetCustomGraphics(&C4Startup::Get()->Graphics.barMainButtons, &C4Startup::Get()->Graphics.barMainButtonsDown);
 	AddElement(btn = new C4GUI::CallbackButton<C4StartupMainDlg>(LoadResStr("IDS_DLG_ABOUT"), caButtons.GetFromTop(iButtonHeight), &C4StartupMainDlg::OnAboutBtn));
 	btn->SetToolTip(LoadResStr("IDS_DLGTIP_ABOUT"));
-	btn->SetCustomGraphics(&C4Startup::Get()->Graphics.barMainButtons, &C4Startup::Get()->Graphics.barMainButtonsDown);
-
-	AddElement(btn = new C4GUI::CallbackButton<C4StartupMainDlg>(LoadResStr("IDS_DLG_QUESTIONNAIRE"), caButtons.GetFromTop(iButtonHeight), &C4StartupMainDlg::OnQuestionnaireBtn));
-	//	btn->SetToolTip(LoadResStr("IDS_DLGTIP_ABOUT"));
-	btn->SetCustomGraphics(&C4Startup::Get()->Graphics.barMainButtons, &C4Startup::Get()->Graphics.barMainButtonsDown);
-
-	AddElement(btn = new C4GUI::CallbackButton<C4StartupMainDlg>(LoadResStr("IDS_DLG_SURVEY"), caButtons.GetFromTop(iButtonHeight), &C4StartupMainDlg::OnSurveyBtn));
-	//	btn->SetToolTip(LoadResStr("IDS_DLGTIP_ABOUT"));
 	btn->SetCustomGraphics(&C4Startup::Get()->Graphics.barMainButtons, &C4Startup::Get()->Graphics.barMainButtonsDown);
 
 	AddElement(btn = new C4GUI::CallbackButton<C4StartupMainDlg>(LoadResStr("IDS_DLG_EXIT"), caButtons.GetFromTop(iButtonHeight), &C4StartupMainDlg::OnExitBtn));
