@@ -3,6 +3,8 @@
 #include <C4StartupNetDlg.h>
 #include <time.h>
 #include <DBConnector.h>
+#include <dlib/svm.h>
+using namespace dlib;
 
 PlayerProfile::PlayerProfile()
 {	
@@ -23,6 +25,7 @@ void PlayerProfile::Evaluate(int32_t keyboardPresses, int32_t clicks, int32_t se
 	int32_t percentageBatDeaths = 0;
 	if(achievementLevel > 0)
 		percentageBatDeaths = batDeaths * 100 / (8 * achievementLevel);
+	Categorise();
 
 	std::string nameStr(name);
 	std::string dataStr = "username=" + nameStr + "&achievementScore=" + std::to_string(achievementScore) + "&socialScore=" + std::to_string(socialScore) +
@@ -35,7 +38,7 @@ void PlayerProfile::Evaluate(int32_t keyboardPresses, int32_t clicks, int32_t se
 		"&achievementTime=" + std::to_string(achievementTime) + "&objectiveCompleted=" + std::to_string(objectiveCompleted);
 	const char* sendData = dataStr.c_str();
 
-	char * hostname = "http://openclonkplus.comp.nus.edu.sg/experiment1.php";
+	char * hostname = "http://openclonkplus.comp.nus.edu.sg/experiment2.php";
 	DBConnector db_connector = DBConnector();
 	db_connector.Execute(sendData, hostname);
 	std::cout << "seed " << seed << "\n";
@@ -53,6 +56,7 @@ void PlayerProfile::Evaluate(int32_t keyboardPresses, int32_t clicks, int32_t se
 	std::cout << "immersionTime " << immersionTime << "\n";
 	std::cout << "achievementTime " << achievementTime << "\n";
 	std::cout << "objectiveCompleted " << objectiveCompleted << "\n";
+
 }
 
 void PlayerProfile::SendFeedback(int ans1, int ans2, int ans3, int ans4, char * feedback) {
@@ -75,11 +79,45 @@ void PlayerProfile::SendFeedback(int ans1, int ans2, int ans3, int ans4, char * 
 	dataStr += "&feedback=" + feedback1;
 	const char* sendData = dataStr.c_str();
 	std::cout << sendData << "\n";
-	char * hostname = "http://openclonkplus.comp.nus.edu.sg/feedback1.php";
+	char * hostname = "http://openclonkplus.comp.nus.edu.sg/feedback2.php";
 	DBConnector db_connector = DBConnector();
 	db_connector.Execute(sendData, hostname);
 	if (!PlayerGrp.Close())
 		return;
+}
+
+void PlayerProfile::Categorise() {
+	typedef matrix<double, 8, 1> sample_type;
+	typedef radial_basis_kernel<sample_type> kernel_type; 
+	typedef decision_function<kernel_type> dec_funct_type;
+	typedef normalized_function<dec_funct_type> funct_type;
+	funct_type learned_function;
+	sample_type sample;
+	double achCat, immCat;
+	
+	sample(0) = keyboardAPM;
+	sample(1) = mouseAPM;
+	sample(2) = timeTakenToComplete;
+	sample(3) = batDeaths;
+	sample(4) = playerDeaths;
+	sample(5) = immersionTime;
+	sample(6) = achievementTime;
+	sample(7) = objectiveCompleted;
+	deserialize("achievement_result.dat") >> learned_function;
+	achCat = learned_function(sample);
+	std::cout << "ach result " << achCat;
+	deserialize("immersion_result.dat") >> learned_function;
+	immCat = learned_function(sample);
+	std::cout << "imm result " << immCat;
+
+	if (achCat > immCat)
+		category += 1;
+	else
+		category -= 1;
+	if (category > 2)
+		category = 2;
+	if (category < -2)
+		category = -2;
 }
 
 void PlayerProfile::updatePlayerType(float achievementScore, float socialScore, float immersionScore)
@@ -87,13 +125,17 @@ void PlayerProfile::updatePlayerType(float achievementScore, float socialScore, 
 	Config.General.Participants[0];
 }
 
+//category +2 max for immersion, -2max for achievement
 int32_t PlayerProfile::getScoreDiff() {
+	
+	return category;
+	/*
 	int32_t scoreDiff = immersionLevel - achievementLevel;
 	if (scoreDiff > 2)
 		return 2;
 	if (scoreDiff < -2)
 		return -2;
-	return scoreDiff;
+	return scoreDiff;*/
 }
 
 int32_t PlayerProfile::getSeed(bool init) {	
@@ -268,6 +310,7 @@ void PlayerProfile::CompileFunc(StdCompiler *pComp)
 	pComp->Value(mkNamingAdapt(immersionScore, "immersionScore", 0));
 	pComp->Value(mkNamingAdapt(achievementLevel, "achievementLevel", 0));
 	pComp->Value(mkNamingAdapt(immersionLevel, "immersionLevel", 0));
+	pComp->Value(mkNamingAdapt(category, "category", 0));
 	pComp->Value(mkNamingAdapt(seed, "seed", 0));
 	pComp->Value(mkNamingAdapt(toC4CArr(foundNPC), "foundNPC"));
 	pComp->Value(mkNamingAdapt(buildingsCompleted, "buildingsCompleted", 0));

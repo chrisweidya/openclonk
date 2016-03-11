@@ -14,6 +14,7 @@ public:
 	//map creation params
 	int32_t achievementLevel = 0;
 	int32_t immersionLevel = 0;
+	int32_t category = 0;
 	int32_t seed = 0;
 	int32_t foundNPCSize = 5;
 	int32_t foundNPC[5] = { 0, 0, 0, 0, 0 };
@@ -36,6 +37,7 @@ public:
 
 	void Evaluate(int32_t keyboardPresses, int32_t clicks, int32_t secondsInRound, int32_t restarts, const char * name);
 	static void SendFeedback(int ans1, int ans2, int ans3, int ans4, char * feedback);
+	void Categorise();
 
 	//profile saving or loading
 	void updatePlayerType(float achievementScore, float socialScore, float immersionScore);

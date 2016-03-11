@@ -9,12 +9,13 @@ static achievement_level;
 static lost_npc;
 static immersion_npc;
 static achievement_npc;
+static category;
 static target_npc;
 
 func InitializeObjects()
 {
-	var offset = GetMapDataFromPlayer();
-	i_width = LandscapeWidth() / 2 + LandscapeWidth()*offset / 12;
+	category = GetMapDataFromPlayer();
+	i_width = LandscapeWidth() / 2 + LandscapeWidth()*category/ 6;
 	a_width = LandscapeWidth() - i_width;
 
 	baseHeight = (LandscapeHeight() / 2);
@@ -233,7 +234,7 @@ private func InitBuildings() {
 }
 
 private func InitBats(int achievement_level) {
-	var bats = Bat->Place(8 * achievement_level, Rectangle( i_width, 0, a_width, LandscapeHeight()));
+	var bats = Bat->Place(6 * (achievement_level - category), Rectangle( i_width, 0, a_width, LandscapeHeight()));
 	// Make the bats a bit weaker so that they are killed with a single arrow.
 	var extra_hp = achievement_level * 1000;
 	for (var bat in bats)
@@ -260,19 +261,19 @@ private func SetWeapon(int index, object npc) {
 }
 
 private func InitTrees(int seed, int immersion_level) {
-	var num_plants = immersion_level + 1;
-	Fern->Place(8*num_plants, Rectangle(0, 0, i_width, LandscapeHeight()));
-	Wheat->Place(4 * num_plants, Rectangle(0, 0, i_width, LandscapeHeight()));
-	Cotton->Place(3 * num_plants, Rectangle(0, 0, i_width, LandscapeHeight()));
+	var num_plants = immersion_level + 1 + 2 * category;
+	Fern->Place(6*num_plants, Rectangle(0, 0, i_width, LandscapeHeight()));
+	Wheat->Place(3 * num_plants, Rectangle(0, 0, i_width, LandscapeHeight()));
+	Cotton->Place(2 * num_plants, Rectangle(0, 0, i_width, LandscapeHeight()));
 	Tree_Coniferous->Place(2 * num_plants, Rectangle(0, 0, i_width, LandscapeHeight()));
 	Tree_Deciduous->Place(2 * num_plants, Rectangle(0, 0, i_width, LandscapeHeight()));
-	Grass->Place(5*num_plants);
+	Grass->Place(4*num_plants);
 	if (immersion_level > 0) {
 		Tree_Coconut->Place(2 * num_plants, Rectangle(0, 0, i_width, LandscapeHeight()));
 	}
 	if (immersion_level > 1) {
-		Flower->Place(20 * num_plants, Rectangle(0, 0, i_width, LandscapeHeight()));
-		Butterfly->Place(10, Rectangle(0, 0, i_width, LandscapeHeight()));
+		Flower->Place(15 * num_plants, Rectangle(0, 0, i_width, LandscapeHeight()));
+		Butterfly->Place(5 * num_plants, Rectangle(0, 0, i_width, LandscapeHeight()));
 	}
 }
 
