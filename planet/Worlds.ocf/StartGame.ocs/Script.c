@@ -182,7 +182,7 @@ public func OnHasTalkedToLostNPC()
 //	guide->ShowGuide();
 	UpdateFoundNPC(seed);
 	SetPlayerImmLevel(-1);
-	SaveProfileData(player.deaths, bat_deaths, tree_chopped, player.secs_spent_in_immersion, player.secs_spent_in_achievement, 1);
+	SaveProfileData(player.deaths, bat_deaths, tree_chopped, player.secs_spent_in_immersion, player.secs_spent_in_achievement, -1);
 	goal->Fulfill();
 	return;
 }
@@ -198,7 +198,7 @@ global func FxCheckConstructionTimer(object target, proplist effect) {
 	{
 		SetPlayerImmLevel(-1);
 		UpdateBuildingsCompleted();
-		GameCall("UpdateProfile", 2);
+		GameCall("UpdateProfile", -1);
 		target.goal->Fulfill();
 		return FX_Execute_Kill;
 	}
@@ -213,7 +213,7 @@ global func FxTargetDeathStop(object target, effect, int reason, bool  temporary
 	if (reason == 3 || reason == 4)
 	{
 		SetPlayerAchLevel(-1);
-		GameCall("UpdateProfile", 3);
+		GameCall("UpdateProfile", 1);
 		target.goal->Fulfill();
 		return FX_Execute_Kill;
 	}

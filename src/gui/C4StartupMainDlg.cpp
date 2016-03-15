@@ -51,7 +51,7 @@ C4StartupMainDlg::C4StartupMainDlg() : C4StartupDlg(NULL) // create w/o title; i
 	instructionsWindow->SetDecoration(true, true, &C4Startup::Get()->Graphics.sfctBookScroll, true);
 	instructionsWindow->UpdateHeight();
 	instructionsWindow->AddTextLine(FormatString(LoadResStr("GAME_INSTRUCTIONS1")).getData(), &C4Startup::Get()->Graphics.BookFont, 4294967295U, false, false);
-	instructionsWindow->AddTextLine(FormatString(LoadResStr("GAME_INSTRUCTIONS2")).getData(), &C4Startup::Get()->Graphics.BookFont, 4294967295U, false, false);
+//	instructionsWindow->AddTextLine(FormatString(LoadResStr("GAME_INSTRUCTIONS2")).getData(), &C4Startup::Get()->Graphics.BookFont, 4294967295U, false, false);
 	instructionsWindow->AddTextLine(FormatString(LoadResStr("GAME_INSTRUCTIONS3")).getData(), &C4Startup::Get()->Graphics.BookFont, 4294967295U, false, false);
 	instructionsWindow->AddTextLine(FormatString(LoadResStr("GAME_INSTRUCTIONS4")).getData(), &C4Startup::Get()->Graphics.BookFont, 4294967295U, false, false);
 	instructionsWindow->AddTextLine(FormatString(LoadResStr("GAME_INSTRUCTIONS5")).getData(), &C4Startup::Get()->Graphics.BookFont, 4294967295U, false, false);
@@ -62,9 +62,9 @@ C4StartupMainDlg::C4StartupMainDlg() : C4StartupDlg(NULL) // create w/o title; i
 	btn->SetCustomGraphics(&C4Startup::Get()->Graphics.barMainButtons, &C4Startup::Get()->Graphics.barMainButtonsDown);
 	pStartButton = btn;
 
-	AddElement(btn = new C4GUI::CallbackButton<C4StartupMainDlg>(LoadResStr("IDS_DLG_QUESTIONNAIRE"), caButtons.GetFromTop(iButtonHeight), &C4StartupMainDlg::OnQuestionnaireBtn));
+//	AddElement(btn = new C4GUI::CallbackButton<C4StartupMainDlg>(LoadResStr("IDS_DLG_QUESTIONNAIRE"), caButtons.GetFromTop(iButtonHeight), &C4StartupMainDlg::OnQuestionnaireBtn));
 	//	btn->SetToolTip(LoadResStr("IDS_DLGTIP_ABOUT"));
-	btn->SetCustomGraphics(&C4Startup::Get()->Graphics.barMainButtons, &C4Startup::Get()->Graphics.barMainButtonsDown);
+//	btn->SetCustomGraphics(&C4Startup::Get()->Graphics.barMainButtons, &C4Startup::Get()->Graphics.barMainButtonsDown);
 
 	AddElement(btn = new C4GUI::CallbackButton<C4StartupMainDlg>(LoadResStr("IDS_DLG_SURVEY"), caButtons.GetFromTop(iButtonHeight), &C4StartupMainDlg::OnSurveyBtn));
 	//	btn->SetToolTip(LoadResStr("IDS_DLGTIP_ABOUT"));
@@ -229,26 +229,7 @@ void C4StartupMainDlg::OnClosed(bool fOK)
 
 void C4StartupMainDlg::OnStartBtn(C4GUI::Control *btn)
 {
-	int32_t iPlrCount = SModuleCount(Config.General.Participants);
-	int32_t plrCount = 1;
-	StdStrBuf sError;
-
-	if (!::PlayerProfile::getDoneQuestionnaire()) {
-		sError.Format(LoadResStr("IDS_MSG_INCOMPLETEQUESTIONNAIRE"));
-		GetScreen()->ShowMessage(sError.getData(), LoadResStr("IDS_MSG_CANNOTSTARTSCENARIO"), C4GUI::Ico_Error);
-	}
-	else if (iPlrCount == plrCount) {
-		std::cout << "go";
-		C4Startup::Get()->SwitchDialog(C4Startup::SDID_ScenSel);
-	}
-	else if (iPlrCount > plrCount) {
-		sError.Format(LoadResStr("IDS_DLG_TOOMANY_QUESTIONNAIRE"));
-		GetScreen()->ShowMessage(sError.getData(), LoadResStr("IDS_MSG_CANNOTSTARTSCENARIO"), C4GUI::Ico_Error);
-	}
-	else if (iPlrCount < plrCount) {
-		sError.Format(LoadResStr("IDS_DLG_TOOFEW_QUESTIONNAIRE"));
-		GetScreen()->ShowMessage(sError.getData(), LoadResStr("IDS_MSG_CANNOTSTARTSCENARIO"), C4GUI::Ico_Error);
-	}
+	C4Startup::Get()->SwitchDialog(C4Startup::SDID_ScenSel);
 	// advance to scenario selection screen
 }
 

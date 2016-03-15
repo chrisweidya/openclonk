@@ -261,7 +261,9 @@ private func SetWeapon(int index, object npc) {
 }
 
 private func InitTrees(int seed, int immersion_level) {
-	var num_plants = immersion_level + 1 + 2 * category;
+	var num_plants = immersion_level + 2 * category;
+	if (immersion_level > 0 && num_plants <= 0)
+		num_plants = immersion_level;
 	Fern->Place(6*num_plants, Rectangle(0, 0, i_width, LandscapeHeight()));
 	Wheat->Place(3 * num_plants, Rectangle(0, 0, i_width, LandscapeHeight()));
 	Cotton->Place(2 * num_plants, Rectangle(0, 0, i_width, LandscapeHeight()));

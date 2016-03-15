@@ -23,14 +23,16 @@ void PlayerProfile::Evaluate(int32_t keyboardPresses, int32_t clicks, int32_t se
 	restartCount = restarts;
 	timeTakenToComplete = secondsInRound;
 	int32_t percentageBatDeaths = 0;
-	if(achievementLevel > 0)
-		percentageBatDeaths = batDeaths * 100 / (8 * achievementLevel);
+	
 	Categorise();
+	if (achievementLevel > 0 && batDeaths > 0)
+		percentageBatDeaths = batDeaths * 100 / (6 * (achievementLevel - category));
 
 	std::string nameStr(name);
 	std::string dataStr = "username=" + nameStr + "&achievementScore=" + std::to_string(achievementScore) + "&socialScore=" + std::to_string(socialScore) +
 		"&immersionScore=" + std::to_string(immersionScore) + "&achievementLevel=" + std::to_string(achievementLevel) +
-		"&immersionLevel=" + std::to_string(immersionLevel) + "&round=" + std::to_string(round) + "&seed=" + std::to_string(seed) +
+		"&immersionLevel=" + std::to_string(immersionLevel) + "&achResult=" + std::to_string(achResult) + "&immResult=" + std::to_string(immResult) +
+		"&round=" + std::to_string(round) + "&seed=" + std::to_string(seed) +
 		"&restarts=" + std::to_string(restarts) +"&immersionChoices=" + std::to_string(immersionChoices) + 
 		"&achievementChoices=" + std::to_string(achievementChoices) + "&roundTime=" + std::to_string(timeTakenToComplete) + 
 		"&keyboardAPM=" + std::to_string(keyboardAPM) + "&mouseAPM=" + std::to_string(mouseAPM) +"&playerDeaths=" + std::to_string(playerDeaths) +
@@ -93,7 +95,6 @@ void PlayerProfile::Categorise() {
 	typedef normalized_function<dec_funct_type> funct_type;
 	funct_type learned_function;
 	sample_type sample;
-	double achCat, immCat;
 	
 	sample(0) = keyboardAPM;
 	sample(1) = mouseAPM;
@@ -104,13 +105,13 @@ void PlayerProfile::Categorise() {
 	sample(6) = achievementTime;
 	sample(7) = objectiveCompleted;
 	deserialize("achievement_result.dat") >> learned_function;
-	achCat = learned_function(sample);
-	std::cout << "ach result " << achCat;
+	achResult = learned_function(sample);
+	std::cout << "ach result " << achResult;
 	deserialize("immersion_result.dat") >> learned_function;
-	immCat = learned_function(sample);
-	std::cout << "imm result " << immCat;
+	immResult = learned_function(sample);
+	std::cout << "imm result " << immResult;
 
-	if (achCat > immCat)
+	if (achResult < immResult)
 		category += 1;
 	else
 		category -= 1;
@@ -127,7 +128,6 @@ void PlayerProfile::updatePlayerType(float achievementScore, float socialScore, 
 
 //category +2 max for immersion, -2max for achievement
 int32_t PlayerProfile::getScoreDiff() {
-	
 	return category;
 	/*
 	int32_t scoreDiff = immersionLevel - achievementLevel;
@@ -211,13 +211,11 @@ int32_t PlayerProfile::saveSingleProfile(PlayerProfile profile) {
 	C4Group PlayerGrp;
 	C4PlayerInfoCore core;	
 	const char *szPlayerFilename = Config.AtUserDataPath(Config.General.Participants);
-	std::cout << profile.seed << " saving profile\n";
 	if (!FileExists(szPlayerFilename) || !PlayerGrp.Open(szPlayerFilename) || !core.Load(PlayerGrp))
 		return -1;
 	core.Profile = profile;
 	if (!core.Save(PlayerGrp) || !PlayerGrp.Close())
 		return -1;
-	std::cout <<core.Profile.seed << " saving profile\n";
 	return 1;
 } 
 
