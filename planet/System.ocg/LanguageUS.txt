@@ -1002,7 +1002,7 @@ SURVEY_4=4
 SURVEY_THANKS=Thank you for your participation in the game. Have a great day ahead!
 GAME_INSTRUCTIONS1= Thank you for participating in this game! Here are the instructions to proceed:
 GAME_INSTRUCTIONS2=1. Complete the Questionnaire 
-GAME_INSTRUCTIONS3=2. Play at least 5 rounds of the game
-GAME_INSTRUCTIONS4=3. Complete the Post-game Survey
+GAME_INSTRUCTIONS3=1. Play at least 5 rounds of the game
+GAME_INSTRUCTIONS4=2. Complete the Post-game Survey
 GAME_INSTRUCTIONS5= Thank you!
 
