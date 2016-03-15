@@ -13,12 +13,14 @@ static target_npc;
 
 func InitializeObjects()
 {
-	var offset = GetMapDataFromPlayer();
-	i_width = LandscapeWidth() / 2 + LandscapeWidth()*offset / 12;
+	seed = GetSeed();
+	var offset =GetRandomNum(4, seed);
+	offset = offset - 2;
+	i_width = LandscapeWidth() / 2 + LandscapeWidth()*offset / 6;
 	a_width = LandscapeWidth() - i_width;
 
 	baseHeight = (LandscapeHeight() / 2);
-	seed = GetSeed();
+	
 	Log("seed %v", seed);
 	immersion_level = GetPlayerImmLevel();
 	achievement_level = GetPlayerAchLevel();
@@ -233,7 +235,7 @@ private func InitBuildings() {
 }
 
 private func InitBats(int achievement_level) {
-	var bats = Bat->Place(8 * achievement_level, Rectangle( i_width, 0, a_width, LandscapeHeight()));
+	var bats = Bat->Place(8 * (GetRandomNum(5, seed+1) + 1), Rectangle( i_width, 0, a_width, LandscapeHeight()));
 	// Make the bats a bit weaker so that they are killed with a single arrow.
 	var extra_hp = achievement_level * 1000;
 	for (var bat in bats)
@@ -260,7 +262,7 @@ private func SetWeapon(int index, object npc) {
 }
 
 private func InitTrees(int seed, int immersion_level) {
-	var num_plants = immersion_level + 1;
+	var num_plants = GetRandomNum(5, seed) + 1;
 	Fern->Place(8*num_plants, Rectangle(0, 0, i_width, LandscapeHeight()));
 	Wheat->Place(4 * num_plants, Rectangle(0, 0, i_width, LandscapeHeight()));
 	Cotton->Place(3 * num_plants, Rectangle(0, 0, i_width, LandscapeHeight()));

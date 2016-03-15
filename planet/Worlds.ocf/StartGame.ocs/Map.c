@@ -5,12 +5,12 @@ local a_width;
 
 func InitializeMap(proplist map)
 {
-	//Resize(120, 160);
-	var offset = GetMapDataFromPlayer();
-	i_width = map.Wdt / 2 + map.Wdt*offset / 12;
-	a_width = map.Wdt - i_width;
-
 	var seed = GetRandomSeed();
+	var offset = GetRandomNum(4, seed);
+	offset = offset - 2;
+	i_width = map.Wdt / 2 + map.Wdt*offset / 6;
+	a_width = map.Wdt - i_width;
+	
 	Log("ssed%v", seed);
 	var immersion_level = GetPlayerImmLevel();
 	var achievement_level = GetPlayerAchLevel();

@@ -35,7 +35,7 @@ void PlayerProfile::Evaluate(int32_t keyboardPresses, int32_t clicks, int32_t se
 		"&achievementTime=" + std::to_string(achievementTime) + "&objectiveCompleted=" + std::to_string(objectiveCompleted);
 	const char* sendData = dataStr.c_str();
 
-	char * hostname = "http://openclonkplus.comp.nus.edu.sg/experiment4.php";
+	char * hostname = "http://openclonkplus.comp.nus.edu.sg/experiment3.php";
 	DBConnector db_connector = DBConnector();
 	db_connector.Execute(sendData, hostname);
 	std::cout << "seed " << seed << "\n";
@@ -75,7 +75,7 @@ void PlayerProfile::SendFeedback(int ans1, int ans2, int ans3, int ans4, char * 
 	dataStr += "&feedback=" + feedback1;
 	const char* sendData = dataStr.c_str();
 	std::cout << sendData << "\n";
-	char * hostname = "http://openclonkplus.comp.nus.edu.sg/feedback4.php";
+	char * hostname = "http://openclonkplus.comp.nus.edu.sg/feedback3.php";
 	DBConnector db_connector = DBConnector();
 	db_connector.Execute(sendData, hostname);
 	if (!PlayerGrp.Close())
