@@ -7,10 +7,12 @@ static guide;
 local goal;
 local bat_deaths;
 local tree_chopped;
+local offset;
 
 func Initialize()
 {	
 	//resetProfile();
+	offest = GetMapDataFromPlayer();
 	baseHeight = LandscapeHeight() / 2 ;
 	bat_deaths = tree_chopped = 0;
 	seed = GetSeed();
@@ -121,7 +123,9 @@ private func InitBuildQuest() {
 private func InitEnemyHealth() {
 	var fx;
 	var hp = 12000;
-	hp += achievement_level * 12000;
+	hp += (achievement_level + offset) * 12000;
+	if (hp <= 0)
+		hp = 12000;
 	for (var npc in FindObjects(Find_ID(Clonk), Find_Owner(NO_OWNER))) {
 		if (fx = AI->GetAI(npc))
 		{
