@@ -21,7 +21,7 @@ void PlayerProfile::Evaluate(int32_t keyboardPresses, int32_t clicks, int32_t se
 	restartCount = restarts;
 	timeTakenToComplete = secondsInRound;
 	int32_t percentageBatDeaths = 0;
-	if(achievementLevel > 0)
+	if(achievementLevel > 0 && batDeaths > 0)
 		percentageBatDeaths = batDeaths * 100 / (8 * achievementLevel);
 
 	std::string nameStr(name);
