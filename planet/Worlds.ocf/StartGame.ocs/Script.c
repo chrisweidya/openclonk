@@ -12,7 +12,7 @@ local offset;
 func Initialize()
 {	
 	//resetProfile();
-	offest = GetMapDataFromPlayer();
+	offset = GetMapDataFromPlayer();
 	baseHeight = LandscapeHeight() / 2 ;
 	bat_deaths = tree_chopped = 0;
 	seed = GetSeed();
