@@ -14,7 +14,6 @@ planet/Records.c4f
 *.dll
 config.h
 C4Version.h
-Makefile
 C4Include.h.gch
 intermediate
 build*
