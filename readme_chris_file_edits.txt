@@ -1,10 +1,12 @@
 List of file modifications. Revision history history shows the changes, edits and progress made in project. Undocumented effort is spent on research and wading through the game engine.  Repo: https://github.com/chrisweidya/openclonk.git
 
 ====================================================================
+Project requirements and description.
+====================================================================
 
 There are 4 branches. 
 
-Branch:
+Branch descriptions:
 
 exp1 : First version of openclonk with questionnaire for experiment 1.
 
@@ -12,11 +14,13 @@ master: Version with player classification scenario for experiment 2.
 
 exp3: Version with random based PCG algorithm for experiment 2.
 
-exp4: Version with objective based algorithm for expeirment 2.
+exp4: Version with objective based algorithm for experiment 2.
+
+Requirements: A server and a running sql database. Server side web scripts and sql experiment dump files provided in folder "server scripts". Project installation instructions can be found in "chris_how_to_install.txt".
 
 ====================================================================
-
 Folders (inclusive of files inside) or files created (Check revision history in github for edits, and files itself for comments):
+====================================================================
 
 planet/worlds.ocf - Game scenario files (See readme_chris.txt inside folder for detailed file descriptions in folder).
 
@@ -33,9 +37,9 @@ src/network/DBConnector.cpp and header file - Connection to SOC database using c
 src/network/Client.cpp and header file - (not used) attempts at using boost library for DB connection
 
 
-===================================================================
-
+====================================================================
 Files/folders modified (Check revision history in github for edits) :
+====================================================================
 
 planet/System.ocg/LanguageUS.txt - Added many new texts in game.
 

@@ -1,0 +1,11 @@
+body {
+  padding-top: 50px;
+  background-color: #eaeaea;
+}
+.starter-template {
+  padding: 40px 15px;
+  text-align: center;
+}
+.navbar-inverse{
+  background-color: #0d192a
+}
