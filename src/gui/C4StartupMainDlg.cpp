@@ -14,6 +14,7 @@
 * for the above references.
 */
 // Startup screen for non-parameterized engine start (stub)
+// Modified by Chris
 
 #include <C4Include.h>
 #include <C4StartupMainDlg.h>

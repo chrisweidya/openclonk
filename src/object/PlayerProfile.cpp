@@ -1,3 +1,6 @@
+//Created by Chris
+//Player profile handling, see function for comments
+
 
 #include <C4Include.h>
 #include <C4StartupNetDlg.h>
@@ -14,6 +17,9 @@ void PlayerProfile::Default()
 {
 }
 
+//Parses data taken from scenario for sending to database
+//Categorisation of player 
+//Sends parsed data to database
 void PlayerProfile::Evaluate(int32_t keyboardPresses, int32_t clicks, int32_t secondsInRound, int32_t restarts, const char * name) {
 	float apm = keyboardPresses * 60.0 / secondsInRound ;
 	keyboardAPM = (int)apm;
@@ -61,6 +67,7 @@ void PlayerProfile::Evaluate(int32_t keyboardPresses, int32_t clicks, int32_t se
 
 }
 
+//Handles player survey data and sends it to database
 void PlayerProfile::SendFeedback(int ans1, int ans2, int ans3, int ans4, char * feedback) {
 	assert(SModuleCount(Config.General.Participants) == 1);
 	C4Group PlayerGrp;
@@ -88,6 +95,7 @@ void PlayerProfile::SendFeedback(int ans1, int ans2, int ans3, int ans4, char * 
 		return;
 }
 
+//Categorisation of player using .dat files from c_svm algorithm based on in-game variables
 void PlayerProfile::Categorise() {
 	typedef matrix<double, 8, 1> sample_type;
 	typedef radial_basis_kernel<sample_type> kernel_type; 
@@ -126,25 +134,16 @@ void PlayerProfile::updatePlayerType(float achievementScore, float socialScore, 
 	Config.General.Participants[0];
 }
 
-//category +2 max for immersion, -2max for achievement
 int32_t PlayerProfile::getScoreDiff() {
 	return category;
-	/*
-	int32_t scoreDiff = immersionLevel - achievementLevel;
-	if (scoreDiff > 2)
-		return 2;
-	if (scoreDiff < -2)
-		return -2;
-	return scoreDiff;*/
 }
 
+//Gets current seed for game session
 int32_t PlayerProfile::getSeed(bool init) {	
 	int32_t tempSeed;
 	if (init) {
 		tempSeed = seed = time(NULL);
-//		std::cout << seed << "seedbefore\n";
 		PlayerProfile::saveSeed(tempSeed);
-//		std::cout << seed << "seedafter\n";
 		return tempSeed;
 	}
 	else {
@@ -154,16 +153,17 @@ int32_t PlayerProfile::getSeed(bool init) {
 	}
 }
 
+//Saves seed of rescued NPC
 void PlayerProfile::updateFoundNPC(int seed) {
 	for (int i = 0; i < foundNPCSize; i++) {
 		if (foundNPC[i] == 0) {
 			foundNPC[i] = seed;
-			std::cout << i<<"savedfee"<<seed << "\n";
 			break;
 		}
 	}	
 }
 
+//Saves data taken from game session 
 void PlayerProfile::updateProfileData(int32_t v_playerDeaths, int32_t v_batDeaths, int32_t v_treesChopped,
 	int32_t v_immersionTime, int32_t v_achievementTime, int32_t v_objectiveCompleted) {
 	playerDeaths = v_playerDeaths;
@@ -174,8 +174,8 @@ void PlayerProfile::updateProfileData(int32_t v_playerDeaths, int32_t v_batDeath
 	objectiveCompleted = v_objectiveCompleted;
 }
 
+//Gets seed of rescued NPC
 int32_t PlayerProfile::getFoundNPC(int index) {
-//	std::cout << "found npc " << foundNPC[index] << "\n";
 	int32_t npc_seed = foundNPC[index];
 	return npc_seed;
 }
@@ -189,22 +189,19 @@ int32_t PlayerProfile::getBuildingsCompleted() {
 	return count;
 }
 
+//Gets and loads player profile from saved profile
 PlayerProfile* PlayerProfile::getSingleProfile() {
 	assert(SModuleCount(Config.General.Participants) == 1);
 	C4Group PlayerGrp;
 	C4PlayerInfoCore nfo;
-//	PlayerProfile profile;
 	const char *szPlayerFilename = Config.AtUserDataPath(Config.General.Participants);
-//	std::cout << "getprofile\n";
 	if (!FileExists(szPlayerFilename) || !PlayerGrp.Open(szPlayerFilename) || !nfo.Load(PlayerGrp) || !PlayerGrp.Close())
 		return nullptr;
-//	profile = nfo.Profile;
-//	std::cout << "before: " << nfo.Profile.achievementScore << "\n";
 	
 	return &nfo.Profile;
 }
 
-
+//Saves player profile
 int32_t PlayerProfile::saveSingleProfile(PlayerProfile profile) {	
 	
 	assert(SModuleCount(Config.General.Participants) == 1);	
@@ -225,16 +222,15 @@ int32_t PlayerProfile::saveSeed(int32_t seed) {
 	C4Group PlayerGrp;
 	C4PlayerInfoCore core;
 	const char *szPlayerFilename = Config.AtUserDataPath(Config.General.Participants);
-	std::cout << seed << " seed\n";
 	if (!FileExists(szPlayerFilename) || !PlayerGrp.Open(szPlayerFilename) || !core.Load(PlayerGrp))
 		return -1;
 	core.Profile.seed = seed;
 	if (!core.Save(PlayerGrp) || !PlayerGrp.Close())
 		return -1;
-	std::cout << core.Profile.seed << " 2seed\n";
 	return 1;
 }
 
+//Supposed to be save list of rescued NPC, however transformed to data clearing function
 int32_t PlayerProfile::saveNPC(int32_t npc1, int32_t npc2, int32_t npc3, int32_t npc4, int32_t npc5) {
 
 	assert(SModuleCount(Config.General.Participants) == 1);
@@ -266,10 +262,10 @@ int32_t PlayerProfile::saveNPC(int32_t npc1, int32_t npc2, int32_t npc3, int32_t
 	core.Profile.round = 0;
 	if (!core.Save(PlayerGrp) || !PlayerGrp.Close())
 		return -1;
-	std::cout << core.Profile.foundNPC[0] << " npc\n";
 	return 1;
 }
 
+//Saves questionnaire results, achievement immersion and social scores after questionnaire completion.
 int32_t PlayerProfile::saveQuestionnaireData(int32_t achievementScore, int32_t socialScore, int32_t immersionScore) {
 
 	assert(SModuleCount(Config.General.Participants) == 1);
@@ -288,6 +284,7 @@ int32_t PlayerProfile::saveQuestionnaireData(int32_t achievementScore, int32_t s
 	return 1;
 }
 
+//Checks if player has completed questionnaire
 bool PlayerProfile::getDoneQuestionnaire() {
 	assert(SModuleCount(Config.General.Participants) == 1);
 	C4Group PlayerGrp;
@@ -300,6 +297,7 @@ bool PlayerProfile::getDoneQuestionnaire() {
 	return core.Profile.doneQuestionnaire;
 }
 
+//Function to save various variables to openclonk .ocp file
 void PlayerProfile::CompileFunc(StdCompiler *pComp)
 {
 	pComp->Value(mkNamingAdapt(doneQuestionnaire, "doneQuestionnaire",false));

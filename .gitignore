@@ -132,3 +132,5 @@ tests/openclonk_unittest.sln
 /*.oc*
 
 openclonk.VC.opendb
+openclonk.VC.VC.opendb
+openclonk.VC.db

@@ -23,9 +23,6 @@ MsgTutorialRound=Each game round changes depending on what you do previously, tr
 MsgTutorialChest=New items can be found each round in the chest, press E when near it to transfer items. Press L.Shift to pickup items on the ground.
 
 
-
-# Buildings
-
 # Immersion NPCs
 ImmersionNPCNameSize=10
 ImmersionNPCName0=Jules

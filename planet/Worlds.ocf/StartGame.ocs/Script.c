@@ -1,3 +1,6 @@
+//Created by Chris
+//Handles in game events and scripts, player generation
+
 local seed;
 local baseHeight;
 local site;
@@ -9,9 +12,10 @@ local bat_deaths;
 local tree_chopped;
 local offset;
 
+//Main function, sets variable default values
 func Initialize()
 {	
-	//resetProfile();
+	//resetProfile(); //use this to clear save data settings
 	offset = GetMapDataFromPlayer();
 	baseHeight = LandscapeHeight() / 2 ;
 	bat_deaths = tree_chopped = 0;
@@ -22,6 +26,7 @@ func Initialize()
 	return true;
 }
 
+//Creates goal events and info
 protected func InitGoal()
 {
 	goal = CreateObject(Goal_PCG);
@@ -32,10 +37,12 @@ protected func InitGoal()
 	InitBuildQuest();
 }
 
+//Creates and positions main player, sets parameters for in-game variable tracking
 protected func InitializePlayer(int plr)
 {
-	// Position player's clonk.
 //	SetPlayerZoomByViewRange(plr, 400, 0, PLRZOOM_LimitMin);
+
+	//Player spawn parameters and items
 	playerNum = plr;
 	DisablePlrControls(plr);
 	player = GetCrew(plr);	
@@ -45,6 +52,7 @@ protected func InitializePlayer(int plr)
 	player->SetPosition(LandscapeWidth()/2 + 100, baseHeight - 20);
 	player->MakeInvincible();
 
+	//Player in-game variable saving
 	InitGuide(plr);
 	player.deaths = 0;
 	player.secs_spent_in_immersion = 0;
@@ -53,6 +61,7 @@ protected func InitializePlayer(int plr)
 	AddEffect("TrackPlayer", player, 100, 60);
 }
 
+//Gives a player a random weapon depending on achievement progression
 private func ItemGiver(object clonk) {
 	var index = GetRandomNum(4, seed);
 	if (achievement_level == 0)
@@ -80,6 +89,7 @@ private func ItemGiver(object clonk) {
 	}
 }
 
+//Starts the tutorial interface and the tutorial
 protected func InitGuide(int plr) {
 	var left = GetPlayerControlAssignment(plr, CON_Left, true, true);
 	var right = GetPlayerControlAssignment(plr, CON_Right, true, true);
@@ -102,7 +112,7 @@ protected func InitGuide(int plr) {
 	guide->ShowGuideMessage(0);
 }
 
-// Gamecall from goals, set next mission.
+// Sets next mission
 protected func OnGoalsFulfilled()
 {	
 	SetNextMission("Worlds.ocf\\StartGame.ocs", "$MsgNext$", "$MsgNextDesc$");
@@ -115,11 +125,13 @@ private func InitAI()
 	return;
 }
 
+//Creates build quest and goal
 private func InitBuildQuest() {
 	var immersion_level = GetPlayerImmLevel();
 	InitConstructionGoal(immersion_level);
 }
 
+//Sets enemy health depending on achievement level progression (difficulty setting)
 private func InitEnemyHealth() {
 	var fx;
 	var hp = 12000;
@@ -145,7 +157,7 @@ private func InitEnemyHealth() {
 	}
 }
 
-
+//Sets the construction goal and generates construction site depending on current building progress
 private func InitConstructionGoal(int level) {
 	var effect;
 	var buildingsCompleted = GetBuildingsCompleted();
@@ -178,7 +190,7 @@ private func InitConstructionGoal(int level) {
 	}
 }
 
-
+//Saves lost NPC seed and progresses immersion level if lost NPC is rescued
 public func OnHasTalkedToLostNPC()
 {	
 //	guide->AddGuideMessage("$GameCompleted$");
@@ -191,12 +203,13 @@ public func OnHasTalkedToLostNPC()
 	return;
 }
 
+//Clears save data
 private func resetProfile() {
 	ResetProfile();
 	return;
 }
 
-
+//Checks for construction completion
 global func FxCheckConstructionTimer(object target, proplist effect) {
 	if (FindObject(Find_ID(target.objective)))
 	{
@@ -208,10 +221,12 @@ global func FxCheckConstructionTimer(object target, proplist effect) {
 	}
 }
 
+//Saves player profile data and in-game variables
 private func UpdateProfile(int objectiveCompleted) {
 	SaveProfileData(player.deaths, bat_deaths, tree_chopped, player.secs_spent_in_immersion, player.secs_spent_in_achievement, objectiveCompleted);
 }
 
+//Game checks and updates game if target enemy dies
 global func FxTargetDeathStop(object target, effect, int reason, bool  temporary)
 {
 	if (reason == 3 || reason == 4)
@@ -228,6 +243,7 @@ global func FxTargetDeathTimer(object target)
 	return FX_OK;
 }
 
+//Tracks how many seconds are spent in each zone
 global func FxTrackPlayerTimer(object target, proplist effect, int time)
 {
 	var x = target->GetX();
@@ -240,11 +256,10 @@ global func FxTrackPlayerTimer(object target, proplist effect, int time)
 
 global func FxTrackDeathsTimer(object target, proplist effect, int time)
 {
-	// Respawn clonk to new location if reached certain position.
 	return FX_OK;
 }
 
-// Relaunches the clonk, from death or removal.
+// Relaunches the clonk, from death or removal, increases player death count
 global func FxTrackDeathsStop(object target, effect, int reason, bool  temporary)
 {
 	if (reason == 3 || reason == 4)
@@ -262,6 +277,7 @@ private func OnTreeChopped() {
 	tree_chopped++;
 }
 
+//Allows player to move and become vulnerable once instructions are read at the start
 private func OnFinishedTutorialIntro(int plr)
 {
 	// enable crew
@@ -269,8 +285,7 @@ private func OnFinishedTutorialIntro(int plr)
 	GetCrew(plr)->ClearInvincible();
 }
 
-
-
+//Index list of tutorial messages and arrow point locations
 protected func OnGuideMessageShown(int plr, int index)
 {
 	// Show the player his clonk and the guide.
@@ -306,6 +321,7 @@ protected func OnGuideMessageRemoved(int plr, int index)
 	return;
 }
 
+//Updates tutorial guide once immersion NPC is talked to
 public func OnHasTalkedToAerin()
 {
 	guide->ShowGuide();
@@ -324,6 +340,8 @@ public func OnHasTalkedToAerin()
 	
 	return;
 }
+
+//Updates tutorial guide once achievement NPC is talked to
 public func OnHasTalkedToWarra()
 {
 	guide->ShowGuide();
@@ -334,6 +352,7 @@ public func OnHasTalkedToWarra()
 	return;
 }
 
+//Hides the guide when player is talking to NPC
 public func IsTalking()
 {
 	guide->HideGuide();

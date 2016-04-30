@@ -575,6 +575,8 @@ bool C4MapScriptLayer::Blit(const C4MapScriptLayer *src, const C4Rect &src_rect,
 		}
 	return true;
 }
+
+//Gets map achievement and immersion portions
 static int32_t FnGetMapDataFromPlayer(C4PropList * _this) {
 	PlayerProfile *profile = PlayerProfile::getSingleProfile();
 	if (profile) {
@@ -585,12 +587,11 @@ static int32_t FnGetMapDataFromPlayer(C4PropList * _this) {
 	return 0;
 }
 
+//Gets current seed
 static int32_t FnGetRandomSeed(C4PropList * _this) {
 	PlayerProfile *profile = PlayerProfile::getSingleProfile();
 	if (profile) {
 		return profile->getSeed(true);
-	//	PlayerProfile::saveSingleProfile(*profile);
-	//	return profile->seed;
 	}
 	else
 		Log("failed to load seed");
@@ -690,6 +691,7 @@ C4MapScriptHost::C4MapScriptHost(): LayerPrototype(NULL), MapPrototype(NULL), pT
 
 C4MapScriptHost::~C4MapScriptHost() { Clear(); }
 
+//Added simplex noise integration into map creation in openclonk
 void C4MapScriptHost::InitFunctionMap(C4AulScriptEngine *pEngine)
 {
 	// Register script host. Add Map and MapLayer prototypes, related constants and engine functions

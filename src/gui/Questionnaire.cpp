@@ -1,35 +1,15 @@
-/*
-* OpenClonk, http://www.openclonk.org
-*
-* Copyright (c) 2005-2009, RedWolf Design GmbH, http://www.clonk.de/
-* Copyright (c) 2009-2013, The OpenClonk Team and contributors
-*
-* Distributed under the terms of the ISC license; see accompanying file
-* "COPYING" for details.
-*
-* "Clonk" is a registered trademark of Matthes Bender, used with permission.
-* See accompanying file "TRADEMARK" for details.
-*
-* To redistribute this file separately, substitute the full license texts
-* for the above references.
-*/
+//Created by Chris
 #include <C4Include.h>
 #include <Questionnaire.h>
 #include <PlayerProfile.h>
 
-// font clrs
 const uint32_t ClrPlayerItem = 0xffffffff;
 
-// Arbitrary cut-off value for player color value. This avoids pitch black
-// colors which look ugly. Note that this limit is only applied in the UI,
-// it's still possible to edit the Player.txt by hand.
 const uint32_t PlayerColorValueLowBound = 64;
 
 const uint32_t NUM_QUESTIONS = 12;
 
-// ------------------------------------------------
-// --- Questionnaire
-
+//Craetes questionnaire windows, buttons.
 Questionnaire::Questionnaire() : C4StartupDlg("Questionnaire")
 {
 	// ctor
@@ -65,6 +45,7 @@ Questionnaire::Questionnaire() : C4StartupDlg("Questionnaire")
 	UpdateBottomButtons();
 }
 
+//Modifies player profile score variables upon question completion
 int Questionnaire::ModifyProfile()
 {
 	PlayerProfile *profile = PlayerProfile::getSingleProfile();
@@ -77,6 +58,7 @@ int Questionnaire::ModifyProfile()
 	return PlayerProfile::saveQuestionnaireData(achievementScore, socialScore, immersionScore);
 }
 
+//Button handling
 void Questionnaire::DoBack()
 {
 	// back 2 main, restart quiz
@@ -94,6 +76,7 @@ void Questionnaire::DoNext()
 	ShowQuestion(++currQs);
 }
 
+//Updates score based on Nick Yee's values
 void Questionnaire::DoNext(int feedback)
 {
 	switch (currQs) {		
@@ -137,6 +120,7 @@ void Questionnaire::DoNext(int feedback)
 	ShowQuestion(++currQs);
 }
 
+//handles question rotation and checks for completion with warning
 void Questionnaire::ShowQuestion(int index) {
 	questionWindow->ClearText(true);
 	if (index > 0 && index <= NUM_QUESTIONS)

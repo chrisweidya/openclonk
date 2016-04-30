@@ -104,6 +104,7 @@ static bool FnSendProfileData(C4PropList * _this, long iPlayer)
 	return true;
 }
 
+//Gets player's achievement level
 static int32_t FnGetPlayerAchLevel(C4PropList * _this)
 {
 	PlayerProfile *profile = PlayerProfile::getSingleProfile();
@@ -118,6 +119,7 @@ static int32_t FnGetPlayerAchLevel(C4PropList * _this)
 	return -1;
 }
 
+//Gets player's immersion level
 static int32_t FnGetPlayerImmLevel(C4PropList * _this)
 {
 	PlayerProfile *profile = PlayerProfile::getSingleProfile();
@@ -132,6 +134,7 @@ static int32_t FnGetPlayerImmLevel(C4PropList * _this)
 	return -1;
 }
 
+//Updates player's achievement level
 static int32_t FnSetPlayerAchLevel(C4PropList * _this, int32_t level, int player)
 {
 	C4Player *plr = ::Players.Get(player);
@@ -147,6 +150,7 @@ static int32_t FnSetPlayerAchLevel(C4PropList * _this, int32_t level, int player
 	return -1;
 }
 
+//Updates player's immersion level
 static int32_t FnSetPlayerImmLevel(C4PropList * _this, int32_t level, int player)
 {
 	C4Player *plr = ::Players.Get(player);
@@ -162,6 +166,7 @@ static int32_t FnSetPlayerImmLevel(C4PropList * _this, int32_t level, int player
 	return -1;
 }
 
+//Gets map seperation portions
 static int32_t FnGetMapDataFromPlayer(C4PropList * _this)
 {
 	PlayerProfile *profile = PlayerProfile::getSingleProfile();
@@ -173,6 +178,7 @@ static int32_t FnGetMapDataFromPlayer(C4PropList * _this)
 	return 0;
 }
 
+//Gets current seed
 static int32_t FnGetSeed(C4PropList * _this)
 {
 	PlayerProfile *profile = PlayerProfile::getSingleProfile();
@@ -184,6 +190,7 @@ static int32_t FnGetSeed(C4PropList * _this)
 	return 0;
 }
 
+//Generates random number using a seed input
 static int32_t FnGetRandomNum(C4PropList * _this, int32_t range, int32_t seed)
 {
 	srand(seed);
@@ -192,6 +199,7 @@ static int32_t FnGetRandomNum(C4PropList * _this, int32_t range, int32_t seed)
 	return randNum;
 }
 
+//Gets random colour based on seed input
 static int32_t FnGetRandomColour(C4PropList * _this, int32_t seed)
 {
 	char colour[10];
@@ -206,6 +214,7 @@ static int32_t FnGetRandomColour(C4PropList * _this, int32_t seed)
 	return std::stoul(colour, nullptr, 16);
 }
 
+//Saves rescued NPC's seed
 static C4Void FnUpdateFoundNPC(C4PropList *_this, int32_t seed, int player) 
 {
 	C4Player *plr = ::Players.Get(player);
@@ -218,6 +227,7 @@ static C4Void FnUpdateFoundNPC(C4PropList *_this, int32_t seed, int player)
 	return C4Void();
 }
 
+//Gets seed value of found NPC based on index
 static int32_t FnGetFoundNPC(C4PropList *_this, int32_t index)
 {
 	PlayerProfile *profile = PlayerProfile::getSingleProfile();
@@ -256,6 +266,7 @@ static int32_t FnGetBuildingsCompleted(C4PropList *_this)
 	return 0;
 }
 
+//Saves profile data
 static C4Void FnSaveProfileData(C4PropList *_this, int32_t playerDeaths, int32_t batDeaths, int32_t treesChopped,
 	int32_t immersionTime, int32_t achievementTime, int32_t objectiveCompleted, int player) {
 	C4Player *plr = ::Players.Get(player);
@@ -268,6 +279,7 @@ static C4Void FnSaveProfileData(C4PropList *_this, int32_t playerDeaths, int32_t
 	return C4Void();
 }
 
+//Resets profile data
 static C4Void FnResetProfile(C4PropList *_this)
 {
 	PlayerProfile::saveNPC(0, 0, 0, 0, 0);

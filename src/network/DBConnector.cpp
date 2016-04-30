@@ -1,3 +1,6 @@
+//Created by Chris
+//Executes curl functions to send data to SOC server
+
 #include <C4Include.h>
 #include <DBConnector.h>
 #include <iostream>

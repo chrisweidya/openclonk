@@ -1,4 +1,5 @@
-/* Automatically created objects file */
+//Created by Chris
+//Generates in-game elements such as objects, NPCs, etc.
 
 static i_width;
 static a_width;
@@ -12,20 +13,24 @@ static achievement_npc;
 static category;
 static target_npc;
 
+//Main function
 func InitializeObjects()
 {
+	//Gets current player classification and achievement/immersion map portions
 	category = GetMapDataFromPlayer();
 	i_width = LandscapeWidth() / 2 + LandscapeWidth()*category/ 6;
 	a_width = LandscapeWidth() - i_width;
 
+	//Gets map parameters, platform height and seed
 	baseHeight = (LandscapeHeight() / 2);
 	seed = GetSeed();
-	Log("seed %v", seed);
+
+	//Gets player's progression
 	immersion_level = GetPlayerImmLevel();
 	achievement_level = GetPlayerAchLevel();
-	Log("imm/ach level %v %v", immersion_level, achievement_level);
+	Log("Current immersion/achievement level: %v/%v", immersion_level, achievement_level);
 
-
+	//Other map elements
 	InitSettlement();
 	InitChest(immersion_level, achievement_level);
 	InitImmersionNPC();
@@ -36,10 +41,10 @@ func InitializeObjects()
 	InitBuildings();
 	InitBats(achievement_level);
 	InitTrees(seed, immersion_level);
-	return true;
-	
+	return true;	
 }
 
+//Creates respawn location, elevator and cabin
 private func InitSettlement() {
 	var respawn = CreateObject(Rule_BaseRespawn);
 	respawn->SetInventoryTransfer(true);
@@ -47,7 +52,6 @@ private func InitSettlement() {
 
 	var flagpole = CreateObjectAbove(Flagpole, LandscapeWidth() / 2 + 100, baseHeight);
 	flagpole->SetNeutral(true);
-	//	flagpole->SetObjectLayer(flagpole);
 
 	var elevator = CreateObjectAbove(Elevator, LandscapeWidth() / 2 + 40, LandscapeHeight() / 2);
 	elevator->SetDir(DIR_Left);
@@ -60,6 +64,7 @@ private func InitSettlement() {
 
 }
 
+//Creates chest and its contents, depending on player progression
 private func InitChest(int immersion_level, int achievement_level) {
 	var chest = CreateObjectAbove(Chest, LandscapeWidth() / 2 + 115, baseHeight);
 	chest->CreateContents(LoamUnlimited);
@@ -84,12 +89,12 @@ private func InitChest(int immersion_level, int achievement_level) {
 	}
 }
 
+//Creates immersion NPC that gives immersion quest, including dialogue settings
 private func InitImmersionNPC() {
 
 	immersion_npc = CreateObjectAbove(Clonk, LandscapeWidth() / 2 , baseHeight - 10);
 	immersion_npc->SetColor(0x00997a);
 	immersion_npc->SetName(Format("Aerin"));
-	//	immersion_npc->SetName(Translate(Format("ImmersionNPC%d", immersion_npc_index)));
 	immersion_npc->SetObjectLayer(immersion_npc);
 	immersion_npc->SetSkin(3);
 	immersion_npc->SetDir(DIR_Right);	
@@ -99,6 +104,7 @@ private func InitImmersionNPC() {
 	immersion_npc.StaticSaveVar = "immersion_npc";
 }
 
+//Creates achievement NPC that gives achievement quest, including dialogue settings
 private func InitAchievementNPC() {
 
 	achievement_npc = CreateObjectAbove(Clonk, LandscapeWidth() / 2 + 200, baseHeight - 10);
@@ -113,6 +119,8 @@ private func InitAchievementNPC() {
 	achievement_npc.StaticSaveVar = "achievement_npc";
 }
 
+//Creates objective/lost NPC if player is at the correct immersion progression level
+//Randomly generated in terms of location, design, name using a seed. The seed is saved if NPC is rescued
 private func InitLostNPC(int seed) {
 	if (immersion_level < 1 || GetBuildingsCompleted() == 3) {
 		var name_size = $ImmersionNPCNameSize$;
@@ -140,6 +148,7 @@ private func InitLostNPC(int seed) {
 	}
 }
 
+//Creates the rescued NPC based on the saved seed in spawn location.
 private func InitFoundNPC() {
 	var name_size = $ImmersionNPCNameSize$;
 	var name_index;
@@ -151,7 +160,6 @@ private func InitFoundNPC() {
 	for (var i = 0; i < 5; i++) {
 		npc_seed = GetFoundNPC(i);
 		if (npc_seed != 0) {
-			Log("npc in script: %v", npc_seed);
 			name_index = GetRandomNum(name_size, npc_seed);
 			skin = GetRandomNum(4, npc_seed);
 			colour = GetRandomColour(npc_seed);
@@ -165,7 +173,6 @@ private func InitFoundNPC() {
 				found_npc->SetDir(DIR_Right);
 			else
 				found_npc->SetDir(DIR_Left);
-			//	found_npc->SetDialogue(Format("$LostNPC$"), true);
 			found_npc->CreateContents(Hammer);
 			found_npc->SetDialogue("FoundNPC");
 		}
@@ -174,6 +181,8 @@ private func InitFoundNPC() {
 	}
 }
 
+//Creates enemy NPC
+//Name, design, location, weapon, are randomly generated. Hostile parameters set here too
 private func InitTargetNPC(int seed) {
 	var name_size = $AchievementNPCNameSize$;
 	var name_index = GetRandomNum(name_size, seed);
@@ -210,6 +219,7 @@ private func InitTargetNPC(int seed) {
 	}
 }
 
+//Creates addtional guards for enemy NPC if player achievement progression is sufficient
 private func InitGuards(int x, int y, int colour) {
 	var guard;
 	guard = CreateObjectAbove(Clonk, x-5, y);
@@ -223,6 +233,7 @@ private func InitGuards(int x, int y, int colour) {
 	AI->SetAllyAlertRange(guard, 60);
 }
 
+//Generates completed buildings in map
 private func InitBuildings() {
 	var buildingsCompleted = GetBuildingsCompleted();
 	if (buildingsCompleted > 0)
@@ -233,6 +244,8 @@ private func InitBuildings() {
 		CreateObjectAbove(Shipyard, LandscapeWidth() / 2 - 230, baseHeight);
 }
 
+//Creates bats that spawn randomly in the achievment zone.
+//HP is reliant on player achievement progress
 private func InitBats(int achievement_level) {
 	var bats = Bat->Place(6 * (achievement_level - category), Rectangle( i_width, 0, a_width, LandscapeHeight()));
 	// Make the bats a bit weaker so that they are killed with a single arrow.
@@ -245,6 +258,7 @@ private func InitBats(int achievement_level) {
 	}
 }
 
+//Helper function to set NPC weapon
 private func SetWeapon(int index, object npc) {
 	if (index == 0) 
 		npc->CreateContents(Sword);
@@ -260,6 +274,7 @@ private func SetWeapon(int index, object npc) {
 	
 }
 
+//Creates decorative elements based on player immersion level 
 private func InitTrees(int seed, int immersion_level) {
 	var num_plants = immersion_level + 2 * category;
 	if (immersion_level > 0 && num_plants <= 0)

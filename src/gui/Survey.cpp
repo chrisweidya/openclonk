@@ -1,18 +1,5 @@
-/*
-* OpenClonk, http://www.openclonk.org
-*
-* Copyright (c) 2005-2009, RedWolf Design GmbH, http://www.clonk.de/
-* Copyright (c) 2009-2013, The OpenClonk Team and contributors
-*
-* Distributed under the terms of the ISC license; see accompanying file
-* "COPYING" for details.
-*
-* "Clonk" is a registered trademark of Matthes Bender, used with permission.
-* See accompanying file "TRADEMARK" for details.
-*
-* To redistribute this file separately, substitute the full license texts
-* for the above references.
-*/
+//Created by Chris
+//Player survey handling
 #include <C4Include.h>
 #include <Survey.h>
 #include <PlayerProfile.h>
@@ -22,9 +9,6 @@
 // font clrs
 const uint32_t ClrPlayerItem = 0xffffffff;
 
-// Arbitrary cut-off value for player color value. This avoids pitch black
-// colors which look ugly. Note that this limit is only applied in the UI,
-// it's still possible to edit the Player.txt by hand.
 const uint32_t PlayerColorValueLowBound = 64;
 
 const uint32_t FEEDBACKBUFFER = 200;
@@ -33,6 +17,7 @@ const uint32_t NUM_QUESTIONS = 5;
 // ------------------------------------------------
 // --- Survey
 
+//Creates survey window, buttons
 Survey::Survey() : C4StartupDlg("Survey")
 {
 	// ctor
@@ -78,6 +63,7 @@ Survey::Survey() : C4StartupDlg("Survey")
 	UpdateBottomButtons();
 }
 
+//Updates profile
 int Survey::ModifyProfile()
 {
 	PlayerProfile::SendFeedback(result[0], result[1], result[2], result[3], feedbackChar);
@@ -113,6 +99,7 @@ void Survey::DoNext(int feedback)
 	ShowQuestion(++currQs);
 }
 
+//Handles question rotation and warnings
 void Survey::ShowQuestion(int index) {
 	questionWindow->ClearText(true);
 	if (index > 0 && index <= NUM_QUESTIONS)
